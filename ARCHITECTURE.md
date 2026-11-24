@@ -1,7 +1,7 @@
 # Architecture map
 
 Find the file for any feature without reading the whole app. All code is in
-`app/src/main/java/app/beacon/`. Every folder has its own README listing its files.
+`app/src/main/java/app/homeward/`. Every folder has its own README listing its files.
 
 ## How hybrid AI is split
 | Job | Where it runs | File |

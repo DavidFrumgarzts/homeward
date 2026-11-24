@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- App manifest: the permissions Beacon needs, and which classes start the app. -->
+<!-- App manifest: the permissions Homeward needs, and which classes start the app. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Cloud AI, safety pack download, push. Not needed for the offline SOS. -->
@@ -12,9 +12,9 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
 
     <application
-        android:name=".app.BeaconApplication"
+        android:name=".app.HomewardApplication"
         android:label="@string/app_name"
-        android:theme="@style/Theme.Beacon"
+        android:theme="@style/Theme.Homeward"
         android:supportsRtl="true">
 
         <activity

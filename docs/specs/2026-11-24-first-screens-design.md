@@ -1,6 +1,6 @@
 # Safety app: first screens and code structure
 
-Working name: **Beacon** (placeholder, easy to rename).
+Working name: **Homeward** (placeholder, easy to rename).
 
 ## Why
 David's sister went to India after the army with no research and often no signal. If something had happened, she had no local numbers and no way to reach home. The app gives the person in danger a way to get help with no signal, and gives family and friends peace of mind. It sits on top of Find My / Life360: they show *where* she is, we show *what's happening and what to do*.
@@ -51,7 +51,7 @@ One module, organized by feature. Rules:
 - Screens never call Firebase or Android APIs directly. They go through small interfaces in `core/`, so each piece can be tested and swapped with a fake.
 
 ```
-app/src/main/java/app/beacon/
+app/src/main/java/app/homeward/
   MainActivity.kt          entry point, sets up navigation
   navigation/              routes and the nav graph
   core/ui/                 theme (colors, type), shared components (BigButton, StatusPill, Card)

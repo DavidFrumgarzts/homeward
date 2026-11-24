@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "app.beacon"
+    namespace = "app.homeward"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "app.beacon"
+        applicationId = "app.homeward"
         minSdk = 26 // Firebase on-device AI needs Android 8.0+
         targetSdk = 35
         versionCode = 1

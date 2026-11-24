@@ -1,11 +1,11 @@
-# Beacon
+# Homeward
 
 **Safety help that works with no signal.** Built for #BuildHybridAI 2026 (Firebase AI Logic).
 
 After the army, my sister went to India with no plan, no local numbers and often no signal. Nothing happened,
-but if it had, she couldn't have reached anyone. Beacon is for that moment, for her and for the family at home.
+but if it had, she couldn't have reached anyone. Homeward is for that moment, for her and for the family at home.
 
-> Find My tells your mom where you are. Beacon tells her what's happening and what to do.
+> Find My tells your mom where you are. Homeward tells her what's happening and what to do.
 
 ## What it does
 - **Safety pack (cloud):** when you land, Gemini with Google Search researches the city: police and ambulance
@@ -25,7 +25,7 @@ the city research runs in the cloud with Google Search grounding. See [ARCHITECT
 
 ## Run it
 1. Install [Android Studio](https://developer.android.com/studio) and open this folder (or build from the terminal with `./gradlew assembleDebug`, Java 17).
-2. Create a Firebase project, add an Android app with package `app.beacon`, enable **Firebase AI Logic**
+2. Create a Firebase project, add an Android app with package `app.homeward`, enable **Firebase AI Logic**
    (Gemini Developer API) and **App Check**, and download `google-services.json` into `app/` (it is git-ignored).
 3. Run on a phone with Gemini Nano (Pixel 9 or newer, recent Samsung flagships) to see on-device AI.
    Other phones fall back to the cloud.
@@ -36,7 +36,7 @@ Working: safety pack build + offline storage, safety map + red-zone check, safe 
 writing, SMS sending, safety photo reading, police call. Not built yet: push between phones (needs a Cloud
 Function), walking route around red zones, contacts editing screen.
 
-Design: Figma file "Beacon – safety app screens". Team: David Frumgarzts, Alwis Lim, Julia.
+Design: Figma file "Homeward – safety app screens". Team: David Frumgarzts, Alwis Lim, Julia.
 
 ## License
 Apache 2.0

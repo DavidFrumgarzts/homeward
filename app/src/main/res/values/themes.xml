@@ -1,6 +1,6 @@
 <!-- Window theme used before Compose draws. Colors live in design/Colors.kt. -->
 <resources>
-    <style name="Theme.Beacon" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Homeward" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">#F4F5F7</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
