@@ -51,7 +51,14 @@ class IncidentEngine(private val scope: CoroutineScope, private val deps: Incide
     fun callEmergency() = deps.dial(_view.value.emergencyNumber)
 
     // ---- Events from the phone ----
-    fun onLocation(fix: LocationFix) = dispatch(IncidentEvent.Location(fix))
+    fun onLocation(fix: LocationFix) {
+        dispatch(IncidentEvent.Location(fix))
+        // Still writing the message: keep the location in the draft current, unless she edited it herself.
+        val s = state
+        if (s.phase == IncidentPhase.SosActive && !s.alertSent && !s.messageEdited && !s.writing) {
+            dispatch(IncidentEvent.MessageWritten(s.description, effects.composeLatest(s), s.messageRanOnDevice))
+        }
+    }
 
     // The outbox reports every status change. Only this incident's messages matter here.
     fun onOutboxChange(entry: SosOutbox.Entry) {

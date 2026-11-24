@@ -35,9 +35,10 @@ class HomewardApplication : Application() {
         OfflineMapSaver.deleteIfTooOld(this) // map provider rule: max 30 days on the phone
         SmsStatusReceiver.register(this)     // hears from the radio whether each SOS text was sent and delivered
         AppServices.sosOutbox.prune(System.currentTimeMillis())
+        AppServices.incidentSync.signIn()    // anonymous; needed once, while online, so an SOS can carry a family link
 
         // Back in reach? Send what was saved while there was no signal: SOS texts first, then safety photos.
-        val sendWaiting = { Thread { AppServices.sosDispatcher.flush(); AppServices.outboxSender.flush() }.start() }
+        val sendWaiting = { AppServices.incidentSync.signIn(); Thread { AppServices.sosDispatcher.flush(); AppServices.outboxSender.flush() }.start() }
         ConnectivityWatcher(this).start { sendWaiting() }
         // SMS needs cell signal, not data, so also try when airplane mode is switched off.
         registerReceiver(object : BroadcastReceiver() {

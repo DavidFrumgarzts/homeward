@@ -41,6 +41,8 @@ class IncidentEngineTest {
         }
         override fun send(incidentId: String, kind: MessageKind, text: String) { sent += kind to text }
         override fun flushOutbox() = Unit
+        val recorded = mutableListOf<MessageKind>()
+        override fun record(kind: MessageKind, state: app.homeward.features.incident.IncidentState, fix: LocationFix?, pointsHeld: Int) { recorded += kind }
         override fun startSession() { sessions++ }
         override fun stopSession() { sessions-- }
         override fun askSafetyCheck(urgent: Boolean) = Unit
@@ -83,6 +85,17 @@ class IncidentEngineTest {
         engine.imOk()
         assertEquals(IncidentPhase.Resolved, engine.view.value.phase)
         assertEquals(MessageKind.Ended, phone.sent.last().first); assertEquals(0, phone.sessions)
+        assertEquals("everything sent is also mirrored for the family view", phone.sent.map { it.first }, phone.recorded)
+    }
+
+    @Test fun draftFollowsHerLocationUntilSheEditsIt() = runTest {
+        val phone = FakePhone(); val engine = engine(phone)
+        engine.startSos(ActivationMethod.SosButton)
+        engine.onLocation(LocationFix(GeoPoint(-22.9120, -43.18421), 1_005_000, 5f))
+        assertTrue(engine.view.value.contactMessage.contains("Location: -22.9120, -43.1842"))
+        engine.editMessage("my words")
+        engine.onLocation(LocationFix(GeoPoint(-22.9150, -43.18421), 1_010_000, 5f))
+        assertEquals("my words", engine.view.value.contactMessage)
     }
 
     @Test fun herOwnEditIsWhatGetsSent() = runTest {

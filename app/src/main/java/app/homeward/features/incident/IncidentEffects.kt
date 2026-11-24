@@ -57,15 +57,19 @@ class IncidentEffects(
         val profile = deps.profile()
         fun time(fix: app.homeward.features.incident.contracts.LocationFix?) = fix?.let { deps.timeText(it.takenAtMillis) }
         when (effect) {
-            is SendAlert -> deps.send(input.sessionId, MessageKind.Alert, effect.message)
+            is SendAlert -> { deps.send(input.sessionId, MessageKind.Alert, effect.message); deps.record(MessageKind.Alert, state, state.lastFix, 0) }
             SendAutoAlert -> {
                 val text = IncidentMessages.autoAlert(profile, deps.timeText(deps.now()), state.lastFix, time(state.lastFix), input.triggerReasons, deps.pack().police, link(state))
                 deps.send(input.sessionId, MessageKind.Alert, text)
+                deps.record(MessageKind.Alert, state.copy(message = text), state.lastFix, 0)
                 dispatch(IncidentEvent.MessageWritten(state.description, text, null)) // so the screen shows what was sent
             }
-            is SendUpdate -> deps.send(input.sessionId, MessageKind.Update, IncidentMessages.update(profile, effect.fix, deps.timeText(effect.fix.takenAtMillis), effect.pointsHeld))
-            is SendBatteryLow -> deps.send(input.sessionId, MessageKind.BatteryLow, IncidentMessages.batteryLow(profile, effect.fix, time(effect.fix)))
-            SendEnded -> deps.send(input.sessionId, MessageKind.Ended, IncidentMessages.ended(profile, deps.timeText(deps.now())))
+            is SendUpdate -> {
+                deps.send(input.sessionId, MessageKind.Update, IncidentMessages.update(profile, effect.fix, deps.timeText(effect.fix.takenAtMillis), effect.pointsHeld))
+                deps.record(MessageKind.Update, state, effect.fix, effect.pointsHeld)
+            }
+            is SendBatteryLow -> { deps.send(input.sessionId, MessageKind.BatteryLow, IncidentMessages.batteryLow(profile, effect.fix, time(effect.fix))); deps.record(MessageKind.BatteryLow, state, effect.fix, 0) }
+            SendEnded -> { deps.send(input.sessionId, MessageKind.Ended, IncidentMessages.ended(profile, deps.timeText(deps.now()))); deps.record(MessageKind.Ended, state, state.lastFix, 0) }
             else -> Unit
         }
     }

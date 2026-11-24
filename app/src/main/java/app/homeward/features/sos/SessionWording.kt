@@ -1,8 +1,16 @@
 package app.homeward.features.sos
 
 // PURE LOGIC: the one line on the active SOS screen that says what is happening with her location.
-// It only claims an update was sent when the radio confirmed one. Tested in SessionWordingTest.
+// It only claims an update was sent when the radio confirmed one. Tested in IncidentLogicTest.
 object SessionWording {
+    // The family link's state: whether what contacts see in the browser is up to date.
+    fun linkLine(hasLink: Boolean, pendingWrites: Int, refused: Boolean = false): String? = when {
+        !hasLink -> null // no link was sent, so there is nothing to say
+        refused -> "Live link is not updating: the server refused it. Your texts still go out by SMS."
+        pendingWrites > 0 -> "Live link: saved on your phone. It updates when you have data."
+        else -> "Live link: up to date."
+    }
+
     fun locationLine(hasFix: Boolean, fixAgeMinutes: Long?, lastUpdateTime: String?, pointsWaiting: Int): String = when {
         !hasFix -> "No GPS fix yet. Your message says so. Step outside or near a window if you can."
         pointsWaiting > 0 -> "$pointsWaiting location ${if (pointsWaiting == 1) "point" else "points"} saved on your phone. They go out in one text when you have signal."

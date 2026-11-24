@@ -24,6 +24,8 @@ interface IncidentDeps {
     suspend fun rewrite(profile: UserProfile, description: String): SosMessageWriter.Sentence
     fun send(incidentId: String, kind: MessageKind, text: String) // to every trusted contact
     fun flushOutbox()
+    // Mirror what was just sent to the cloud, for the family view (does nothing if never signed in).
+    fun record(kind: MessageKind, state: IncidentState, fix: LocationFix?, pointsHeld: Int)
     fun startSession()                    // keep location (and later the microphone) running
     fun stopSession()
     fun askSafetyCheck(urgent: Boolean)   // show "Are you OK?"

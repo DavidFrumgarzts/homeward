@@ -26,12 +26,14 @@ class AndroidIncidentDeps(private val context: Context) : IncidentDeps {
     override fun canSendSms() = AppServices.signal.canSendSms()
     override fun batteryPercent() = AppServices.battery.percent()
     override fun testMode() = TestMode.fakeSms(context)
-    override fun familyLink(incidentId: String): String? = null // arrives with the Firestore sync
+    override fun familyLink(incidentId: String): String? = AppServices.incidentSync.familyLink()
 
     override suspend fun rewrite(profile: UserProfile, description: String) = AppServices.sosWriter.write(profile, description)
     override fun send(incidentId: String, kind: MessageKind, text: String) =
         AppServices.sosDispatcher.send(incidentId, kind, AppServices.contacts.all(), text)
     override fun flushOutbox() = AppServices.sosDispatcher.flush()
+    override fun record(kind: MessageKind, state: IncidentState, fix: LocationFix?, pointsHeld: Int) =
+        AppServices.incidentSync.record(kind, state, fix, pointsHeld, batteryPercent(), profile(), pack(), now())
     override fun startSession() = SafetySessionService.start(context)
     override fun stopSession() = SafetySessionService.stop(context)
     override fun askSafetyCheck(urgent: Boolean) = Unit   // the safety check screen and notification come with Safe Walk

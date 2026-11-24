@@ -24,6 +24,9 @@ import app.homeward.features.sos.sending.SmsSender
 import app.homeward.features.sos.sending.SosDispatcher
 import app.homeward.features.sos.sending.SosOutbox
 import app.homeward.features.sos.sending.handOff
+import app.homeward.features.sync.FirestoreCloud
+import app.homeward.features.sync.IncidentSync
+import app.homeward.features.sync.TripStore
 import app.homeward.profile.UserProfileStore
 import app.homeward.testmode.TestMode
 import kotlinx.coroutines.CoroutineScope
@@ -67,6 +70,10 @@ object AppServices {
         }
     }
     val sosDispatcher by lazy { SosDispatcher(sosOutbox, sosFlusher, PushSender(), hasInternet = { network.hasInternet() }) }
+
+    // Mirrors an SOS to Firestore for the web family view, and makes the family link for the SMS.
+    private val trip by lazy { TripStore(appContext) }
+    val incidentSync by lazy { IncidentSync(FirestoreCloud(), { trip.tripId }, { trip.shareId }, { trip.createdAtMillis }) }
 
     // The incident engine: the state machine behind every SOS.
     val incident by lazy { IncidentEngine(appScope, AndroidIncidentDeps(appContext)) }

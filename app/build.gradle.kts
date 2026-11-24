@@ -62,6 +62,12 @@ dependencies {
     // App Check is required by the hackathon. Debug provider is fine for judging.
     implementation("com.google.firebase:firebase-appcheck-debug:20.1.0")
 
+    // --- Firestore + anonymous sign-in: mirrors an SOS to the cloud so family can follow it on the web ---
+    // (SMS stays the path that works with no data. Versions come from the Firebase BoM.)
+    implementation(platform("com.google.firebase:firebase-bom:35.2.0"))
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")
+
     // --- Saving the safety pack offline as JSON ---
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 

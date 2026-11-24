@@ -18,6 +18,7 @@ import app.homeward.design.HomewardType
 import app.homeward.design.components.PrimaryButton
 import app.homeward.design.components.WhiteCard
 import app.homeward.features.incident.contracts.IncidentPhase
+import app.homeward.features.sync.FamilyLink
 import app.homeward.testmode.TestMode
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,6 +35,7 @@ fun SosSentScreen(onLeave: () -> Unit) {
     val summary = remember(view.deliveries) { DeliveryWording.summarize(view.deliveries) }
     var confirmEnd by remember { mutableStateOf(false) }
     val testTexts by TestMode.log.collectAsState()
+    val sync by AppServices.incidentSync.status.collectAsState()
     fun clock(millis: Long) = SimpleDateFormat("h:mm a", Locale.US).format(Date(millis))
     val leave = { if (ended) engine.reset(); onLeave() }
     BackHandler(onBack = leave) // back goes to the map; an active SOS keeps running (Home shows it)
@@ -61,6 +63,7 @@ fun SosSentScreen(onLeave: () -> Unit) {
                 ),
                 style = HomewardType.Small, modifier = Modifier.fillMaxWidth(),
             )
+            SessionWording.linkLine(hasLink = view.contactMessage.contains(FamilyLink.HOST), sync.pending, sync.refused)?.let { Text(it, style = HomewardType.Small, modifier = Modifier.fillMaxWidth()) }
             TextButton({ confirmEnd = true }, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("I'm safe now, end SOS", style = HomewardType.Label, color = HomewardColors.TextMuted) }
         }
 

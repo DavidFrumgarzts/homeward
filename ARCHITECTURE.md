@@ -48,6 +48,8 @@ AI models are created in one place: `ai/AiModels.kt`. Every AI-written text carr
 5. While the SOS is active, `UpdateThrottle` decides when contacts get a location update (200 m or 5 minutes, at most one per 2 minutes, one catch-up text after a stretch with no signal).
 6. "I'm safe now, end SOS" asks once, tells contacts it is over, and stops GPS.
 
+Everything sent to contacts is also mirrored to Firestore by `features/sync/IncidentSync.kt` (trip, share, incident, one update per message), and the alert carries a family link (`https://homeward-6999c.web.app/f/{shareId}`) that opens the live web view. Nothing is written before she presses Send. The document shapes and the access rules are in `shared/schema/README.md` and `firebase/firestore.rules`.
+
 ## Rules the code follows
 
 - The on-device AI only rewrites or classifies text it is given. Phone numbers, places, phrases, coordinates and links come from the saved pack or from code, never from model output. Every AI call has a non-AI fallback.
@@ -66,6 +68,8 @@ AI models are created in one place: `ai/AiModels.kt`. Every AI-written text carr
 | "Sent" / "Delivered" never shows, or shows too early | `features/sos/sending/SmsStatusReceiver.kt`, `OutboxFlusher.kt`, `features/sos/DeliveryWording.kt` |
 | SMS not sent | `features/sos/sending/SmsSender.kt` (SEND_SMS permission), `device/SignalChecker.kt` |
 | No location updates during an SOS | `features/session/SafetySessionService.kt` (location permission), `device/LocationUpdates.kt` |
+| Family link missing from the SMS | The phone has never signed in (it needs to be online once): `features/sync/FirestoreCloud.kt`, logcat tag `FirestoreCloud` |
+| Family view shows nothing | Logcat tag `FirestoreCloud` ("was refused" = the Firestore rules); the SOS screen says "Live link is not updating" |
 | No real SMS in a debug build | "Test mode" is on: `app/src/debug/java/app/homeward/testmode/` |
 | Red zone warning wrong | `features/safetymap/ZoneChecker.kt` (+ `ZoneCheckerTest`) |
 | No buzz near a red zone | `features/safetymap/ApproachDetector.kt` (+ test), location permission |

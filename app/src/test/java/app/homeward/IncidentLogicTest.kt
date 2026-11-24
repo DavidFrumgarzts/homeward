@@ -96,5 +96,9 @@ class IncidentLogicTest {
         assertTrue(SessionWording.locationLine(true, 0, null, 3).startsWith("3 location points saved on your phone"))
         assertTrue(SessionWording.locationLine(true, 0, "1:59 AM", 0).startsWith("Last location update sent at 1:59 AM"))
         assertFalse(SessionWording.locationLine(true, 0, null, 0).contains("sent at"))
+        assertNull("no link was sent, so nothing is claimed", SessionWording.linkLine(hasLink = false, pendingWrites = 3))
+        assertEquals("Live link: saved on your phone. It updates when you have data.", SessionWording.linkLine(true, 2))
+        assertEquals("Live link: up to date.", SessionWording.linkLine(true, 0))
+        assertTrue("a refused write is never called up to date", SessionWording.linkLine(true, 0, refused = true)!!.startsWith("Live link is not updating"))
     }
 }
