@@ -27,7 +27,7 @@ import java.util.Calendar
 // Home is the map (like Find My / Waze): full-screen safety map that follows you live, a red-zone
 // alert on top (plus a buzz) when you walk toward one, and a bottom sheet with SOS + three actions. This file only wires them up.
 @Composable
-fun HomeScreen(onSos: () -> Unit) {
+fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pack = remember { AppServices.packStore.load() }
@@ -73,7 +73,7 @@ fun HomeScreen(onSos: () -> Unit) {
         }
 
         HomeBottomSheet(
-            city = pack.city, country = pack.country, police = pack.police, contactNames = contactNames,
+            city = pack.city, country = pack.country, police = pack.police, contactNames = contactNames, onEditContacts = onEditContacts,
             onSos = onSos,
             onPhoto = { camera.launch(null) },
             onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },

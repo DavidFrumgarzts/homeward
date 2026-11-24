@@ -15,7 +15,7 @@ class TrustedContactsStore(context: Context) {
 
     private companion object {
         const val KEY = "list"
-        // Demo contacts until the Contacts screen exists. Replace numbers with real test phones.
+        // Shown until the user saves their own list on the Contacts screen. Fake numbers: SMS to them goes nowhere.
         val DEMO = listOf(
             TrustedContact("Mom", "+15555550101"),
             TrustedContact("Dad", "+15555550102"),

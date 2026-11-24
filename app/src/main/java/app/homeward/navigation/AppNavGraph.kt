@@ -5,6 +5,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import app.homeward.features.contacts.ContactsScreen
 import app.homeward.features.home.HomeScreen
 import app.homeward.features.sos.SosComposeScreen
 import app.homeward.features.sos.SosSentScreen
@@ -18,11 +19,12 @@ fun AppNavGraph() {
 
     NavHost(nav, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
-            HomeScreen(onSos = { nav.navigate(Screen.SosCompose.route) })
+            HomeScreen(onSos = { nav.navigate(Screen.SosCompose.route) }, onEditContacts = { nav.navigate(Screen.Contacts.route) })
         }
         composable(Screen.SosCompose.route) {
             SosComposeScreen(sos, onBack = { nav.popBackStack() }, onSent = { nav.navigate(Screen.SosSent.route) })
         }
         composable(Screen.SosSent.route) { SosSentScreen(sos) }
+        composable(Screen.Contacts.route) { ContactsScreen(onBack = { nav.popBackStack() }) }
     }
 }

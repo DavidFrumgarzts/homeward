@@ -6,4 +6,5 @@ enum class Screen(val route: String) {
     Home("home"),
     SosCompose("sos"),
     SosSent("sos_sent"),
+    Contacts("contacts"),
 }

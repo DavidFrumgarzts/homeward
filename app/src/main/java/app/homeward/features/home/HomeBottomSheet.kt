@@ -30,6 +30,7 @@ fun HomeBottomSheet(
     country: String,
     police: String,
     contactNames: String,
+    onEditContacts: () -> Unit,
     onSos: () -> Unit,
     onPhoto: () -> Unit,
     onSafePlace: () -> Unit,
@@ -54,7 +55,12 @@ fun HomeBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("SOS", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("Goes to $contactNames · works with no signal", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+            Text("Works with no signal", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+        }
+        // Who gets the SOS, with a way to change it.
+        Row(Modifier.fillMaxWidth().clickable(onClick = onEditContacts), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("SOS goes to $contactNames", style = HomewardType.Small, modifier = Modifier.weight(1f))
+            Text("Edit", color = HomewardColors.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             RoundAction("Photo", Icons.Outlined.PhotoCamera, onPhoto)
