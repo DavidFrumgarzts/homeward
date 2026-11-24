@@ -15,6 +15,7 @@ import app.homeward.app.AppServices
 import app.homeward.device.GeoPoint
 import app.homeward.features.policecall.PoliceCaller
 import app.homeward.features.safeplace.SafePlacePicker
+import app.homeward.features.safetymap.ApproachDetector
 import app.homeward.features.safetymap.SafetyMapView
 import app.homeward.features.safetymap.ZoneChecker
 import app.homeward.features.safetymap.ZoneWarningWriter
@@ -23,18 +24,29 @@ import app.homeward.features.safetyphoto.SafetyPhotoReader
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-// Home is the map (like Find My / Waze): full-screen safety map, a red-zone alert on top
-// when one is close, and a bottom sheet with SOS + three actions. This file only wires them up.
+// Home is the map (like Find My / Waze): full-screen safety map that follows you live, a red-zone
+// alert on top (plus a buzz) when you walk toward one, and a bottom sheet with SOS + three actions. This file only wires them up.
 @Composable
 fun HomeScreen(onSos: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pack = remember { AppServices.packStore.load() }
     val contactNames = remember { AppServices.contacts.all().joinToString(", ") { it.name } }
-    val here = remember { AppServices.location.lastKnown() ?: GeoPoint(pack.zones.first().polygon[0][0], pack.zones.first().polygon[0][1]) }
+    // Your position: starts at the last known fix, then follows GPS live while Home is open.
+    var here by remember { mutableStateOf(AppServices.location.lastKnown() ?: GeoPoint(pack.zones.first().polygon[0][0], pack.zones.first().polygon[0][1])) }
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-    val redZone = remember { ZoneChecker.redZoneAhead(here, pack.zones, hour) }
-    val safePlace = remember { SafePlacePicker.pick(here, pack.safePlaces, hour) }
+    val redZone = remember(here) { ZoneChecker.redZoneAhead(here, pack.zones, hour) }
+    val safePlace = remember(here) { SafePlacePicker.pick(here, pack.safePlaces, hour) }
+
+    // Walking toward a red zone? Buzz once (ApproachDetector decides when) and the banner shows.
+    val detector = remember { ApproachDetector() }
+    LaunchedEffect(Unit) {
+        AppServices.locationUpdates.stream().collect { point ->
+            here = point
+            val nowHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+            if (detector.update(point, pack.zones, nowHour, System.currentTimeMillis()) != null) AppServices.haptics.warn()
+        }
+    }
     var showSafePlace by remember { mutableStateOf(false) }
     var popup by remember { mutableStateOf<String?>(null) }
 

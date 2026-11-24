@@ -8,13 +8,15 @@ import app.homeward.device.GeoPoint
 import app.homeward.features.safetypack.SafePlace
 import app.homeward.features.safetypack.SafetyZone
 import app.homeward.features.safetypack.ZoneLevel
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import app.homeward.features.offlinemap.MapStyle
+import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import org.osmdroid.util.GeoPoint as OsmPoint
 
-// A real OpenStreetMap map with the pack's zones drawn on it (green / yellow / red),
+// A real map (Google Maps-like style, see offlinemap/MapStyle.kt; works offline once saved) with the pack's zones drawn on it (green / yellow / red),
 // your position, and optionally a highlighted safe place. Used full-screen and as the Home preview.
 @Composable
 fun SafetyMapView(
@@ -25,13 +27,19 @@ fun SafetyMapView(
     highlight: SafePlace? = null,
     interactive: Boolean = true,
 ) {
-    AndroidView(modifier = modifier, factory = { ctx -> MapView(ctx).apply { setTileSource(TileSourceFactory.MAPNIK) } }) { map ->
+    AndroidView(modifier = modifier, factory = { ctx ->
+        MapView(ctx).apply {
+            setTileSource(MapStyle.tiles)
+            zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER) // clean look, pinch to zoom
+        }
+    }) { map ->
         map.setMultiTouchControls(interactive)
         map.isClickable = interactive
         map.controller.setZoom(16.5)
         map.controller.setCenter(OsmPoint(center.lat, center.lng))
         map.overlays.clear()
         zones.forEach { map.overlays.add(zoneShape(it)) }
+        map.overlays.add(CopyrightOverlay(map.context)) // map credit, required by the tile license
         you?.let { map.overlays.add(pin(map, it, "You")) }
         highlight?.let { map.overlays.add(pin(map, GeoPoint(it.lat, it.lng), it.name)) }
         map.invalidate()

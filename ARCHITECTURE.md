@@ -10,7 +10,8 @@ Find the file for any feature without reading the whole app. All code is in
 | Write the SOS from her note | **On device** (Gemini Nano), cloud fallback | `features/sos/SosMessageWriter.kt` |
 | Read a safety photo (taxi plate) | **On device** | `features/safetyphoto/SafetyPhotoReader.kt` |
 | Explain a red zone | **On device** | `features/safetymap/ZoneWarningWriter.kt` |
-| Red zone ahead? Nearest open safe place? Push or SMS? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `SafePlacePicker.kt`, `ChannelChooser.kt` |
+| Red zone ahead? Buzz now? Nearest open safe place? Push or SMS? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `ApproachDetector.kt`, `SafePlacePicker.kt`, `ChannelChooser.kt` |
+| Map of the city | Downloaded once on wifi, then offline | `features/offlinemap/` |
 
 Both AI models are created in one place: `ai/AiModels.kt`.
 
@@ -35,4 +36,7 @@ Both AI models are created in one place: `ai/AiModels.kt`.
 | Red zone warning wrong | `features/safetymap/ZoneChecker.kt` (+ `ZoneCheckerTest`) |
 | Pack fails to build | `features/safetypack/SafetyPackBuilder.kt` (JSON parsing), `SafetyPackPrompt.kt` |
 | AI always runs in the cloud | `ai/OnDeviceModelSetup.kt`, phone must support Gemini Nano |
+| No buzz near a red zone | `features/safetymap/ApproachDetector.kt` (+ test), location permission |
+| Map blank offline | `features/offlinemap/OfflineMapSaver.kt` (must run once on wifi) |
+| Safety photos never arrive | `features/safetyphoto/OutboxSender.kt`, `device/ConnectivityWatcher.kt` |
 | Colors / spacing | `design/Colors.kt`, `design/components/` |

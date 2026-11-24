@@ -1,6 +1,8 @@
 package app.homeward.features.sos
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -36,7 +38,7 @@ fun SosSentScreen(vm: SosViewModel) {
         SafePlacePicker.pick(here, pack.safePlaces, Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
     }
 
-    Column(Modifier.fillMaxSize().background(HomewardColors.Background).padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    Column(Modifier.fillMaxSize().background(HomewardColors.Background).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.size(72.dp).background(HomewardColors.Green.copy(alpha = 0.15f), CircleShape), contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.Check, null, tint = HomewardColors.Green, modifier = Modifier.size(34.dp))
@@ -67,5 +69,7 @@ fun SosSentScreen(vm: SosViewModel) {
                 Text(it.reason, style = HomewardType.Small)
             }
         }
+
+        LocalPhrasesCard(pack.localPhrases)
     }
 }

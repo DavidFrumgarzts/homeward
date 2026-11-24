@@ -1,6 +1,7 @@
 package app.homeward.app
 
 import android.app.Application
+import app.homeward.device.ConnectivityWatcher
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
@@ -17,5 +18,7 @@ class HomewardApplication : Application() {
         // OpenStreetMap requires an identifying user agent.
         Configuration.getInstance().userAgentValue = packageName
         AppServices.init(this)
+        // Back online? Send safety photos that were saved while there was no signal.
+        ConnectivityWatcher(this).start { Thread { AppServices.outboxSender.flush() }.start() }
     }
 }

@@ -3,6 +3,7 @@ package app.homeward.features.safetypack
 import android.content.Context
 import android.location.Geocoder
 import app.homeward.app.AppServices
+import app.homeward.features.offlinemap.OfflineMapSaver
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -12,6 +13,7 @@ import java.util.Locale
 object PackUpdater {
     suspend fun updateIfNeeded(context: Context) = withContext(Dispatchers.IO) {
         if (!AppServices.network.hasInternet()) return@withContext
+        OfflineMapSaver.saveCityOnce(context, AppServices.packStore.load()) // e.g. the Rio demo pack
         val here = AppServices.location.lastKnown() ?: return@withContext
         @Suppress("DEPRECATION") // simple blocking call is fine on the IO thread
         val place = Geocoder(context, Locale.ENGLISH).getFromLocation(here.lat, here.lng, 1)?.firstOrNull() ?: return@withContext
@@ -20,5 +22,6 @@ object PackUpdater {
         val current = AppServices.packStore.load()
         if (AppServices.packStore.hasRealPack() && current.city == city) return@withContext
         runCatching { AppServices.packBuilder.build(city, country, AppServices.USER_NATIONALITY) }
+            .onSuccess { OfflineMapSaver.saveCityOnce(context, it) } // save the map too, while there's wifi
     }
 }
