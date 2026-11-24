@@ -9,6 +9,8 @@ import { copSvg } from "./cop.js";
 import { answer } from "./ask.js";
 import { aiReady } from "./ai.js";
 import { writeSos, checkInText, smsLink } from "./sos.js";
+import { scanScreen } from "./scan.js";
+import { recommends } from "./scams.js";
 
 const app = document.getElementById("app");
 const $ = (selector) => app.querySelector(selector);
@@ -24,6 +26,7 @@ const icon = {
   arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="#22A06B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="#2F6BFF" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>',
 };
 const progress = (step) => `<div class="progress">${[1, 2, 3].map((i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
@@ -137,11 +140,17 @@ async function ready() {
 }
 
 // ---------- Home: the map, Ask Beacon, the nearest safe place, SOS ----------
-function home() {
-  const closeness = zoneCloseness(here.you), risky = zoneRiskyAt(new Date().getHours()), place = nearestPlace(here.you), z = pack.zone;
+// `highlight` is a saved place Beacon recommended (Ask Beacon or a scan): a yellow ring blinks around it,
+// then stays until you tap the map. Coming back to Home later shows no ring.
+function home(highlight = null) {
+  const shown = pack.places.find((p) => p.name === highlight);
+  const closeness = zoneCloseness(here.you), risky = zoneRiskyAt(new Date().getHours()), z = pack.zone;
+  const near = nearestPlace(here.you);
+  const place = shown ? { ...shown, meters: Math.round(Math.hypot(shown.x - here.you.x, shown.y - here.you.y) * 2.34) } : near;
+  const ring = shown ? `<circle class="go-here" cx="${shown.x}" cy="${shown.y}" r="22"/>` : "";
   const names = joinNames(store.contacts.map((c) => c.name));
   app.innerHTML = `
-    <div class="mapwrap" style="min-height:300px">${mapSvg({ you: here.you, heading: here.heading, zoneLabel: ["RED ZONE", `AFTER ${clock(z.fromHour).toUpperCase()}`] })}
+    <div class="mapwrap" style="min-height:300px">${mapSvg({ you: here.you, heading: here.heading, zoneLabel: ["RED ZONE", `AFTER ${clock(z.fromHour).toUpperCase()}`], top: ring })}
       ${closeness === "far" ? "" : `<div class="banner"><div class="tile" style="width:40px;height:40px;border-radius:12px;background:var(--red);color:#fff">${icon.warn}</div>
         <div><div class="label">${closeness === "inside" ? "You're in a red zone" : "Red zone ahead"}</div><p class="small">${z.name} · ${risky ? "avoid now" : `risky after ${clock(z.fromHour)}`}. Take ${z.saferStreet}.</p></div></div>`}
       ${here.demo ? '<div class="hint small">Demo: tap the map to walk</div>' : ""}
@@ -150,17 +159,18 @@ function home() {
       <button class="askbar" id="ask"><span>Ask Beacon anything</span><i class="sq">${icon.arrow}</i></button>
       <div class="chips"><button class="chip" data-q="Is this area OK now?">Is this area OK now?</button><button class="chip" data-q="Where's a safe place?">Where's a safe place?</button></div>
       <div class="card">${badge(place.kind, 34)}<div><div class="label">${place.name} · ${place.meters} m</div><p class="small">Open 24 hours</p></div></div>
-      <div class="two"><a id="ok" href="#">${icon.check}I'm OK</a><a href="tel:${pack.police}">${icon.phone}Police ${pack.police}</a></div>
+      <div class="two"><a id="ok" href="#">${icon.check}I'm OK</a><button id="scan">${icon.camera}Scan</button><a href="tel:${pack.police}">${icon.phone}Police ${pack.police}</a></div>
       <button class="btn red" id="sos">SOS</button>
       <div class="foot small"><span>Goes to ${esc(names)}</span><button class="link small" id="edit">Edit</button></div>
     </div>`;
   const svg = $("svg.map");
   // Demo: tap the map to walk there. With real GPS in Lapa, the dot follows you instead.
-  svg.onclick = (e) => { if (!here.demo) return; const to = tapToSpot(svg, e); here.heading = headingBetween(here.you, to) ?? here.heading; here.you = to; home(); };
+  svg.onclick = (e) => { if (shown) return home(); if (!here.demo) return; const to = tapToSpot(svg, e); here.heading = headingBetween(here.you, to) ?? here.heading; here.you = to; home(); };
   $("#ask").onclick = () => ask("");
   app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => ask(b.dataset.q)));
   $("#ok").href = smsLink(store.contacts.map((c) => c.phone), checkInText(store.name, here.real));
   $("#sos").onclick = () => sos();
+  $("#scan").onclick = () => scanScreen(app, { back: () => home(), showPlace: (name) => home(name), backIcon: icon.back });
   $("#edit").onclick = () => contacts(true);
   watchGps();
 }
@@ -181,14 +191,14 @@ function watchGps() {
 }
 
 // ---------- Ask Beacon: a chat that answers from the saved pack ----------
-const chat = []; // [{you: true|false, text}]
+const chat = []; // [{you: true|false, text, place?}] place = the saved place Beacon recommended, for "Show on map"
 async function ask(question) {
   let thinking = false, talking = false;
   const draw = () => {
     app.innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
       <div class="chat-top"><button class="back" id="back" aria-label="Back">${icon.back}</button>${copSvg(talking)}</div>
       <div class="bubbles" id="bubbles">
-        ${chat.map((line) => `<div class="bubble ${line.you ? "you" : "beacon"}">${esc(line.text)}</div>`).join("")}
+        ${chat.map((line) => `<div class="bubble ${line.you ? "you" : "beacon"}">${esc(line.text)}</div>${line.place && !talking ? `<button class="link left show" data-place="${esc(line.place)}">Show ${esc(line.place)} on the map</button>` : ""}`).join("")}
         ${thinking ? '<div class="bubble beacon">…</div>' : ""}
         ${chat.length || thinking ? "" : `<div class="stack center">${["What's the police number?", "Is this area OK now?", "Where's a safe place?"].map((q) => `<button class="chip label" data-q="${q}">${q}</button>`).join("")}</div>`}
       </div>
@@ -197,6 +207,7 @@ async function ask(question) {
     $("#back").onclick = home;
     $("#form").onsubmit = (e) => { e.preventDefault(); send($("#box").value); };
     app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => send(b.dataset.q)));
+    app.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => home(b.dataset.place)));
     const bubbles = $("#bubbles"); bubbles.scrollTop = bubbles.scrollHeight;
   };
   const send = async (text) => {
@@ -206,7 +217,7 @@ async function ask(question) {
     const earlier = []; for (let i = 0; i + 1 < chat.length; i += 2) earlier.push([chat[i].text, chat[i + 1].text]);
     chat.push({ you: true, text }); thinking = true; draw();
     const reply = await answer(text, earlier, here.you);
-    chat.push({ you: false, text: reply }); thinking = false; talking = true; draw();
+    chat.push({ you: false, text: reply, place: recommends(text) ? nearestPlace(here.you).name : null }); thinking = false; talking = true; draw();
     setTimeout(() => { talking = false; if ($("#bubbles")) { draw(); $("#box").focus(); } }, 1600);
   };
   draw();

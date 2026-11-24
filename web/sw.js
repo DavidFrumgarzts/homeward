@@ -1,6 +1,6 @@
 // Keeps a copy of Beacon's files on the device, so the page still opens with no signal.
-const CACHE = "beacon-v1";
-const FILES = ["./", "index.html", "styles.css", "js/app.js", "js/map.js", "js/cop.js", "js/ai.js", "js/ask.js", "js/sos.js", "js/pack.js", "js/store.js"];
+const CACHE = "beacon-v2";
+const FILES = ["./", "index.html", "styles.css", "js/app.js", "js/map.js", "js/cop.js", "js/ai.js", "js/ask.js", "js/sos.js", "js/pack.js", "js/store.js", "js/scan.js", "js/scams.js"];
 
 self.addEventListener("install", (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));

@@ -4,6 +4,7 @@
 // Either way, numbers and names are copied from the pack, never made up.
 import { askAi } from "./ai.js";
 import { pack, clock, nearestPlace, zoneCloseness, zoneRiskyAt, METERS_PER_STEP } from "./pack.js";
+import { recommends } from "./scams.js";
 
 function facts(you, hour) {
   const z = pack.zone;
@@ -23,7 +24,7 @@ function prompt(question, earlier, you, hour) {
   return `You are Beacon, a calm safety helper for a traveler in ${pack.city}, Brazil. It is ${clock(hour)}.
 Answer the question using ONLY the facts below. Copy phone numbers and names exactly.
 If the facts don't cover it, say "I don't have that saved. Police: ${pack.police}."
-Write at most 3 short steps, plain words, no headings.
+Write at most 3 short steps, plain words, no headings.${recommends(question) ? `\nRecommend ${nearestPlace(you).name} first.` : ""}
 
 FACTS
 ${facts(you, hour)}
