@@ -1,0 +1,81 @@
+# Beacon full app: plan and phase reports
+
+Plan for the build prompt in `2026-11-24-beacon-build-prompt.md`. Phase reports are appended at the bottom as each phase ends.
+
+## Baseline (Nov 24, before any change)
+
+- `./gradlew test`: 49 tests, 0 failures. `./gradlew assembleDebug`: builds.
+- Both need `JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home` and `ANDROID_HOME=~/Library/Android/sdk` (there is no `local.properties`, and the system `java` is not set up).
+
+## Toolchains on this Mac
+
+| Tool | Found | Note |
+|---|---|---|
+| JDK for Gradle | OpenJDK 21 (Homebrew) | Not on the PATH; export `JAVA_HOME` as above |
+| Android SDK | platforms 35 and 37.0, build-tools 34 and 36 | AVDs: `Pixel_9`, `Medium_Phone_API_37.0` |
+| Xcode | 27.2 (iOS 27.2 SDK) | Simulators: iPhone 17, 17e, Air, 18 Pro, 18 Pro Max |
+| Node | 26.7.0, npm 11.19 | |
+| Firebase CLI | 15.37.0, logged in | `homeward-6999c` shows in `firebase projects:list` |
+| Config files | all three present | `app/google-services.json`, `ios/Beacon/GoogleService-Info.plist`, `web/firebase-config.js`; all git-ignored |
+| Missing | `MAPS_API_KEY`, `CARTO_KEY`, xcodegen | No Routes key: routes use their fallback. The Xcode project file is written by hand |
+
+## Where the prompt, the code and the current docs disagree
+
+Checked on Nov 24 against the pages in section 12 of the prompt.
+
+1. **Vite.** Section 2 step 4 says "build the Xcode and Vite projects"; section 10A says the web app keeps no build step. Following 10A: no Vite.
+2. **Firebase JS SDK.** `web/js/ai.js` pins 12.4.0. Hybrid inference and `inferenceSource` need 12.5.0; the latest is 13.4.0 (Nov 16). Raising to 13.4.0.
+3. **Chrome flag.** The prompt names the flag "Gemma 4 for Built-in AI". Firebase's web page names only `chrome://flags/#prompt-api-for-gemini-nano-multimodal-input` and Chrome 139 or later on desktop. The README will list the documented flag as required and the Gemma 4 one as "turn on if your Chrome has it".
+4. **Android SDK versions.** The repo has `firebase-ai` 18.0.0, `firebase-ai-ondevice` 16.0.0-beta06, App Check debug 20.0.0. Current: 18.2.0, 16.0.0-beta08, 20.1.0. The on-device model is chosen with `OnDeviceConfig(modelOption = OnDeviceModelOption.PREVIEW)` (`STABLE` is the default, `PREVIEW_FAST` the fast one). The docs show `checkStatus()` and `download()` with no model option, so "download Nano 4, else use stable" has to be checked against the library itself in Phase 5.
+5. **Fact 4.1 wording.** Firebase's pages say on-device inference is foreground-only but do not name `BACKGROUND_USE_BLOCKED`. The design consequence is unchanged.
+6. **Structured output on device.** The docs now list JSON and enum output as supported on device on Android and web. The prompt keeps a defensive parser for on-device calls; keeping it as the fallback either way.
+7. **iOS API shape.** There is no `InferenceMode` on iOS. A hybrid model is `HybridModel(primary:secondary:)` used through `ai.generativeModelSession(model:)` and `session.respond(to:)`. Where a call ran is the string `response.rawResponse.modelVersion` (`apple-foundation-models-system-language-model` means on device). On-device input is text only. SPM products: `FirebaseAILogic`, `FirebaseAppCheck`, Firebase 12.13.0 or later. The docs do not say whether the simulator has the model or what the minimum iOS is; both are checked at build and run time in Phase 3.
+8. **Google Routes API terms (affects section 8 and two screens in section 9).** Read directly from the Maps Service Specific Terms, section 20:
+   - 20.1: Routes content may be used without a Google map.
+   - 20.2: "Customer must not use Google Maps Content from the Routes API in conjunction with a non-Google map." So a Google route may not be drawn on OpenStreetMap tiles, the illustrated Lapa map or MapKit.
+   - 20.3: only latitude and longitude values may be cached, for up to 30 consecutive days. Step text, distance and duration are not listed, and the general terms (3.2.3 b) forbid caching anything not expressly allowed.
+   - Policies page: showing Routes content without a Google map needs a "Google Maps" attribution next to it.
+   - What this means: the prompt's fallback (show Google routes on a Google map view) covers 20.2, but storing step-by-step text in the pack for offline use is not covered by 20.3. This does not touch Phases 1 to 3. **Decision needed before Phase 4** (asked in the stop report): either (a) Google routes are online-only on a Google map view, with only the route's points kept for 30 days and offline answers limited to direction and distance plus the hand-checked Lapa route; or (b) use an OpenStreetMap-based router whose routes may be stored and drawn on every Beacon map.
+9. **Walkthrough screenshots.** `docs/walkthrough/img/` shows the older navy "Homeward" build, not what the code draws now. They are replaced at the end of stretch 1.
+10. **Demo pack drift.** `DemoRioPack` (Shell gas station, Police post Lapa, Hospital Souza Aguiar, 4 phrases), `web/js/pack.js` and the mockups (5º DP police station, Hospital Cruz Vermelha, 3 phrases) disagree, and the Android red-zone polygon does not sit under the red patch on the drawn map. Fix: `shared/fixtures/rio-lapa-pack.json` becomes the one source, exported from `DemoRioPack`; `DemoRioPack` takes the mockup's places at the positions the drawn map shows them; a web test checks `pack.js` against the fixture.
+11. **Hard-coded person.** `AppServices.USER_NAME = "Noa"` and "Call her now" in `SosPrompt` and the template. Replaced by a small profile (name, how to refer to her).
+12. **Locale bug.** `"%.4f".format(...)` in `GeoPoint.short()` and `MapsLink` follows the phone's language, so some phones would write `-22,9133` and break the map link. Forced to `Locale.US`.
+13. **Engine and service order.** Section 6 puts the `IncidentEngine` in the session service's scope, but the service is Phase 4. Phase 1 adds a minimal `SafetySessionService` (foreground type `location`) so location updates keep going with the screen off; the microphone type, notification actions and the rest arrive in Phase 4.
+14. **Stale docs fixed as files are touched.** README says Java 17; `ARCHITECTURE.md` says the SOS goes by push when online and that the fonts are missing; `design/README.md` names the old Figma file; `design/components/README.md` lists components that do not exist.
+15. **Open product question (not built).** After "Hold for SOS", nothing reaches contacts until she presses Send. If she cannot, nobody is told. An automatic send after a short countdown would close that gap; it is not in the prompt, so it is only raised in the stop report.
+
+## Files
+
+### Phase 1: Android vertical slice (`beacon/phase-1-slice`)
+
+Add:
+- `features/incident/contracts/`: `ActivationMethod`, `LocationFix`, `IncidentInput`, `Delivery` (status and per-contact delivery), `IncidentViewState`.
+- `features/incident/`: `IncidentState` (state, events, effects), `IncidentReducer` (pure transitions), `IncidentEngine` (the `StateFlow` and effect runner), `IncidentViewStateMapper`, `Situation` + `SituationPicker` (keywords), `ActionChecklist` (the reviewed steps), `PhrasePicker`, `UpdateThrottle`, `IncidentMessages` (alert facts, update, battery low, ended, automatic alert).
+- `features/sos/sending/`: `SmsGateway` (interface), `SmsStatusReceiver`, `SosOutbox`, `OutboxFlusher`; `features/sos/`: `DeliveryWording`, `ForMeCard`, `DeliveryList`, `EndSosButton`.
+- `features/session/`: `SafetySessionService`, `SessionNotification`.
+- `profile/`: `UserProfile`, `UserProfileStore`.
+- `device/`: `SignalChecker`, `BatteryReader`, `LocationFixes`.
+- `design/components/`: `HoldButton`, `InferenceBadge`, `QuickPickChips`.
+- `app/src/debug/`: `FakeSmsGateway`, `TestMode` (debug only); `app/src/release/`: `TestMode` (always off).
+- `shared/schema/`, `shared/fixtures/`, `shared/test-vectors/`, `shared/prompts/`; `docs/demo/` (a recorded Lapa route and the script that plays it into the emulator).
+- Tests: reducer, mapper, situation, checklist, phrase picker, throttle, messages, delivery wording, outbox, shared vectors, fixture export.
+
+Change: `AppServices`, `AiModels` (on-device-only model), `SosMessageWriter`, `SosPrompt`, `SmsSender`, `SosDispatcher`, `SosComposeScreen`, `SosSentScreen`, `SosViewModel` (thin adapter), `HomeBottomSheet` (hold for SOS), `HomeScreen`, `AppNavGraph`, `ContactsStep` and `ContactsScreen` (her name, wording), `GetReadyStep` (wording), `DemoRioPack`, `GeoPoint`, `MapsLink`, `LocationReader`, `CheckInSender`, `PackUpdater`, manifest, `app/build.gradle.kts`, every touched folder's `README.md`, `ARCHITECTURE.md`, the first-screens design doc.
+
+### Phase 2: backend and family view (`beacon/phase-2-backend`)
+
+- `firebase/`: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, rules tests.
+- Android `features/sync/`: anonymous sign-in, `IncidentSync` (trip, incident, updates, share), family link in the SMS.
+- `web/js/`: `firebase.js` (app, App Check, Auth, Firestore), `router.js`, `family.js`, `familymap.js`, `summary.js`, `demo.js`, `incident.js`; changes to `ai.js`, `app.js`, `sos.js`, `sw.js`, `styles.css`; `web/package.json` with Vitest and Playwright tests; deploy.
+
+### Phase 3: iOS core (`beacon/phase-3-ios`)
+
+- `ios/Beacon.xcodeproj`, `ios/Beacon/` (App, AI, Design, Logic, Features, Services), `ios/BeaconTests/` running `shared/test-vectors/`.
+
+### Phases 4 to 7 (stretch 2)
+
+As in section 11 of the prompt: session service with microphone, tile, widget, Safe Walk, listening, `RiskScorer`, safety check, pack radius and refresh; web planner and pairing; iOS Action Button, Control Center, Live Activity; submission documents.
+
+## Phase reports
+
+(appended below as each phase ends)
