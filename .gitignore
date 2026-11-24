@@ -20,3 +20,7 @@ app/google-services.json
 
 # Beacon web: the Firebase web config is added locally, not committed
 web/firebase-config.js
+
+# Firebase config files (download with the Firebase CLI; see the build prompt)
+ios/Beacon/GoogleService-Info.plist
+web/firebase-config.json
