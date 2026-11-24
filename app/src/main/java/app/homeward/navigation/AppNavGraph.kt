@@ -7,6 +7,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import app.homeward.features.contacts.ContactsScreen
 import app.homeward.features.home.HomeScreen
+import app.homeward.features.onboarding.OnboardingFlow
+import app.homeward.app.AppServices
 import app.homeward.features.sos.SosComposeScreen
 import app.homeward.features.sos.SosSentScreen
 import app.homeward.features.sos.SosViewModel
@@ -17,7 +19,12 @@ fun AppNavGraph() {
     val nav = rememberNavController()
     val sos: SosViewModel = viewModel()
 
-    NavHost(nav, startDestination = Screen.Home.route) {
+    // First launch starts with onboarding; after that, straight to Home.
+    val start = if (AppServices.onboarding.isDone()) Screen.Home.route else Screen.Onboarding.route
+    NavHost(nav, startDestination = start) {
+        composable(Screen.Onboarding.route) {
+            OnboardingFlow(onFinished = { nav.navigate(Screen.Home.route) { popUpTo(Screen.Onboarding.route) { inclusive = true } } })
+        }
         composable(Screen.Home.route) {
             HomeScreen(onSos = { nav.navigate(Screen.SosCompose.route) }, onEditContacts = { nav.navigate(Screen.Contacts.route) })
         }

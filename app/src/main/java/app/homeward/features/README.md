@@ -10,5 +10,6 @@ One folder per feature. Each file says at the top what it does and whether it us
 | `osmplaces/` | Real safe places from OpenStreetMap | download on wifi, then offline |
 | `offlinemap/` | Google Maps-like map, saved to the phone per city | download once on wifi |
 | `safetyphoto/` | Read taxi plates etc., send when back online | on-device AI |
+| `onboarding/` | First launch: welcome, contacts, permissions, get ready offline | UI + pack/AI setup |
 | `contacts/` | Edit who gets the SOS | UI, saved on phone |
 | `policecall/` | One-tap call to local police | phone dialer |

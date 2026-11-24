@@ -6,6 +6,7 @@ import app.homeward.device.Haptics
 import app.homeward.device.LocationReader
 import app.homeward.device.LocationUpdates
 import app.homeward.device.NetworkChecker
+import app.homeward.features.onboarding.OnboardingStore
 import app.homeward.features.safetyphoto.OutboxSender
 import app.homeward.features.safetyphoto.PhotoOutbox
 import app.homeward.features.safetypack.SafetyPackBuilder
@@ -31,6 +32,7 @@ object AppServices {
     val sosWriter by lazy { SosMessageWriter() }
     val sosDispatcher by lazy { SosDispatcher(network, SmsSender(appContext), PushSender()) }
     val photoOutbox by lazy { PhotoOutbox(appContext) }
+    val onboarding by lazy { OnboardingStore(appContext) }
     val outboxSender by lazy { OutboxSender(photoOutbox, { contacts.all() }, { phone, text -> SmsSender(appContext).send(phone, text) }) }
 
     // Demo user name. Replace with a real profile screen later.

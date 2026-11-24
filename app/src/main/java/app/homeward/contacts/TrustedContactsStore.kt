@@ -8,18 +8,13 @@ import kotlinx.serialization.json.Json
 class TrustedContactsStore(context: Context) {
     private val prefs = context.getSharedPreferences("trusted_contacts", Context.MODE_PRIVATE)
 
+    // Empty until the user adds people (onboarding step 2 makes sure there's at least one).
     fun all(): List<TrustedContact> =
-        prefs.getString(KEY, null)?.let { Json.decodeFromString<List<TrustedContact>>(it) } ?: DEMO
+        prefs.getString(KEY, null)?.let { Json.decodeFromString<List<TrustedContact>>(it) } ?: emptyList()
 
     fun save(contacts: List<TrustedContact>) = prefs.edit().putString(KEY, Json.encodeToString(contacts)).apply()
 
     private companion object {
         const val KEY = "list"
-        // Shown until the user saves their own list on the Contacts screen. Fake numbers: SMS to them goes nowhere.
-        val DEMO = listOf(
-            TrustedContact("Mom", "+15555550101"),
-            TrustedContact("Dad", "+15555550102"),
-            TrustedContact("Alwis", "+15555550103"),
-        )
     }
 }

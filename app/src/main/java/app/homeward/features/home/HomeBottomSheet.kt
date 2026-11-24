@@ -60,8 +60,8 @@ fun HomeBottomSheet(
         }
         // Who gets the SOS, with a way to change it.
         Row(Modifier.fillMaxWidth().clickable(onClick = onEditContacts), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("SOS goes to $contactNames", style = HomewardType.Small, modifier = Modifier.weight(1f))
-            Text("Edit", color = HomewardColors.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text(if (contactNames.isBlank()) "No one gets your SOS yet" else "SOS goes to $contactNames", style = HomewardType.Small, modifier = Modifier.weight(1f))
+            Text(if (contactNames.isBlank()) "Add" else "Edit", color = HomewardColors.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
             RoundAction("Photo", Icons.Outlined.PhotoCamera, onPhoto)
