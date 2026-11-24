@@ -11,9 +11,9 @@ import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
 import app.homeward.design.components.ProgressDots
-import app.homeward.design.components.RedButton
+import app.homeward.design.components.PrimaryButton
 
-// Shared frame for every onboarding step: progress dots, title, short text, content, one red button at the bottom.
+// Shared frame for every onboarding step: progress dots, title, short text, content, one blue button at the bottom.
 @Composable
 fun StepLayout(
     step: OnboardingStep,
@@ -35,7 +35,7 @@ fun StepLayout(
             Text(subtitle, style = HomewardType.Small)
             content()
         }
-        RedButton(button, enabled = buttonEnabled, onClick = onButton)
+        PrimaryButton(button, enabled = buttonEnabled, onClick = onButton)
         footnote?.let { Text(it, style = HomewardType.Small, modifier = Modifier.padding(top = 8.dp)) }
     }
 }

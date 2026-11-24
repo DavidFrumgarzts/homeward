@@ -11,12 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 
-// Onboarding progress: the current step is a short red bar, the others grey dots.
+// Onboarding progress: the current step is a short blue bar, the others grey dots.
 @Composable
 fun ProgressDots(current: Int, total: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(total) { i ->
-            Box(Modifier.size(if (i == current) 20.dp else 6.dp, 6.dp).background(if (i == current) HomewardColors.Red else HomewardColors.Border, RoundedCornerShape(3.dp)))
+            Box(Modifier.size(if (i == current) 20.dp else 6.dp, 6.dp).background(if (i == current) HomewardColors.Primary else HomewardColors.Border, RoundedCornerShape(3.dp)))
         }
     }
 }

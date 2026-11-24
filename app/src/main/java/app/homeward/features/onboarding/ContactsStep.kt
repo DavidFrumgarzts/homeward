@@ -37,7 +37,7 @@ fun ContactsStep(onNext: () -> Unit) {
                     Text("Only when you tap \"I'm OK\". No live tracking.", style = HomewardType.Small)
                 }
                 Switch(share, { share = it; AppServices.locationSharing.onCheckIn = it },
-                    colors = SwitchDefaults.colors(checkedTrackColor = HomewardColors.Red))
+                    colors = SwitchDefaults.colors(checkedTrackColor = HomewardColors.Primary))
             }
         }
     }

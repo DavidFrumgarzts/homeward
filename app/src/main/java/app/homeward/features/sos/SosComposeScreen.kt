@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
-import app.homeward.design.components.RedButton
+import app.homeward.design.components.PrimaryButton
 
 // Step 1 of SOS: say what's happening (type or tap a quick pick), the phone's AI writes the
 // message, she checks it, and sends it with one tap.
@@ -26,7 +26,7 @@ fun SosComposeScreen(vm: SosViewModel, onBack: () -> Unit, onSent: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(HomewardColors.Background).padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = HomewardColors.Red) }
+            IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = HomewardColors.Primary) }
             Text("What's happening?", style = HomewardType.Title)
         }
 
@@ -43,16 +43,16 @@ fun SosComposeScreen(vm: SosViewModel, onBack: () -> Unit, onSent: () -> Unit) {
         }
 
         if (vm.draft.isBlank()) {
-            RedButton(if (vm.isWriting) "Writing..." else "Write my SOS", enabled = vm.note.isNotBlank() && !vm.isWriting) { vm.writeDraft() }
+            PrimaryButton(if (vm.isWriting) "Writing..." else "Write my SOS", enabled = vm.note.isNotBlank() && !vm.isWriting) { vm.writeDraft() }
         } else {
             // The AI draft, editable. She is always in control of what is sent.
-            Column(Modifier.border(BorderStroke(1.5.dp, HomewardColors.Red), RoundedCornerShape(20.dp)).background(HomewardColors.Surface, RoundedCornerShape(20.dp)).padding(18.dp)) {
+            Column(Modifier.border(BorderStroke(1.5.dp, HomewardColors.Primary), RoundedCornerShape(20.dp)).background(HomewardColors.Surface, RoundedCornerShape(20.dp)).padding(18.dp)) {
                 Text("Your message", style = HomewardType.Label)
                 Spacer(Modifier.height(8.dp))
                 BasicDraftField(vm.draft) { vm.draft = it }
             }
             Spacer(Modifier.weight(1f))
-            RedButton("Send to $names") { vm.send(onSent) }
+            PrimaryButton("Send to $names", color = HomewardColors.Red) { vm.send(onSent) }
         }
     }
 }

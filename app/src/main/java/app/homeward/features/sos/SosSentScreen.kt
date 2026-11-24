@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
-import app.homeward.design.components.RedButton
+import app.homeward.design.components.PrimaryButton
 import app.homeward.design.components.WhiteCard
 import app.homeward.device.GeoPoint
 import app.homeward.features.policecall.PoliceCaller
@@ -57,12 +57,12 @@ fun SosSentScreen(vm: SosViewModel) {
             }
         }
 
-        RedButton("Call local police (${vm.policeNumber})") { PoliceCaller.dial(context, vm.policeNumber) }
+        PrimaryButton(color = HomewardColors.Red, label = "Call local police (${vm.policeNumber})") { PoliceCaller.dial(context, vm.policeNumber) }
 
         pick?.let {
             WhiteCard(Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Icon(Icons.Outlined.Place, null, tint = HomewardColors.Red)
+                    Icon(Icons.Outlined.Place, null, tint = HomewardColors.Primary)
                     Text("Nearest safe place", style = HomewardType.Label)
                 }
                 Spacer(Modifier.height(6.dp))

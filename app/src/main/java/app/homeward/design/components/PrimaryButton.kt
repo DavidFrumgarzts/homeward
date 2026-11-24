@@ -8,19 +8,21 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.homeward.design.HomewardColors
 
-// Full-width red button for the one main action on a screen ("Send", "Call police", "Safer route").
+// Full-width button for the one main action on a screen. Calm blue by default;
+// pass color = HomewardColors.Red only for emergency actions (send SOS, call police).
 @Composable
-fun RedButton(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
+fun PrimaryButton(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, color: Color = HomewardColors.Primary, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(56.dp),
         shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = HomewardColors.Red),
+        colors = ButtonDefaults.buttonColors(containerColor = color),
     ) { Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
 }

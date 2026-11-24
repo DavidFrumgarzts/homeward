@@ -78,7 +78,7 @@ private fun Item(title: String, detail: String?, waitingText: String = "Workingâ
         }
         Column {
             Text(title, style = HomewardType.Label)
-            Text(detail ?: waitingText, style = HomewardType.Small, color = if (done) HomewardColors.TextMuted else HomewardColors.Red)
+            Text(detail ?: waitingText, style = HomewardType.Small, color = if (done) HomewardColors.TextMuted else HomewardColors.Primary)
         }
     }
 }

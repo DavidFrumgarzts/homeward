@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 fun HomewardTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = lightColorScheme(
-            primary = HomewardColors.Red,
+            primary = HomewardColors.Primary,
             background = HomewardColors.Background,
             surface = HomewardColors.Surface,
             onSurface = HomewardColors.Text,

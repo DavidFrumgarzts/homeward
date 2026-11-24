@@ -30,7 +30,7 @@ fun WelcomeStep(onNext: () -> Unit) {
         button = "Get started",
         onButton = onNext,
         header = {
-            Box(Modifier.size(64.dp).background(HomewardColors.Red, CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(64.dp).background(HomewardColors.Primary, CircleShape), contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.Home, null, tint = Color.White)
             }
         },

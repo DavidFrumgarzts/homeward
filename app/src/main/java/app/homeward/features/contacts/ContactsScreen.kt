@@ -21,7 +21,7 @@ import app.homeward.design.HomewardType
 fun ContactsScreen(onBack: () -> Unit) {
     Column(Modifier.fillMaxSize().background(HomewardColors.Background).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = HomewardColors.Red) }
+            IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = HomewardColors.Primary) }
             Text("Who gets your SOS", style = HomewardType.Title)
         }
         Text("Only these people see your exact location, and only after you send an SOS.", style = HomewardType.Small)

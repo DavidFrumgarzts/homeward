@@ -65,7 +65,7 @@ fun ContactsEditor(onChange: (Int) -> Unit = {}) {
         Button(
             onClick = { picker.launch(Intent(Intent.ACTION_PICK, Phone.CONTENT_URI)) },
             modifier = Modifier.fillMaxWidth().height(52.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = HomewardColors.RedTint, contentColor = HomewardColors.Red),
+            colors = ButtonDefaults.buttonColors(containerColor = HomewardColors.PrimaryTint, contentColor = HomewardColors.Primary),
         ) { Text("Choose from contacts") }
         Text("or type one in", style = HomewardType.Small)
         OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -78,6 +78,6 @@ fun ContactsEditor(onChange: (Int) -> Unit = {}) {
             onClick = { save(contacts + TrustedContact(name.trim(), PhoneNumber.clean(phone))); name = ""; phone = "" },
             enabled = name.isNotBlank() && phoneOk,
             modifier = Modifier.fillMaxWidth().height(52.dp),
-        ) { Text("+ Add person", color = if (name.isNotBlank() && phoneOk) HomewardColors.Red else HomewardColors.TextMuted) }
+        ) { Text("+ Add person", color = if (name.isNotBlank() && phoneOk) HomewardColors.Primary else HomewardColors.TextMuted) }
     }
 }

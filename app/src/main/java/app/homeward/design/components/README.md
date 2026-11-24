@@ -1,2 +1,2 @@
 # design/components/
-One UI piece per file: `RedButton`, `WhiteCard`, `RoundAction` (round grey button with label), `StatusDot`.
+One UI piece per file: `PrimaryButton` (blue; red only for SOS / police), `WhiteCard`, `RoundAction`, `IconCircle`, `StatusDot`, `ProgressDots`.
