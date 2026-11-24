@@ -16,3 +16,4 @@ app/google-services.json
 *.jks
 .env
 .DS_Store
+.kotlin/
