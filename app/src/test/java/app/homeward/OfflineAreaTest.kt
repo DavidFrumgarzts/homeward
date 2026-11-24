@@ -16,6 +16,6 @@ class OfflineAreaTest {
 
     @Test fun capsAHugeArea() {
         val capped = OfflineArea.capSize(OfflineArea.Box(north = 10.0, east = 10.0, south = 0.0, west = 0.0))
-        assertTrue(capped.north - capped.south <= 0.0601 && capped.east - capped.west <= 0.0601)
+        assertTrue(capped.north - capped.south <= 0.0201 && capped.east - capped.west <= 0.0201)
     }
 }

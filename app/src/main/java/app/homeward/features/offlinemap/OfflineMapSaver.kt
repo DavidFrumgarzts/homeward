@@ -15,12 +15,24 @@ object OfflineMapSaver {
     private const val MIN_ZOOM = 13
     private const val MAX_ZOOM = 17
 
-    // Saves each city only once (remembered on the phone), so reopening the app doesn't re-download.
+    // Saves each city only once (remembered on the phone, with the date), so reopening the app
+    // doesn't re-download.
     fun saveCityOnce(context: Context, pack: SafetyPack) {
         val prefs = context.getSharedPreferences("offline_map", Context.MODE_PRIVATE)
-        if (prefs.getBoolean(pack.city, false)) return
+        if (prefs.contains(pack.city)) return
         saveCity(context, pack)
-        prefs.edit().putBoolean(pack.city, true).apply()
+        prefs.edit().putLong(pack.city, System.currentTimeMillis()).apply()
+    }
+
+    // Map provider rule: saved tiles may stay on the phone at most 30 days. Called at app start.
+    fun deleteIfTooOld(context: Context) {
+        val prefs = context.getSharedPreferences("offline_map", Context.MODE_PRIVATE)
+        val oldest = prefs.all.values.filterIsInstance<Long>().minOrNull() ?: return
+        val ageDays = (System.currentTimeMillis() - oldest) / 86_400_000
+        if (ageDays < MapStyle.MAX_CACHE_DAYS) return
+        SqlTileWriter().purgeCache(MapStyle.tiles.name())
+        prefs.edit().clear().apply()
+        Log.i(TAG, "Deleted saved map tiles older than ${MapStyle.MAX_CACHE_DAYS} days")
     }
 
     fun saveCity(context: Context, pack: SafetyPack) {

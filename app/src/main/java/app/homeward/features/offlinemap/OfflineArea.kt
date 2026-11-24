@@ -3,13 +3,13 @@ package app.homeward.features.offlinemap
 import app.homeward.features.safetypack.SafetyPack
 
 // PURE LOGIC: which rectangle of the city to save for offline use.
-// The box around every zone and safe place in the pack, plus a margin, capped so we never
-// bulk-download a whole country (tile servers forbid that). Tested in OfflineAreaTest.
+// The box around every zone and safe place in the pack, plus a margin, capped at ~2 km so we
+// only pre-save the neighborhood that matters, never bulk-download a city. Tested in OfflineAreaTest.
 object OfflineArea {
     data class Box(val north: Double, val east: Double, val south: Double, val west: Double)
 
     private const val MARGIN_DEG = 0.005   // about 500 m around the outermost point
-    private const val MAX_SPAN_DEG = 0.06  // about 6-7 km across at most
+    private const val MAX_SPAN_DEG = 0.02  // about 2 km across at most: a neighborhood, not a city (no bulk downloads)
 
     fun around(pack: SafetyPack): Box? {
         val lats = pack.zones.flatMap { z -> z.polygon.map { it[0] } } + pack.safePlaces.map { it.lat }

@@ -1,4 +1,11 @@
 // App module setup: Android settings + every library the app uses.
+import java.util.Properties
+
+// Secrets live in local.properties (git-ignored), never in the repo. e.g. CARTO_KEY=abc123
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -18,9 +25,11 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1"
+        // Map key (CARTO). Empty = fall back to plain OpenStreetMap tiles.
+        buildConfigField("String", "CARTO_KEY", "\"${localProps.getProperty("CARTO_KEY", "")}\"")
     }
 
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

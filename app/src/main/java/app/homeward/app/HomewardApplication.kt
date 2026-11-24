@@ -2,6 +2,7 @@ package app.homeward.app
 
 import android.app.Application
 import app.homeward.device.ConnectivityWatcher
+import app.homeward.features.offlinemap.OfflineMapSaver
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
@@ -25,6 +26,7 @@ class HomewardApplication : Application() {
             osmdroidTileCache = File(osmdroidBasePath, "tiles")
         }
         AppServices.init(this)
+        OfflineMapSaver.deleteIfTooOld(this) // map provider rule: max 30 days on the phone
         // Back online? Send safety photos that were saved while there was no signal.
         ConnectivityWatcher(this).start { Thread { AppServices.outboxSender.flush() }.start() }
     }

@@ -32,6 +32,8 @@ the city research runs in the cloud with Google Search grounding. See [ARCHITECT
 3. Run on a phone with Gemini Nano (Pixel 9 or newer, recent Samsung flagships) to see on-device AI.
    Other phones fall back to the cloud.
 4. App Check: copy the debug token from Logcat into Firebase console > App Check > Manage debug tokens.
+5. Optional, for the Google Maps-like look: request a free key at carto.com/basemaps/apikey and add
+   `CARTO_KEY=your_key` to `local.properties` (git-ignored). Without it the app uses plain OpenStreetMap tiles.
 
 ## Status
 Working: safety pack build + offline storage, offline city map, live red-zone warning with vibration, safe place picker, on-device SOS
