@@ -7,6 +7,7 @@ One folder per feature. Each file says at the top what it does and whether it us
 | `safetypack/` | Country safety pack (numbers, places, zones) | cloud AI once, then offline |
 | `safetymap/` | Map drawing + red-zone logic (shown on Home) | offline logic + on-device AI |
 | `safeplace/` | Pick the nearest open safe place | offline logic |
+| `osmplaces/` | Real safe places from OpenStreetMap | download on wifi, then offline |
 | `offlinemap/` | Google Maps-like map, saved to the phone per city | download once on wifi |
 | `safetyphoto/` | Read taxi plates etc., send when back online | on-device AI |
 | `contacts/` | Edit who gets the SOS | UI, saved on phone |

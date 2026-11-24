@@ -9,8 +9,9 @@ but if it had, she couldn't have reached anyone. Homeward is for that moment, fo
 
 ## What it does
 - **Safety pack (cloud):** when you land, Gemini with Google Search researches the city: police and ambulance
-  numbers, your embassy, emergency phrases, safe places, and green / yellow / red areas by time of night.
-  It is saved on the phone.
+  numbers, your embassy, emergency phrases, and green / yellow / red areas by time of night. Safe places (police,
+  hospitals, pharmacies, 24h gas stations) come from **OpenStreetMap**, so they're real, not AI guesses.
+  Everything is saved on the phone.
 - **Safety map (offline):** a Google Maps-style map of the city saved to your phone. While you walk, it buzzes
   when you head toward a red area at night, says why, and shows the nearest open safe place.
 - **Offline SOS (on-device AI):** type or tap what's happening. Gemini Nano on the phone writes a clear SOS with
@@ -39,7 +40,7 @@ Function), walking route around red zones, contacts editing screen.
 
 Design: Figma file "Homeward – safety app screens". Team: David Frumgarzts, Alwis Lim, Julia.
 
-Map: CARTO Voyager tiles, © OpenStreetMap contributors © CARTO (free for non-commercial use with credit).
+Map and safe places: OpenStreetMap data (ODbL), map style CARTO Voyager tiles, © OpenStreetMap contributors © CARTO (free for non-commercial use with credit).
 
 ## License
 Apache 2.0

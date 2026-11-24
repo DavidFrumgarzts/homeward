@@ -16,6 +16,7 @@ data class SafetyPack(
     val safePlaces: List<SafePlace>,
     val zones: List<SafetyZone>,
     val builtAtMillis: Long,
+    val placesFromOsm: Boolean = false, // true once safe places come from OpenStreetMap (osmplaces/)
 )
 
 @Serializable

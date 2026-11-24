@@ -12,6 +12,7 @@ Find the file for any feature without reading the whole app. All code is in
 | Explain a red zone | **On device** | `features/safetymap/ZoneWarningWriter.kt` |
 | Red zone ahead? Buzz now? Nearest open safe place? Push or SMS? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `ApproachDetector.kt`, `SafePlacePicker.kt`, `ChannelChooser.kt` |
 | Map of the city | Downloaded once on wifi, then offline | `features/offlinemap/` |
+| Real safe places (police, hospitals, pharmacies, gas stations) | OpenStreetMap, downloaded on wifi | `features/osmplaces/` |
 
 Both AI models are created in one place: `ai/AiModels.kt`.
 
@@ -39,4 +40,5 @@ Both AI models are created in one place: `ai/AiModels.kt`.
 | No buzz near a red zone | `features/safetymap/ApproachDetector.kt` (+ test), location permission |
 | Map blank offline | `features/offlinemap/OfflineMapSaver.kt` (must run once on wifi) |
 | Safety photos never arrive | `features/safetyphoto/OutboxSender.kt`, `device/ConnectivityWatcher.kt` |
+| Safe places look made up / empty | `features/osmplaces/OsmPlacesFetcher.kt` (server busy?), `PlacesEnricher.kt` |
 | Colors / spacing | `design/Colors.kt`, `design/components/` |
