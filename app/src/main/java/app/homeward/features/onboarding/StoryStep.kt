@@ -29,7 +29,7 @@ fun StoryStep(onNext: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(HomewardColors.Background).systemBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(if (withBeacon) "The same night, with Beacon" else "Based on a real case", style = HomewardType.Small)
+            Text(if (withBeacon) "The same night, with Beacon" else "", style = HomewardType.Small)
             Text("Skip", style = HomewardType.Label, color = HomewardColors.TextMuted, modifier = Modifier.clickable(onClick = onNext).padding(12.dp))
         }
         Text(

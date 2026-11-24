@@ -110,11 +110,14 @@ def hostel():  # only used in the Figma design for now
         path("M20,42 V35 a3,3 0 0 1 6,0 V42 Z", fill=N), ground(46, 42.5),
     ]
 
-def person():  # "you are here": a head and a simple rounded body, nothing else
-    return 24, 36, [
-        path("M5.5,32.5 C5.5,22 8,14.8 12,14.8 C16,14.8 18.5,22 18.5,32.5 a2.2,2.2 0 0 1 -2.2,2.2 h-8.6 a2.2,2.2 0 0 1 -2.2,-2.2 z", fill=B, stroke=N, sw=1.8, join="round"),
-        circle(12, 7, 5.2, fill=C, stroke=N, sw=1.8),
-    ]
+def person():  # "you are here": an outlined stick figure with a round head, filled yellow
+    parts = [circle(12, 5.6, 4.4), rect(4.4, 13, 3.6, 12, 1.8), rect(16, 13, 3.6, 12, 1.8),      # head, arms
+             rect(7.4, 12.4, 9.2, 13.6, 3), rect(7.8, 22.5, 3.9, 13.5, 1.95), rect(12.3, 22.5, 3.9, 13.5, 1.95)]  # body, legs
+    # Drawn twice so the parts read as ONE outlined shape: first every part in navy with a thick edge,
+    # then every part again in yellow on top. Only the outer edge of the navy stays visible.
+    outline = [x.replace(' fill="none"', f' fill="{N}" stroke="{N}" stroke-width="3.4" stroke-linejoin="round"') for x in parts]
+    fill = [x.replace(' fill="none"', f' fill="{Y}"') for x in parts]
+    return 24, 38, outline + fill
 
 # ---- SVG -> Android VectorDrawable ----
 def rect_d(x, y, w, h, r):
@@ -144,7 +147,7 @@ ALL = {"police": (police, "Police station: red and blue lights on the roof."), "
        "bar": (bar, "Bar with a striped awning."), "catedral": (catedral, "Rio's cone-shaped cathedral."),
        "arcos": (arcos, "Arcos da Lapa aqueduct (the tram is its own picture)."), "tram": (tram, "The yellow Santa Teresa tram."),
        "steps": (steps, "Selarón steps: colored tile stairs."), "hostel": (hostel, "A hostel (blue roof)."),
-       "person": (person, '"You are here": a minimal person.')}
+       "person": (person, '"You are here": a yellow outlined stick figure.')}
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__)); res = os.path.join(here, "..", "..", "..", "app", "src", "main", "res", "drawable")

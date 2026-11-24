@@ -99,7 +99,7 @@ fun LapaIllustratedMap(
         )
 
         // You: the person stands with their feet on the spot.
-        person?.let { Landmark(unit, R.drawable.landmark_person, "You are here", x = it.x - 12f, y = it.y - 35f, w = 24, h = 36) }
+        person?.let { Landmark(unit, R.drawable.landmark_person, "You are here", x = it.x - 12f, y = it.y - 37f, w = 24, h = 38) }
     }
 }
 
