@@ -40,7 +40,7 @@ Function), walking route around red zones, contacts editing screen.
 
 Design: Figma file "Homeward – safety app screens". Team: David Frumgarzts, Alwis Lim, Julia.
 
-Map and safe places: OpenStreetMap data (ODbL), map style CARTO Voyager tiles, © OpenStreetMap contributors © CARTO (free for non-commercial use with credit).
+Map and safe places: © OpenStreetMap contributors (ODbL). Standard OpenStreetMap tiles; streets you have viewed stay available offline.
 
 ## License
 Apache 2.0

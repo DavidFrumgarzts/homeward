@@ -24,6 +24,7 @@ object OfflineMapSaver {
     }
 
     fun saveCity(context: Context, pack: SafetyPack) {
+        if (!MapStyle.allowsBulkDownload) return // current map provider forbids it (see MapStyle.kt)
         val area = OfflineArea.around(pack) ?: return
         val box = BoundingBox(area.north, area.east, area.south, area.west)
         val manager = CacheManager(MapStyle.tiles, SqlTileWriter(), MIN_ZOOM, MAX_ZOOM)
