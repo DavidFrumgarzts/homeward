@@ -3,8 +3,14 @@ package app.homeward.features.safetypack
 // The instructions sent to the CLOUD model (with Google Search) to research a city.
 // Kept in its own file so we can tune the wording without touching any logic.
 object SafetyPackPrompt {
-    fun forCity(city: String, country: String, nationality: String) = """
-        You are building an offline safety pack for a $nationality traveler who just arrived in $city, $country.
+    // `nationality` may be empty: then no embassy is looked up, instead of guessing one.
+    fun forCity(city: String, country: String, nationality: String): String {
+        val who = if (nationality.isBlank()) "a traveler (nationality not given: leave embassyName and embassyPhone empty)" else "a $nationality traveler"
+        return forTraveler(who, city, country)
+    }
+
+    private fun forTraveler(who: String, city: String, country: String) = """
+        You are building an offline safety pack for $who who just arrived in $city, $country.
         Use Google Search. Only include facts you found in official or reputable sources (government sites,
         embassy pages, major news, travel advisories). If you are not sure about a fact, leave it out.
 

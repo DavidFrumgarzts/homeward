@@ -14,6 +14,6 @@ object AskBeacon {
         val pack = AppServices.packStore.load()
         val prompt = AskBeaconPrompt.build(question, pack, AppServices.location.lastKnown(), Calendar.getInstance().get(Calendar.HOUR_OF_DAY), earlier)
         val ai = runCatching { AiModels.hybrid.ask(prompt) }.getOrNull()
-        return if (ai == null || ai.text.isBlank()) AiAnswer(AskBeaconPrompt.fallback(pack), ranOnDevice = false) else ai
+        return if (ai == null || ai.text.isBlank()) AiAnswer(AskBeaconPrompt.fallback(pack), ranOnDevice = false, fromAi = false) else ai
     }
 }

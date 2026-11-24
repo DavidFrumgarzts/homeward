@@ -1,25 +1,30 @@
 package app.homeward.features.sos.sending
 
 import app.homeward.contacts.TrustedContact
-import app.homeward.device.NetworkChecker
+import java.util.UUID
 
-// Sends one SOS to every trusted contact, each by the best available channel,
-// and falls back to SMS if push fails. Returns what happened per contact for the "sent" screen.
+// Queues one message for every trusted contact and tries to send it straight away.
+// Nothing is ever sent without going through the outbox first, so a message written with no signal
+// is saved and goes out later. Push is not built (PushSender is a stub), so the channel is always SMS;
+// `online` only decides whether we call it "SMS" or "SMS (no data)".
 class SosDispatcher(
-    private val network: NetworkChecker,
-    private val sms: SmsSender,
+    private val outbox: SosOutbox,
+    private val flusher: OutboxFlusher,
     private val push: PushSender,
+    private val hasInternet: () -> Boolean,
+    private val now: () -> Long = System::currentTimeMillis,
 ) {
-    fun sendToAll(contacts: List<TrustedContact>, message: String): List<SendResult> {
-        val online = network.hasInternet()
-        return contacts.map { c ->
-            when (ChannelChooser.choose(online, contactHasApp = false)) { // TODO: true once contacts sync
-                SendChannel.Push ->
-                    if (push.send(c.phone, message)) SendResult(c.name, SendChannel.Push, true)
-                    else SendResult(c.name, SendChannel.Sms, sms.send(c.phone, message))
-                SendChannel.Sms -> SendResult(c.name, SendChannel.Sms, sms.send(c.phone, message))
-                SendChannel.SmsNoData -> SendResult(c.name, SendChannel.SmsNoData, sms.send(c.phone, message))
-            }
+    fun send(incidentId: String, kind: MessageKind, contacts: List<TrustedContact>, text: String) {
+        val online = hasInternet()
+        val entries = contacts.map { contact ->
+            val chosen = ChannelChooser.choose(online, contactHasApp = false) // TODO: true once contacts have the app
+            val channel = if (chosen == SendChannel.Push && !push.send(contact.phone, text)) SendChannel.Sms else chosen
+            SosOutbox.Entry(UUID.randomUUID().toString(), incidentId, kind, contact.name, contact.phone, text, channel, now())
         }
+        outbox.add(entries)
+        entries.forEach { flusher.onChange(it) } // "Saved on your phone", before anything else
+        flusher.flush()
     }
+
+    fun flush() = flusher.flush()
 }

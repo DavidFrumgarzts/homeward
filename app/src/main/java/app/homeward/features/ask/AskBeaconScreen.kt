@@ -26,12 +26,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
+import app.homeward.design.components.InferenceBadge
 import app.homeward.device.Speaker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // One line of the chat. `fromYou` = the traveler's question; otherwise Beacon's answer.
-private data class ChatLine(val fromYou: Boolean, val text: String)
+// `badge` says where an answer was written: true = on device, false = cloud, null = no AI (saved facts).
+private data class ChatLine(val fromYou: Boolean, val text: String, val badge: Boolean? = null)
 
 // Chat with Beacon (Figma "08 Ask Beacon"): the cop at the top, your questions in blue on the right,
 // Beacon's answers in white on the left, and a box to type the next one. It keeps the last answers in mind
@@ -58,7 +60,7 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit) {
         scope.launch {
             val answer = AskBeacon.answer(q.trim(), earlier)
             thinking = false
-            lines += ChatLine(fromYou = false, text = answer.text)
+            lines += ChatLine(fromYou = false, text = answer.text, badge = answer.badge)
             shownChars = 0
             while (shownChars < answer.text.length) { delay(18); shownChars = (shownChars + 2).coerceAtMost(answer.text.length) }
         }
@@ -82,6 +84,7 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit) {
             itemsIndexed(lines) { i, line ->
                 val newest = i == lines.lastIndex && !line.fromYou
                 Bubble(line.fromYou, if (newest) line.text.take(shownChars) else line.text)
+                if (!line.fromYou) InferenceBadge(line.badge, Modifier.padding(top = 6.dp))
             }
             if (thinking) item { Bubble(fromYou = false, text = "…") }
             // Ready-made questions before the first one

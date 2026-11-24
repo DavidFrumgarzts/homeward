@@ -26,7 +26,7 @@ import app.homeward.features.safetypack.ZoneLevel
 import kotlinx.coroutines.launch
 
 // Setup step 4 (Figma "06 Ready offline"): while on wifi, get everything needed offline: red zones and the
-// safety pack (cloud AI), real safe places (OpenStreetMap) and the AI model for the phone.
+// safety pack (cloud AI), real places to get help (OpenStreetMap) and the AI model for the phone.
 // Shows live status. The button works any time; the rest keeps going in the background.
 @Composable
 fun GetReadyStep(onDone: () -> Unit) {
@@ -62,7 +62,7 @@ fun GetReadyStep(onDone: () -> Unit) {
         val redZones = p?.zones?.filter { it.level != ZoneLevel.Safer }.orEmpty()
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Item(Icons.Outlined.WarningAmber, HomewardColors.Red, HomewardColors.RedTint, "${if (p == null) "Red" else redZones.size.toString() + " red"} zones mapped", redZones.joinToString(", ") { it.name }.ifBlank { "Checking the city" }, done = p != null)
-            Item(Icons.Outlined.Place, HomewardColors.Primary, HomewardColors.PrimaryTint, "${p?.safePlaces?.size ?: ""} safe places saved".trim(), "Police, hospitals, pharmacies", done = p != null)
+            Item(Icons.Outlined.Place, HomewardColors.Primary, HomewardColors.PrimaryTint, "${p?.safePlaces?.size ?: ""} places to get help".trim(), "Police, hospitals, pharmacies", done = p != null)
             Item(Icons.AutoMirrored.Outlined.MenuBook, HomewardColors.Amber, HomewardColors.AmberTint, "$city safety pack", p?.let { "Police ${it.police}, ambulance ${it.ambulance}, embassy, key phrases" } ?: "Local numbers and phrases", done = p != null)
             Item(Icons.Outlined.Memory, HomewardColors.Primary, HomewardColors.PrimaryTint, "AI for your phone", aiLine, done = aiDone)
         }

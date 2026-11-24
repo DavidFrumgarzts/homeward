@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "share",
+  "title": "Share (shares/{shareId})",
+  "description": "shareId is 32 lowercase hex characters. Knowing it is the permission to follow one trip.",
+  "type": "object",
+  "required": [
+    "tripId",
+    "ownerUid",
+    "contactLabel",
+    "createdAtMillis",
+    "revoked"
+  ],
+  "properties": {
+    "tripId": {
+      "type": "string"
+    },
+    "ownerUid": {
+      "type": "string"
+    },
+    "contactLabel": {
+      "type": "string"
+    },
+    "createdAtMillis": {
+      "type": "number"
+    },
+    "revoked": {
+      "type": "boolean"
+    }
+  }
+}

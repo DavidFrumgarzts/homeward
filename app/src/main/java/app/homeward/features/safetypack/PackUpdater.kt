@@ -25,7 +25,7 @@ object PackUpdater {
         val country = place.countryName ?: return@withContext
         val current = AppServices.packStore.load()
         if (AppServices.packStore.hasRealPack() && current.city == city) return@withContext
-        runCatching { AppServices.packBuilder.build(city, country, AppServices.USER_NATIONALITY) }
+        runCatching { AppServices.packBuilder.build(city, country, AppServices.profile.load().nationality) }
             .onSuccess { pack ->
                 AppServices.packStore.save(PlacesEnricher.withOsmPlaces(pack)) // real places, not AI guesses
                 OfflineMapSaver.saveCityOnce(context, pack) // save the map too

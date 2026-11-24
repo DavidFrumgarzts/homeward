@@ -24,7 +24,8 @@ fun ContactsScreen(onBack: () -> Unit) {
             IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = HomewardColors.Primary) }
             Text("Who gets your SOS", style = HomewardType.Title)
         }
-        Text("Only these people see your exact location, and only after you send an SOS.", style = HomewardType.Small)
+        Text("Only these people see your exact location: during an SOS you start, or in an \"I'm OK\" if you turned that on.", style = HomewardType.Small)
+        ProfileEditor()
         ContactsEditor()
     }
 }

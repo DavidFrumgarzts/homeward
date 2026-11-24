@@ -1,0 +1,135 @@
+{
+  "city": "Rio de Janeiro",
+  "country": "Brazil",
+  "police": "190",
+  "ambulance": "192",
+  "embassyName": "U.S. Consulate General Rio de Janeiro",
+  "embassyPhone": "+55 21 3823-2000",
+  "localPhrases": [
+    {
+      "english": "Help!",
+      "local": "Socorro!"
+    },
+    {
+      "english": "Call the police",
+      "local": "Chame a polícia"
+    },
+    {
+      "english": "I am being followed",
+      "local": "Estou sendo seguida"
+    },
+    {
+      "english": "I need a hospital",
+      "local": "Preciso de um hospital"
+    }
+  ],
+  "safePlaces": [
+    {
+      "name": "5º DP police station",
+      "kind": "police",
+      "lat": -22.91255,
+      "lng": -43.1803,
+      "open24h": true,
+      "opensHour": 0,
+      "closesHour": 24,
+      "note": ""
+    },
+    {
+      "name": "Hospital Cruz Vermelha",
+      "kind": "hospital",
+      "lat": -22.91297,
+      "lng": -43.18456,
+      "open24h": true,
+      "opensHour": 0,
+      "closesHour": 24,
+      "note": ""
+    }
+  ],
+  "zones": [
+    {
+      "name": "Rua dos Inválidos",
+      "level": "Avoid",
+      "polygon": [
+        [
+          -22.90838,
+          -43.18348
+        ],
+        [
+          -22.90838,
+          -43.18149
+        ],
+        [
+          -22.91125,
+          -43.18149
+        ],
+        [
+          -22.91125,
+          -43.18348
+        ]
+      ],
+      "riskyFromHour": 23,
+      "riskyToHour": 5,
+      "reasons": [
+        "Bars close and the side streets go quiet",
+        "Robberies reported here in local news",
+        "Poor street lighting"
+      ]
+    },
+    {
+      "name": "Lapa nightlife area",
+      "level": "Careful",
+      "polygon": [
+        [
+          -22.9125,
+          -43.1815
+        ],
+        [
+          -22.912,
+          -43.1785
+        ],
+        [
+          -22.9145,
+          -43.178
+        ],
+        [
+          -22.915,
+          -43.181
+        ]
+      ],
+      "riskyFromHour": 22,
+      "riskyToHour": 5,
+      "reasons": [
+        "Crowded at night, watch for pickpockets"
+      ]
+    },
+    {
+      "name": "Av. Mem de Sá",
+      "level": "Safer",
+      "polygon": [
+        [
+          -22.91095,
+          -43.186
+        ],
+        [
+          -22.91213,
+          -43.177
+        ],
+        [
+          -22.91259,
+          -43.177
+        ],
+        [
+          -22.91141,
+          -43.186
+        ]
+      ],
+      "riskyFromHour": 0,
+      "riskyToHour": 24,
+      "reasons": [
+        "Main avenue, busy and lit late"
+      ]
+    }
+  ],
+  "builtAtMillis": 0,
+  "placesFromOsm": false
+}

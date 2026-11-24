@@ -15,6 +15,7 @@ import app.homeward.app.AppServices
 import app.homeward.design.HomewardType
 import app.homeward.device.GeoPoint
 import app.homeward.features.checkin.CheckInSender
+import app.homeward.features.incident.contracts.IncidentPhase
 import app.homeward.features.lapamap.Heading
 import app.homeward.features.lapamap.LapaIllustratedMap
 import app.homeward.features.lapamap.LapaMapProjection
@@ -39,6 +40,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
     val scope = rememberCoroutineScope()
     val pack = remember { AppServices.packStore.load() }
     val contactNames = remember { AppServices.contacts.all().joinToString(", ") { it.name } }
+    val incident by AppServices.incident.view.collectAsState()
     // Your position: starts at the last known fix, then follows GPS live while Home is open.
     var here by remember { mutableStateOf(AppServices.location.lastKnown() ?: GeoPoint(pack.zones.first().polygon[0][0], pack.zones.first().polygon[0][1])) }
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -88,6 +90,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
 
         HomeBottomSheet(
             police = pack.police, contactNames = contactNames, safePlace = safePlace,
+            sosActive = incident.phase == IncidentPhase.SosActive,
             onAsk = onAsk,
             onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },
             onImOk = {

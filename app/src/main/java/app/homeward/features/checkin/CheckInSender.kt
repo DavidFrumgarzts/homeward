@@ -1,6 +1,7 @@
 package app.homeward.features.checkin
 
 import app.homeward.app.AppServices
+import app.homeward.features.sos.sending.handOff
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -12,7 +13,7 @@ object CheckInSender {
     fun send(): List<String> {
         val pack = AppServices.packStore.load()
         val time = SimpleDateFormat("h:mm a", Locale.US).format(Date())
-        val text = CheckInMessage.build(AppServices.USER_NAME, pack.city, time, AppServices.location.lastKnown(), AppServices.locationSharing.onCheckIn)
-        return AppServices.contacts.all().filter { AppServices.sms.send(it.phone, text) }.map { it.name }
+        val text = CheckInMessage.build(AppServices.profile.load().displayName, pack.city, time, AppServices.location.lastKnown(), AppServices.locationSharing.onCheckIn)
+        return AppServices.contacts.all().filter { AppServices.sms.handOff(it.phone, text) }.map { it.name }
     }
 }

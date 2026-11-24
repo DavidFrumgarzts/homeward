@@ -1,0 +1,256 @@
+{
+  "logic": "PhrasePicker",
+  "about": "Picks one reviewed phrase from the pack to show a stranger. Only ever returns a phrase that is in the list.",
+  "cases": [
+    {
+      "name": "followed, no words",
+      "fn": "pick",
+      "input": {
+        "description": "",
+        "situation": "followed",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "I am being followed",
+        "local": "Estou sendo seguida"
+      }
+    },
+    {
+      "name": "followed, her words",
+      "fn": "pick",
+      "input": {
+        "description": "Being followed",
+        "situation": "followed",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "I am being followed",
+        "local": "Estou sendo seguida"
+      }
+    },
+    {
+      "name": "medical",
+      "fn": "pick",
+      "input": {
+        "description": "Hurt",
+        "situation": "medical",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "I need a hospital",
+        "local": "Preciso de um hospital"
+      }
+    },
+    {
+      "name": "vehicle",
+      "fn": "pick",
+      "input": {
+        "description": "In a vehicle",
+        "situation": "vehicle",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "Call the police",
+        "local": "Chame a polícia"
+      }
+    },
+    {
+      "name": "harassment",
+      "fn": "pick",
+      "input": {
+        "description": "he won't leave me alone",
+        "situation": "harassment",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "Call the police",
+        "local": "Chame a polícia"
+      }
+    },
+    {
+      "name": "lost falls back to the first phrase",
+      "fn": "pick",
+      "input": {
+        "description": "Lost",
+        "situation": "lost",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "Help!",
+        "local": "Socorro!"
+      }
+    },
+    {
+      "name": "other",
+      "fn": "pick",
+      "input": {
+        "description": "Feel unsafe",
+        "situation": "other",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "Help!",
+        "local": "Socorro!"
+      }
+    },
+    {
+      "name": "her words can pick the phrase",
+      "fn": "pick",
+      "input": {
+        "description": "please call the police",
+        "situation": "other",
+        "phrases": [
+          {
+            "english": "Help!",
+            "local": "Socorro!"
+          },
+          {
+            "english": "Call the police",
+            "local": "Chame a polícia"
+          },
+          {
+            "english": "I am being followed",
+            "local": "Estou sendo seguida"
+          },
+          {
+            "english": "I need a hospital",
+            "local": "Preciso de um hospital"
+          }
+        ]
+      },
+      "expected": {
+        "english": "Call the police",
+        "local": "Chame a polícia"
+      }
+    },
+    {
+      "name": "no phrases in the pack",
+      "fn": "pick",
+      "input": {
+        "description": "Hurt",
+        "situation": "medical",
+        "phrases": []
+      },
+      "expected": null
+    }
+  ]
+}

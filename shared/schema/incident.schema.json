@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "incident",
+  "title": "Incident (trips/{tripId}/incidents/{incidentId})",
+  "type": "object",
+  "required": [
+    "ownerUid",
+    "tripId",
+    "travelerName",
+    "city",
+    "country",
+    "phase",
+    "method",
+    "userConfirmed",
+    "description",
+    "situation",
+    "triggerReasons",
+    "message",
+    "emergency",
+    "platform",
+    "startedAtMillis",
+    "updatedAtMillis"
+  ],
+  "properties": {
+    "ownerUid": {
+      "type": "string"
+    },
+    "tripId": {
+      "type": "string"
+    },
+    "travelerName": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "phase": {
+      "enum": [
+        "SafetyCheckRequested",
+        "SosActive",
+        "Resolved"
+      ]
+    },
+    "method": {
+      "enum": [
+        "SosButton",
+        "Widget",
+        "TalkTile",
+        "AskBeacon",
+        "VoiceShortcut",
+        "SafePhrase",
+        "SafetyCheckEscalation",
+        "SafeWalkMissedArrival"
+      ]
+    },
+    "userConfirmed": {
+      "type": "boolean",
+      "description": "false when the app raised it because she did not answer a safety check"
+    },
+    "description": {
+      "type": "string",
+      "description": "Her own words; may be empty"
+    },
+    "situation": {
+      "enum": [
+        "lost",
+        "followed",
+        "vehicle",
+        "medical",
+        "harassment",
+        "other"
+      ]
+    },
+    "triggerReasons": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "message": {
+      "type": "string",
+      "description": "The alert text contacts were sent; empty until it is sent"
+    },
+    "emergency": {
+      "type": "object",
+      "required": [
+        "police",
+        "ambulance",
+        "embassyName",
+        "embassyPhone"
+      ],
+      "properties": {
+        "police": {
+          "type": "string"
+        },
+        "ambulance": {
+          "type": "string"
+        },
+        "embassyName": {
+          "type": "string"
+        },
+        "embassyPhone": {
+          "type": "string"
+        }
+      }
+    },
+    "platform": {
+      "enum": [
+        "android",
+        "ios",
+        "web"
+      ]
+    },
+    "startedAtMillis": {
+      "type": "number"
+    },
+    "alertSentAtMillis": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "resolvedAtMillis": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "updatedAtMillis": {
+      "type": "number"
+    }
+  }
+}

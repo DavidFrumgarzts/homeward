@@ -1,0 +1,195 @@
+{
+  "logic": "SituationPicker and ActionChecklist",
+  "about": "Key words pick the situation (the more urgent one wins when two match); each situation has a fixed, reviewed checklist of 3 to 5 steps.",
+  "cases": [
+    {
+      "name": "pick: Being followed",
+      "fn": "pick",
+      "input": {
+        "description": "Being followed"
+      },
+      "expected": "followed"
+    },
+    {
+      "name": "pick: A man is following me since the bar",
+      "fn": "pick",
+      "input": {
+        "description": "A man is following me since the bar"
+      },
+      "expected": "followed"
+    },
+    {
+      "name": "pick: Feel unsafe",
+      "fn": "pick",
+      "input": {
+        "description": "Feel unsafe"
+      },
+      "expected": "other"
+    },
+    {
+      "name": "pick: Hurt",
+      "fn": "pick",
+      "input": {
+        "description": "Hurt"
+      },
+      "expected": "medical"
+    },
+    {
+      "name": "pick: I fell and I'm bleeding",
+      "fn": "pick",
+      "input": {
+        "description": "I fell and I'm bleeding"
+      },
+      "expected": "medical"
+    },
+    {
+      "name": "pick: Lost",
+      "fn": "pick",
+      "input": {
+        "description": "Lost"
+      },
+      "expected": "lost"
+    },
+    {
+      "name": "pick: I don't know where I am",
+      "fn": "pick",
+      "input": {
+        "description": "I don't know where I am"
+      },
+      "expected": "lost"
+    },
+    {
+      "name": "pick: In a vehicle",
+      "fn": "pick",
+      "input": {
+        "description": "In a vehicle"
+      },
+      "expected": "vehicle"
+    },
+    {
+      "name": "pick: The taxi driver is going the wrong way",
+      "fn": "pick",
+      "input": {
+        "description": "The taxi driver is going the wrong way"
+      },
+      "expected": "vehicle"
+    },
+    {
+      "name": "pick: Someone grabbed my arm and won't leave me alone",
+      "fn": "pick",
+      "input": {
+        "description": "Someone grabbed my arm and won't leave me alone"
+      },
+      "expected": "harassment"
+    },
+    {
+      "name": "pick: Lost and someone is following me",
+      "fn": "pick",
+      "input": {
+        "description": "Lost and someone is following me"
+      },
+      "expected": "followed"
+    },
+    {
+      "name": "pick: In a taxi and I feel sick",
+      "fn": "pick",
+      "input": {
+        "description": "In a taxi and I feel sick"
+      },
+      "expected": "medical"
+    },
+    {
+      "name": "pick: (empty)",
+      "fn": "pick",
+      "input": {
+        "description": ""
+      },
+      "expected": "other"
+    },
+    {
+      "name": "pick: SOMEONE IS STALKING ME",
+      "fn": "pick",
+      "input": {
+        "description": "SOMEONE IS STALKING ME"
+      },
+      "expected": "followed"
+    },
+    {
+      "name": "checklist: followed",
+      "fn": "checklist",
+      "input": {
+        "situation": "followed"
+      },
+      "expected": [
+        "Go where there are people and light: a shop, a bar, a hotel lobby.",
+        "Don't walk to where you are staying while someone is following you.",
+        "Stay on the phone with someone, or look like you are.",
+        "If they come close, call the number below and say where you are."
+      ]
+    },
+    {
+      "name": "checklist: lost",
+      "fn": "checklist",
+      "input": {
+        "situation": "lost"
+      },
+      "expected": [
+        "Stop somewhere lit, near other people. Don't keep walking into quiet streets.",
+        "Walk to the nearest open place to get help, shown below.",
+        "Ask staff in a shop or hotel for directions, not someone passing by.",
+        "Save your battery: lower the screen brightness."
+      ]
+    },
+    {
+      "name": "checklist: vehicle",
+      "fn": "checklist",
+      "input": {
+        "situation": "vehicle"
+      },
+      "expected": [
+        "Tell the driver clearly to stop and let you out somewhere busy and lit.",
+        "Add the plate or taxi number to your message if you can see it.",
+        "Keep your phone in your hand with this screen open.",
+        "If the driver won't stop, call the number below and say which road you are on."
+      ]
+    },
+    {
+      "name": "checklist: medical",
+      "fn": "checklist",
+      "input": {
+        "situation": "medical"
+      },
+      "expected": [
+        "Call the number below. Say where you are and what happened.",
+        "If you are bleeding, press hard on the wound with a clean cloth.",
+        "Sit or lie down where people can see you.",
+        "Show the phrase below to someone nearby and ask them to stay with you."
+      ]
+    },
+    {
+      "name": "checklist: harassment",
+      "fn": "checklist",
+      "input": {
+        "situation": "harassment"
+      },
+      "expected": [
+        "Move toward other people, staff or a shop.",
+        "Don't argue or explain. Keep walking to somewhere busy and lit.",
+        "Ask staff or a group nearby to stay with you.",
+        "If they follow or touch you, call the number below."
+      ]
+    },
+    {
+      "name": "checklist: other",
+      "fn": "checklist",
+      "input": {
+        "situation": "other"
+      },
+      "expected": [
+        "Go where there are people and light.",
+        "If you are in danger right now, call the number below.",
+        "Walk to the nearest open place to get help, shown below."
+      ]
+    }
+  ]
+}

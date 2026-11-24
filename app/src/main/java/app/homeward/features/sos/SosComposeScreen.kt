@@ -1,67 +1,92 @@
 package app.homeward.features.sos
 
-import androidx.compose.foundation.BorderStroke
+import android.content.Intent
+import android.speech.RecognizerIntent
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
 import app.homeward.design.components.PrimaryButton
 
-// Step 1 of SOS: say what's happening (type or tap a quick pick), the phone's AI writes the
-// message, she checks it, and sends it with one tap.
+// SOS, step 1: say what's happening (type, speak or tap a quick pick). The message for her contacts
+// is there from the first moment (a plain template) and is rewritten by the AI when she pauses.
+// She can edit it, and nothing is sent until she presses Send. Back cancels the SOS.
+// It only draws IncidentViewState and calls the engine's intents.
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SosComposeScreen(vm: SosViewModel, onBack: () -> Unit, onSent: () -> Unit) {
-    val names = AppServices.contacts.all().joinToString(", ") { it.name }
+fun SosComposeScreen(onCancelled: () -> Unit) {
+    val engine = AppServices.incident
+    val view by engine.view.collectAsState()
+    val names = remember { DeliveryWording.joinNames(AppServices.contacts.all().map { it.name }) }
+    var words by rememberSaveable { mutableStateOf(view.description) }
+    var noSpeech by remember { mutableStateOf(false) }
+    fun describe(text: String) { words = text; engine.describe(text) }
+    fun add(more: String) = describe(if (words.isBlank()) more else "${words.trim()}, ${more.replaceFirstChar { it.lowercase() }}")
 
-    Column(Modifier.fillMaxSize().background(HomewardColors.Background).padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = HomewardColors.Primary) }
-            Text("What's happening?", style = HomewardType.Title)
-        }
+    // The phone's own speech-to-text screen: she speaks, the words land in the box.
+    val speech = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.takeIf { it.isNotBlank() }?.let(::add)
+    }
+    val cancel = { engine.cancel(); onCancelled() }
+    BackHandler(onBack = cancel)
 
-        OutlinedTextField(
-            value = vm.note, onValueChange = { vm.note = it },
-            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp),
-            placeholder = { Text("e.g. guy following me since the bar, grey hoodie") },
-        )
-
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Being followed", "Feel unsafe", "Hurt", "Lost").forEach { pick ->
-                AssistChip(onClick = { vm.addQuickPick(pick) }, label = { Text(pick) }, shape = RoundedCornerShape(50))
+    Column(Modifier.fillMaxSize().background(HomewardColors.Background).systemBarsPadding().imePadding().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(cancel) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Cancel the SOS", tint = HomewardColors.Primary) }
+                Text("What's happening?", style = HomewardType.Title)
             }
+            if (view.testMode) TestModeTag()
+
+            Row(Modifier.fillMaxWidth().background(HomewardColors.Surface, RoundedCornerShape(22.dp)).padding(start = 6.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                TextField(
+                    words, ::describe, modifier = Modifier.weight(1f), textStyle = HomewardType.Body,
+                    placeholder = { Text("A few words are enough", color = HomewardColors.TextMuted) }, colors = plainField(),
+                )
+                IconButton(
+                    onClick = {
+                        val ask = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM).putExtra(RecognizerIntent.EXTRA_PROMPT, "Say what's happening")
+                        runCatching { speech.launch(ask) }.onFailure { noSpeech = true }
+                    },
+                    modifier = Modifier.size(48.dp).background(HomewardColors.Primary, RoundedCornerShape(16.dp)),
+                ) { Icon(Icons.Outlined.Mic, "Speak instead of typing", tint = Color.White) }
+            }
+            if (noSpeech) Text("This phone has no speech-to-text. Type or tap below.", style = HomewardType.Small)
+
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Being followed", "Feel unsafe", "Hurt", "Lost", "In a vehicle").forEach { pick ->
+                    AssistChip(onClick = { add(pick) }, label = { Text(pick) }, shape = RoundedCornerShape(50), modifier = Modifier.heightIn(min = 48.dp))
+                }
+            }
+
+            ContactMessageCard(names, view.contactMessage, view.contactMessageRanOnDevice, view.writingMessage, onEdit = engine::editMessage)
         }
 
-        if (vm.draft.isBlank()) {
-            PrimaryButton(if (vm.isWriting) "Writing..." else "Write my SOS", enabled = vm.note.isNotBlank() && !vm.isWriting) { vm.writeDraft() }
-        } else {
-            // The AI draft, editable. She is always in control of what is sent.
-            Column(Modifier.border(BorderStroke(1.5.dp, HomewardColors.Primary), RoundedCornerShape(20.dp)).background(HomewardColors.Surface, RoundedCornerShape(20.dp)).padding(18.dp)) {
-                Text("Your message", style = HomewardType.Label)
-                Spacer(Modifier.height(8.dp))
-                BasicDraftField(vm.draft) { vm.draft = it }
-            }
-            Spacer(Modifier.weight(1f))
-            PrimaryButton("Send to $names", color = HomewardColors.Red) { vm.send(onSent) }
-        }
+        if (names.isBlank()) Text("No one gets your SOS yet. Add someone from Home, or call ${view.emergencyLabel} ${view.emergencyNumber}.", style = HomewardType.Small, color = HomewardColors.Red)
+        PrimaryButton(if (names.isBlank()) "Send" else "Send to $names", color = HomewardColors.Red, enabled = names.isNotBlank() && view.contactMessage.isNotBlank()) { engine.send() }
     }
 }
 
-// Plain editable text for the draft (no extra box, it already sits inside the card).
+// A text field with no box of its own: it already sits inside a white card.
 @Composable
-private fun BasicDraftField(text: String, onChange: (String) -> Unit) {
-    TextField(text, onChange, textStyle = HomewardType.Body, colors = TextFieldDefaults.colors(
-        focusedContainerColor = HomewardColors.Surface, unfocusedContainerColor = HomewardColors.Surface,
-        focusedIndicatorColor = HomewardColors.Surface, unfocusedIndicatorColor = HomewardColors.Surface,
-    ))
-}
+internal fun plainField() = TextFieldDefaults.colors(
+    focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
+    focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent,
+)

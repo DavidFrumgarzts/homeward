@@ -1,0 +1,68 @@
+package app.homeward.features.sos
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import app.homeward.R
+import app.homeward.design.HomewardColors
+import app.homeward.design.HomewardType
+import app.homeward.design.components.PrimaryButton
+import app.homeward.design.components.WhiteCard
+import app.homeward.features.home.NearbyFeed
+import app.homeward.features.incident.contracts.IncidentViewState
+
+// The "For me" card on the active SOS screen: what to do now (reviewed steps for her situation),
+// one tap to call the local emergency number, and the nearest open place to get help.
+// The steps are fixed text; the number and the place come from the saved pack.
+@Composable
+fun ForMeCard(view: IncidentViewState, onCall: () -> Unit) {
+    var showAll by remember { mutableStateOf(false) }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (view.forMe.isNotEmpty()) WhiteCard(Modifier.fillMaxWidth()) {
+            Text("What to do now", style = HomewardType.Label)
+            (if (showAll) view.forMe else view.forMe.take(3)).forEachIndexed { i, step ->
+                Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.size(24.dp).background(HomewardColors.PrimaryTint, CircleShape), contentAlignment = Alignment.Center) {
+                        Text("${i + 1}", style = HomewardType.Small, color = HomewardColors.Primary)
+                    }
+                    Text(step, style = HomewardType.Body, modifier = Modifier.weight(1f))
+                }
+            }
+            if (view.forMe.size > 3 && !showAll) {
+                Text("Show all ${view.forMe.size} steps", style = HomewardType.Small, color = HomewardColors.Primary, modifier = Modifier.padding(top = 10.dp).clickable { showAll = true }.padding(vertical = 8.dp))
+            }
+        }
+
+        PrimaryButton(color = HomewardColors.Red, label = "Call ${view.emergencyLabel} ${view.emergencyNumber}", modifier = Modifier.height(64.dp), onClick = onCall)
+
+        view.suggestedPlace?.let { pick ->
+            Row(
+                Modifier.fillMaxWidth().border(1.5.dp, HomewardColors.Border, RoundedCornerShape(20.dp)).padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                when (pick.place.kind.lowercase()) {
+                    "police" -> Image(painterResource(R.drawable.landmark_police), null, Modifier.size(32.dp))
+                    "hospital" -> Image(painterResource(R.drawable.landmark_hospital), null, Modifier.size(32.dp))
+                    else -> Icon(Icons.Outlined.Place, null, tint = HomewardColors.Green)
+                }
+                Column {
+                    Text("Walk to ${pick.place.name}", style = HomewardType.Label, maxLines = 1)
+                    Text("${NearbyFeed.distance(pick.meters)}, ${if (pick.place.open24h) "open 24 hours" else "open now"}", style = HomewardType.Small)
+                }
+            }
+        }
+    }
+}
