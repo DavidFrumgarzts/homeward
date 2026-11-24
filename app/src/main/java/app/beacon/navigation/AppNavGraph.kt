@@ -6,7 +6,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import app.beacon.features.home.HomeScreen
-import app.beacon.features.safetymap.SafetyMapScreen
 import app.beacon.features.sos.SosComposeScreen
 import app.beacon.features.sos.SosSentScreen
 import app.beacon.features.sos.SosViewModel
@@ -19,9 +18,8 @@ fun AppNavGraph() {
 
     NavHost(nav, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
-            HomeScreen(onSos = { nav.navigate(Screen.SosCompose.route) }, onOpenMap = { nav.navigate(Screen.SafetyMap.route) })
+            HomeScreen(onSos = { nav.navigate(Screen.SosCompose.route) })
         }
-        composable(Screen.SafetyMap.route) { SafetyMapScreen(onBack = { nav.popBackStack() }) }
         composable(Screen.SosCompose.route) {
             SosComposeScreen(sos, onBack = { nav.popBackStack() }, onSent = { nav.navigate(Screen.SosSent.route) })
         }

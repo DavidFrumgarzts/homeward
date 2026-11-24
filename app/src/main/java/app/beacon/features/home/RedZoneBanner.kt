@@ -1,0 +1,42 @@
+package app.beacon.features.home
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import app.beacon.design.BeaconColors
+import app.beacon.design.BeaconType
+import app.beacon.features.safetypack.SafetyZone
+
+// Waze-style alert at the top of the map: "Red zone in 250 m". Only shown when one is close
+// and risky at this hour. Tap it for the reasons and the nearest open safe place.
+@Composable
+fun RedZoneBanner(zone: SafetyZone, meters: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val shape = RoundedCornerShape(20.dp)
+    Row(
+        modifier.fillMaxWidth().shadow(8.dp, shape).background(BeaconColors.Surface, shape).clickable(onClick = onClick).padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(40.dp).background(BeaconColors.Red, CircleShape), contentAlignment = Alignment.Center) {
+            Icon(Icons.Outlined.WarningAmber, null, tint = Color.White, modifier = Modifier.size(20.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(if (meters == 0) "You're in a red zone" else "Red zone in $meters m", style = BeaconType.Heading)
+            Text("${zone.name} · empty at night", style = BeaconType.Small, maxLines = 1)
+        }
+        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = BeaconColors.TextMuted)
+    }
+}

@@ -17,7 +17,8 @@ Both AI models are created in one place: `ai/AiModels.kt`.
 ## Flow
 1. First launch: `MainActivity` downloads Gemini Nano (`ai/OnDeviceModelSetup.kt`) and, if online in a new city,
    builds the safety pack in the cloud (`features/safetypack/PackUpdater.kt`). The pack is saved as a file.
-2. Home (`features/home/HomeScreen.kt`) reads the saved pack: map preview, red zone ahead, quick actions.
+2. Home is the map (`features/home/`): full-screen safety map, a Waze-style red-zone alert, and a Find My-style
+   bottom sheet with SOS and three actions (photo, safe place, police).
 3. SOS: `SosComposeScreen` -> `SosViewModel.writeDraft()` (on-device AI) -> `send()` -> `SosDispatcher`
    (push if online, SMS if not) -> `SosSentScreen`.
 
