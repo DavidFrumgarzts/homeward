@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.homeward.app.AppServices
+import app.homeward.device.MapsLink
 import app.homeward.features.sos.sending.SendResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,7 +31,9 @@ class SosViewModel : ViewModel() {
     fun writeDraft() = viewModelScope.launch {
         isWriting = true
         val here = AppServices.location.lastKnown()
-        draft = AppServices.sosWriter.write(AppServices.USER_NAME, note, "${pack.city}", here, pack.police)
+        val written = AppServices.sosWriter.write(AppServices.USER_NAME, note, "${pack.city}", here, pack.police)
+        // Add a tappable map link so family can open her exact spot (an SOS always shares location).
+        draft = if (here != null) "$written\nMap: ${MapsLink.of(here)}" else written
         isWriting = false
     }
 

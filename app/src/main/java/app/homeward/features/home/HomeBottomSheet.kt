@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Place
@@ -36,6 +37,7 @@ fun HomeBottomSheet(
     onPhoto: () -> Unit,
     onSafePlace: () -> Unit,
     onPolice: () -> Unit,
+    onImOk: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -64,6 +66,7 @@ fun HomeBottomSheet(
             Text(if (contactNames.isBlank()) "Add" else "Edit", color = HomewardColors.Red, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+            RoundAction("I'm OK", Icons.Outlined.CheckCircle, onImOk)
             RoundAction("Photo", Icons.Outlined.PhotoCamera, onPhoto)
             RoundAction("Safe place", Icons.Outlined.Place, onSafePlace)
             RoundAction("Police $police", Icons.Outlined.Phone, onPolice)

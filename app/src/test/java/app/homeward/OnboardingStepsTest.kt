@@ -8,7 +8,8 @@ import org.junit.Test
 // Checks onboarding order and that you can't skip adding a contact.
 class OnboardingStepsTest {
     @Test fun order() {
-        assertEquals(OnboardingStep.Contacts, OnboardingSteps.next(OnboardingStep.Welcome))
+        assertEquals(OnboardingStep.Story, OnboardingSteps.next(OnboardingStep.Welcome))
+        assertEquals(OnboardingStep.Contacts, OnboardingSteps.next(OnboardingStep.Story))
         assertNull(OnboardingSteps.next(OnboardingStep.GetReady))
         assertNull(OnboardingSteps.previous(OnboardingStep.Welcome))
     }

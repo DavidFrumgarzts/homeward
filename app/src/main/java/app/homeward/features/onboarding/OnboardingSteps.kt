@@ -1,7 +1,7 @@
 package app.homeward.features.onboarding
 
 // PURE LOGIC: the order of onboarding steps and when "Continue" is allowed. Tested in OnboardingStepsTest.
-enum class OnboardingStep { Welcome, Contacts, Permissions, GetReady }
+enum class OnboardingStep { Welcome, Story, Contacts, Permissions, GetReady }
 
 object OnboardingSteps {
     val all = OnboardingStep.entries

@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.device.GeoPoint
+import app.homeward.features.checkin.CheckInSender
 import app.homeward.features.policecall.PoliceCaller
 import app.homeward.features.safeplace.SafePlacePicker
 import app.homeward.features.safetymap.ApproachDetector
@@ -81,6 +82,12 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
             onPhoto = { camera.launch(null) },
             onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },
             onPolice = { PoliceCaller.dial(context, pack.police) },
+            onImOk = {
+                scope.launch {
+                    val reached = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CheckInSender.send() }
+                    popup = if (reached.isEmpty()) "Add someone first (Edit)." else "Sent \"I'm OK\" to ${reached.joinToString(", ")}."
+                }
+            },
             modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged { sheetHeightPx = it.height },
         )
     }

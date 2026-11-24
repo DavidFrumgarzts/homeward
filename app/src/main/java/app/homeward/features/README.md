@@ -11,5 +11,6 @@ One folder per feature. Each file says at the top what it does and whether it us
 | `offlinemap/` | Google Maps-like map, saved to the phone per city | download once on wifi |
 | `safetyphoto/` | Read taxi plates etc., send when back online | on-device AI |
 | `onboarding/` | First launch: welcome, contacts, permissions, get ready offline | UI + pack/AI setup |
-| `contacts/` | Edit who gets the SOS | UI, saved on phone |
+| `contacts/` | Edit who gets the SOS (type or pick from phone contacts) | UI, saved on phone |
+| `checkin/` | "I'm OK" text to family, location optional | SMS |
 | `policecall/` | One-tap call to local police | phone dialer |
