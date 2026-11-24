@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homeward Onboarding Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: phone on the left, what-to-notice notes on the right; one step at a time, arrows to move. */
+  --bg: #F3F6FB;
+  --surface: #FFFFFF;
+  --ink: #16213A;
+  --muted: #5E6A80;
+  --primary: #2E6BE6;
+  --sos: #D92B33;
+  --line: #DCE3EF;
+  --display: "Manrope", system-ui, sans-serif;
+  --body: "Source Sans 3", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg:#0F1626; --surface:#18223A; --ink:#E8EDF7; --muted:#9BA8C0; --primary:#6F9BFF; --sos:#FF6B70; --line:#2A3654; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg:#0F1626; --surface:#18223A; --ink:#E8EDF7; --muted:#9BA8C0; --primary:#6F9BFF; --sos:#FF6B70; --line:#2A3654; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 28px 20px 40px; display: grid; gap: 20px; }
+header h1 { font-family: var(--display); font-weight: 800; font-size: 28px; margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+
+.track { display: flex; gap: 6px; flex-wrap: wrap; }
+.track button { font: 600 13px var(--body); border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.track button[aria-current="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.track button:focus-visible, .nav button:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+.slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; border-radius: 24px; }
+@media (prefers-reduced-motion: reduce) { .slides { scroll-behavior: auto; } }
+.slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 32px; align-items: center; background: var(--surface); padding: 28px; border-radius: 24px; }
+.phone { border-radius: 30px; overflow: hidden; border: 6px solid var(--ink); background: #000; max-width: 300px; }
+.phone img { display: block; width: 100%; height: auto; }
+.step-no { font: 700 13px var(--display); color: var(--primary); letter-spacing: .04em; }
+.slide h2 { font-family: var(--display); font-size: 26px; line-height: 1.2; margin: 6px 0 10px; text-wrap: balance; }
+.slide p { margin: 0 0 12px; max-width: 58ch; }
+.notice { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+.notice li { padding-left: 14px; border-left: 3px solid var(--line); }
+.notice li.why { border-left-color: var(--primary); }
+.notice li.sos { border-left-color: var(--sos); }
+.notice b { font-weight: 600; }
+
+.nav { display: flex; justify-content: space-between; gap: 12px; }
+.nav button { font: 700 16px var(--display); border-radius: 14px; padding: 14px 22px; cursor: pointer; border: 1.5px solid var(--primary); background: transparent; color: var(--primary); }
+.nav button.next { background: var(--primary); color: #fff; }
+.nav button:disabled { opacity: .35; cursor: default; }
+footer { color: var(--muted); font-size: 14px; }
+
+@media (max-width: 720px) {
+  .slide { grid-template-columns: 1fr; padding: 18px; gap: 18px; }
+  .phone { max-width: 240px; margin: 0 auto; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Homeward onboarding, step by step</h1>
+    <p>Recorded on a Pixel 8 emulator (Android 15), from a fresh install, placed in Lapa, Rio de Janeiro. Use the arrows or your keyboard's left and right keys.</p>
+  </header>
+
+  <nav class="track" id="track" aria-label="Steps"></nav>
+  <div class="slides" id="slides" tabindex="0" aria-label="Walkthrough"></div>
+  <div class="nav">
+    <button id="prev" type="button">Previous</button>
+    <button id="next" type="button" class="next">Next</button>
+  </div>
+  <footer>App: github.com/DavidFrumgarzts/homeward · Design: Figma "Homeward – onboarding" · Map and places © OpenStreetMap contributors</footer>
+</div>
+
+<script>
+const steps = [
+  { img: "img/1-welcome.jpg", tag: "Welcome", title: "1 · The landing screen",
+    text: "The first thing a new user sees. One promise in one sentence, then three lines on what the app does.",
+    notice: [["why","Calm blue everywhere: nothing here is an emergency yet, so nothing is red."],["","The three lines match the three features judges will see: red-zone warnings, SOS with no signal, family peace of mind."],["","Progress at the top: five steps, so people know it's short."]] },
+  { img: "img/2-story.jpg", tag: "Story", title: "2 · How it helps, one night in Lapa",
+    text: "Before asking for anything, we show the moment Homeward is for, as a three-point timeline.",
+    notice: [["","11:40 pm, yellow: the phone buzzes, a red zone is 200 m ahead."],["sos","11:44 pm, red: being followed, no signal. Tap SOS, type 3 words, the phone's AI writes the message."],["","11:45 pm, green: Mom in Tel Aviv gets it, with what to do."],["why","Based on the real Rio case. Check the news source before the pitch."]] },
+  { img: "img/3-contacts-empty.jpg", tag: "Contacts", title: "3 · Who gets your SOS?",
+    text: "The one setup that really matters. Continue stays grey until at least one person is added, because an SOS that goes to nobody is worse than no app.",
+    notice: [["why","\"Choose from contacts\" is the fast path; typing is the backup."],["","The location switch is off by default. SOS always shares location; check-ins only if she says so."]] },
+  { img: "img/4-picker.jpg", tag: "Picker", title: "3a · Choose from contacts",
+    text: "Android's own contact picker opens. Homeward never reads the address book, it only gets the one person tapped, so no contacts permission is needed.",
+    notice: [["","These four are test contacts placed on the emulator: Alwis Lim, Dad, Julia, Mom."]] },
+  { img: "img/5-contacts-mom.jpg", tag: "Added", title: "3b · Mom is added",
+    text: "Numbers that already have a country code go straight in. Ones without it drop into the form so the user can fix them, because a traveler's family is usually abroad.",
+    notice: [["","Continue turns blue as soon as there's one person."]] },
+  { img: "img/6-contacts-done.jpg", tag: "Sharing", title: "3c · Three people, location sharing on",
+    text: "Mom, Dad and Alwis are in. The switch \"Share my location when I say I'm OK\" is turned on here, so the new I'm OK button will include a map link.",
+    notice: [["why","Still no live tracking: location goes out only when she taps I'm OK or SOS."]] },
+  { img: "img/7-permissions.jpg", tag: "Permissions", title: "4 · Two things Homeward needs",
+    text: "Each permission gets one plain sentence about why, before Android asks. Nothing leaves the phone until an SOS.",
+    notice: [["","Location: warnings and the SOS spot. GPS works with no signal."],["","Text messages: the SOS reaches family with no mobile data."]] },
+  { img: "img/8-android-location.jpg", tag: "Location", title: "4a · Android asks for location",
+    text: "The system dialog. We tapped \"While using the app\", which is enough for warnings while Home is open.",
+    notice: [["","Precise location is what makes the red-zone distance and the safe-place pick accurate."]] },
+  { img: "img/9-android-sms.jpg", tag: "SMS", title: "4b · Android asks for SMS",
+    text: "Second system dialog. Allowing this lets Android send the SOS text automatically, with no extra tap, which iPhone can't do.",
+    notice: [["sos","This is the permission that makes \"SOS with no signal\" real."]] },
+  { img: "img/10-get-ready-start.jpg", tag: "Get ready", title: "5 · Getting you ready to go offline",
+    text: "While on wifi, Homeward gets everything it needs for later: the safety pack (cloud AI with Google Search), real safe places (OpenStreetMap) and the AI model for the phone.",
+    notice: [["why","This is the cloud half of hybrid AI, done once, so the dangerous moment later can be fully offline."]] },
+  { img: "img/11-get-ready-done.jpg", tag: "Ready", title: "5a · Ready",
+    text: "All three are done: Rio safety pack (police 190, embassy, phrases, red zones), 74 real police stations, hospitals and pharmacies, and the AI.",
+    notice: [["","\"This phone uses cloud AI instead\" is expected on the emulator. A Pixel 9 or newer runs Gemini Nano on the phone."],["","The user can start any time; the rest finishes in the background."]] },
+  { img: "img/12-home.jpg", tag: "Home", title: "6 · Home, where onboarding leads",
+    text: "The map is the home screen. Red zones carry labels, the sheet holds SOS, the four quick actions and a Nearby list.",
+    notice: [["sos","Only SOS is red. It says \"Works with no signal\"."],["","\"SOS goes to Mom, Dad, Alwis Lim\" with Edit, from what was just set up."],["","New: I'm OK, Photo, Safe place, Police 190. Nearby shows the closest red zone and the nearest open police station."]] },
+];
+
+const slides = document.getElementById("slides");
+const track = document.getElementById("track");
+const prev = document.getElementById("prev");
+const next = document.getElementById("next");
+let current = 0;
+
+steps.forEach((s, i) => {
+  const el = document.createElement("section");
+  el.className = "slide";
+  el.id = "step-" + (i + 1);
+  el.innerHTML = `
+    <div class="phone"><img src="${s.img}" alt="Homeward screen: ${s.tag}" loading="${i < 2 ? "eager" : "lazy"}" width="432" height="960"></div>
+    <div>
+      <div class="step-no">Step ${i + 1} of ${steps.length}</div>
+      <h2>${s.title}</h2>
+      <p>${s.text}</p>
+      <ul class="notice">${s.notice.map(([k, t]) => `<li class="${k}">${t}</li>`).join("")}</ul>
+    </div>`;
+  slides.appendChild(el);
+  const b = document.createElement("button");
+  b.type = "button"; b.textContent = (i + 1) + ". " + s.tag;
+  b.addEventListener("click", () => go(i));
+  track.appendChild(b);
+});
+
+function go(i) {
+  current = Math.max(0, Math.min(steps.length - 1, i));
+  slides.children[current].scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest", inline: "start" });
+  update();
+}
+function update() {
+  [...track.children].forEach((b, i) => b.setAttribute("aria-current", i === current ? "true" : "false"));
+  prev.disabled = current === 0;
+  next.disabled = current === steps.length - 1;
+}
+prev.addEventListener("click", () => go(current - 1));
+next.addEventListener("click", () => go(current + 1));
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") { e.preventDefault(); go(current + 1); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); go(current - 1); }
+});
+slides.addEventListener("scroll", () => {
+  const i = Math.round(slides.scrollLeft / slides.clientWidth);
+  if (i !== current) { current = i; update(); }
+}, { passive: true });
+update();
+</script>
+</body>
+</html>
