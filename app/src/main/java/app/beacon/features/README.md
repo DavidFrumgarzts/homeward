@@ -1,0 +1,11 @@
+# features/
+One folder per feature. Each file says at the top what it does and whether it uses on-device AI, cloud AI, or no AI.
+| Folder | Feature | Runs |
+|---|---|---|
+| `home/` | Home screen | UI |
+| `sos/` | Write and send the SOS | on-device AI + SMS/push |
+| `safetypack/` | Country safety pack (numbers, places, zones) | cloud AI once, then offline |
+| `safetymap/` | Green/yellow/red map + red-zone warning | offline logic + on-device AI |
+| `safeplace/` | Pick the nearest open safe place | offline logic |
+| `safetyphoto/` | Read taxi plates etc., send when back online | on-device AI |
+| `policecall/` | One-tap call to local police | phone dialer |

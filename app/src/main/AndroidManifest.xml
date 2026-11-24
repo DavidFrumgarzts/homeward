@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App manifest: the permissions Beacon needs, and which classes start the app. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Cloud AI, safety pack download, push. Not needed for the offline SOS. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- GPS works with no signal; used for the SOS location and red-zone warnings. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- SMS fallback when there is no mobile data. -->
+    <uses-permission android:name="android.permission.SEND_SMS" />
+
+    <application
+        android:name=".app.BeaconApplication"
+        android:label="@string/app_name"
+        android:theme="@style/Theme.Beacon"
+        android:supportsRtl="true">
+
+        <activity
+            android:name=".app.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
