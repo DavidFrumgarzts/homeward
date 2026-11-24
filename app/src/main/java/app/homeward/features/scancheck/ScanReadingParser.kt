@@ -33,7 +33,13 @@ object ScanReadingParser {
         )
     }
 
+    // "4,20" -> 4.20 and "1,500" -> 1500: a comma is a decimal point only when 1-2 digits follow it.
+    fun number(s: String): Double? {
+        val t = s.trim()
+        return (if (Regex(",\\d{1,2}$").containsMatchIn(t)) t.replace(".", "").replace(',', '.') else t.replace(",", "")).toDoubleOrNull()
+    }
+
     private fun JsonObject.str(key: String) = (this[key] as? JsonPrimitive)?.content
-    private fun JsonObject.num(key: String) = str(key)?.replace(',', '.')?.trim()?.toDoubleOrNull()
+    private fun JsonObject.num(key: String) = str(key)?.let { number(it) }
     private fun JsonObject.list(key: String) = (this[key] as? JsonArray).orEmpty().mapNotNull { it as? JsonObject }
 }

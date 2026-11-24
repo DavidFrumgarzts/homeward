@@ -1,6 +1,7 @@
 package app.homeward
 
 import app.homeward.features.safetypack.DemoBucharestPack
+import app.homeward.features.safetypack.DemoRioPack
 import app.homeward.features.scancheck.BoardRate
 import app.homeward.features.scancheck.FairPrice
 import app.homeward.features.scancheck.ScamKind
@@ -63,6 +64,11 @@ class ScanJudgeTest {
         val v = ScanJudge.judge(ScanReading(ScamKind.Other, "museum opening hours"), bucharest)
         assertEquals(Verdict.Unknown, v.verdict)
         assertEquals("Nothing saved about this", v.why)
+    }
+
+    @Test fun commonWordsDoNotTriggerAWarning() {
+        val sign = ScanReading(ScamKind.Other, "Thank you for visiting, please keep the doors closed")
+        assertEquals(Verdict.Unknown, ScanJudge.judge(sign, DemoRioPack.pack).verdict)
     }
 
     @Test fun emptyPackIsUnknown() =

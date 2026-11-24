@@ -86,7 +86,9 @@ object ScanJudge {
     }
 
     private fun sameThing(a: String, b: String) = words(a).intersect(words(b)).isNotEmpty()
-    private fun words(s: String) = s.lowercase(Locale.ROOT).split(Regex("[^\\p{L}\\p{N}%]+")).filter { it.length >= 3 }.toSet()
+    // Common words don't count as a match ("the", "you", "for"...), or any sign would trigger a warning.
+    private val stopwords = setOf("the", "you", "your", "for", "and", "with", "only", "this", "that", "are", "from", "not", "after", "before", "please", "thank", "than", "get", "its", "our")
+    private fun words(s: String) = s.lowercase(Locale.ROOT).split(Regex("[^\\p{L}\\p{N}%]+")).filter { it.length >= 3 && it !in stopwords }.toSet()
     private fun n2(x: Double) = String.format(Locale.ROOT, "%.2f", x)
     private fun n0(x: Double) = x.roundToInt().toString()
 }

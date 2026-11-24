@@ -30,6 +30,12 @@ class ScanReadingParserTest {
         assertEquals("RON", r.rates.single().to)
     }
 
+    @Test fun thousandsCommaIsNotADecimal() {
+        assertEquals(1500.0, ScanReadingParser.number("1,500")!!, 0.0001)
+        assertEquals(4.20, ScanReadingParser.number("4,20")!!, 0.0001)
+        assertEquals(4.5, ScanReadingParser.number("4,5")!!, 0.0001)
+    }
+
     @Test fun unknownKindIsOther() = assertEquals(ScamKind.Other, ScanReadingParser.parse("""{"kind":"Spaceship"}""")!!.kind)
 
     @Test fun noJsonIsNull() = assertNull(ScanReadingParser.parse("I can't read this photo."))

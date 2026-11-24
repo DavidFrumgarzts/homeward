@@ -61,7 +61,7 @@ fun ScanConfirmForm(read: ScanReading?, pack: SafetyPack, onCheck: (ScanReading)
         }
         Spacer(Modifier.height(16.dp))
         PrimaryButton("Check it", Modifier.fillMaxWidth()) {
-            val n = number.replace(',', '.').trim().toDoubleOrNull()
+            val n = ScanReadingParser.number(number)
             val text = read?.text.orEmpty()
             onCheck(
                 when {
