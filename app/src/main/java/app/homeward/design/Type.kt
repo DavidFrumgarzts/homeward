@@ -1,5 +1,7 @@
 package app.homeward.design
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -31,5 +33,7 @@ object HomewardType {
     val Body = TextStyle(fontFamily = HomewardFonts.Body, fontSize = 16.sp, lineHeight = 24.sp, color = HomewardColors.Text)
     val Small = TextStyle(fontFamily = HomewardFonts.Body, fontSize = 13.sp, lineHeight = 18.sp, color = HomewardColors.TextMuted)
     // Small capital letters on the map ("ARCOS DA LAPA") and time stamps in the story.
+    // Place names under the map badges ("Police"). A soft white glow keeps them readable over streets.
+    val PlaceLabel = TextStyle(fontFamily = HomewardFonts.Body, fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF3C4658), shadow = Shadow(Color.White, blurRadius = 6f))
     val MapLabel = TextStyle(fontFamily = HomewardFonts.Display, fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.7.sp, color = HomewardColors.MapNavy)
 }

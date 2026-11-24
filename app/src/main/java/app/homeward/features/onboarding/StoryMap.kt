@@ -18,10 +18,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import app.homeward.design.HomewardColors
 import app.homeward.features.lapamap.LapaIllustratedMap
 import app.homeward.features.lapamap.LapaMapProjection
+import kotlin.math.atan2
 
 // The map in the opening story: the SAME illustrated Lapa map as Home (lapamap/), with a walk on top.
-//   withBeacon = false -> the person walks from the bar into the red zone, leaving a dotted trail; a red dot marks where it ends
-//   withBeacon = true  -> the person stops at the corner and a blue route draws the way around, along the busy avenue
+//   withBeacon = false -> the green dot walks from the bar into the red zone, leaving a dotted trail; a red ring marks where it ends
+//   withBeacon = true  -> the dot waits at the corner, its arrow pointing the new way, and a blue route draws the way around
 // Takes about two seconds. Route numbers are in the map's 393 x 520 grid.
 @Composable
 fun StoryMap(withBeacon: Boolean, modifier: Modifier = Modifier) {
@@ -42,17 +43,19 @@ fun StoryMap(withBeacon: Boolean, modifier: Modifier = Modifier) {
     val measure = remember(walk) { PathMeasure().apply { setPath(walk, false) } }
     val head = measure.getPosition(measure.length * progress.value)
     val done = progress.value >= 1f
-    // With Beacon the person waits at the corner; without it, they walk the whole way in.
-    val person = if (withBeacon) start else head
+    // With Beacon the dot waits at the corner; without it, it walks the whole way in.
+    val you = if (withBeacon) start else head
+    // The arrow points along the walk: the way the path runs at that point (0 = up, clockwise).
+    val along = measure.getTangent(if (withBeacon) 0f else measure.length * progress.value)
+    val heading = Math.toDegrees(atan2(along.x.toDouble(), -along.y.toDouble())).toFloat()
 
-    LapaIllustratedMap(person = LapaMapProjection.Spot(person.x, person.y), redZoneLabel = "RUA DOS\nINVÁLIDOS", modifier = modifier) {
+    LapaIllustratedMap(you = LapaMapProjection.Spot(you.x, you.y), heading = heading, redZoneLabel = "RUA DOS\nINVÁLIDOS", modifier = modifier) {
         val drawn = Path().also { measure.getSegment(0f, measure.length * progress.value, it, true) }
         if (withBeacon) {
             // The way he would have gone, faint.
             drawPath(Path().apply { moveTo(start.x, start.y); lineTo(150f, 154f); lineTo(151f, 190f) }, HomewardColors.MapNavy.copy(alpha = 0.45f), style = Stroke(2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f, 6f))))
-            drawPath(drawn, Color.White, style = Stroke(9f, cap = StrokeCap.Round, join = StrokeJoin.Round))
-            drawPath(drawn, Color(0xFF4F8BFF), style = Stroke(4.5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
-            if (done) { drawCircle(Color.White, 11f, head); drawCircle(HomewardColors.Green, 8f, head) }
+            drawPath(drawn, HomewardColors.Primary, style = Stroke(5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            if (done) { drawCircle(Color.White, 9f, head); drawCircle(HomewardColors.Primary, 6f, head) } // where the safe walk ends
         } else {
             drawPath(drawn, HomewardColors.MapNavy, style = Stroke(3.5f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f, 8f))))
             if (done) {

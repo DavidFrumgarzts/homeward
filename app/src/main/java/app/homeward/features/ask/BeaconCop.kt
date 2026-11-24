@@ -37,7 +37,7 @@ enum class CopMood { Idle, Thinking, Talking }
 //   Talking  -> the mouth opens and closes
 // Numbers are in the drawing's own 64 x 72 grid.
 @Composable
-fun BeaconCop(mood: CopMood, size: Dp = 88.dp, modifier: Modifier = Modifier) {
+fun BeaconCop(mood: CopMood, size: Dp = 60.dp, modifier: Modifier = Modifier) {
     val loop = rememberInfiniteTransition(label = "cop")
     val bob by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(2600, easing = LinearEasing)), label = "bob")
     val blinkClock by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(3400, easing = LinearEasing)), label = "blink")

@@ -2,7 +2,6 @@ package app.homeward.features.lapamap
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -22,31 +21,38 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.homeward.R
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
-import kotlin.math.sin
 
-// The illustrated map of Lapa (Figma "Map/Lapa illustrated"): a drawn base, landmark pictures,
-// a few labels, and a small person where you are. Used on Home and in the opening story.
-// `person` is a spot on the map's own grid (LapaMapProjection.toSpot turns GPS into one); null hides it.
+// The illustrated map of Lapa (Figma "Map/Lapa illustrated"): a drawn base, small place badges with
+// their names, the red zone, and a green dot where you are. Used on Home and in the opening story.
+// `you` is a spot on the map's own grid (LapaMapProjection.toSpot turns GPS into one); null hides the dot.
+// `heading` is the way you are walking, in degrees clockwise from north; the dot gets a small arrow
+// pointing that way. Null (standing still, or not known yet) shows the dot with no arrow.
 // `redZoneLabel` comes from the saved safety pack, e.g. "RED ZONE\nAFTER 11PM".
 // `extra` draws on top of the streets, in the map's grid (the story uses it for the walk).
 //
-// Three small things move, so the map feels alive: the police lights blink, the tram rides
-// along the arches, and a soft circle pulses under the person.
+// Two small things move: a ring pulses around the police badge (red, then blue), and a soft circle
+// pulses under your dot.
 @Composable
 fun LapaIllustratedMap(
-    person: LapaMapProjection.Spot?,
+    you: LapaMapProjection.Spot?,
+    heading: Float?,
     redZoneLabel: String,
     modifier: Modifier = Modifier,
     palette: LapaMapPalette = LapaMapPalette.Day,
@@ -54,70 +60,73 @@ fun LapaIllustratedMap(
 ) {
     val loop = rememberInfiniteTransition(label = "map")
     val pulse by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(1800, easing = LinearEasing)), label = "pulse")
-    val blink by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(1100, easing = LinearEasing)), label = "blink")
-    val tram by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(7000, easing = LinearEasing), RepeatMode.Reverse), label = "tram")
+    val police by loop.animateFloat(0f, 2f, infiniteRepeatable(tween(2600, easing = LinearEasing)), label = "police")
 
     BoxWithConstraints(modifier.clipToBounds()) {
         // One step of the drawing's 393-wide grid, in screen dp.
         val unit: Dp = maxWidth / LapaMapProjection.WIDTH
         Canvas(Modifier.fillMaxSize()) { drawLapaBase(unit.toPx(), palette, extra) }
 
-        // The pulsing circle on the ground under the person.
-        person?.let { spot ->
+        // Moving rings: around the police badge, and under your dot.
+        Canvas(Modifier.fillMaxSize()) {
+            scale(unit.toPx(), unit.toPx(), pivot = Offset.Zero) {
+                val beat = police % 1f                                   // 0..1, twice per loop
+                val ringColor = if (police < 1f) HomewardColors.Red else HomewardColors.Blue
+                drawCircle(ringColor.copy(alpha = 0.5f * (1f - beat)), 13f + 9f * beat, Offset(POLICE.x, POLICE.y), style = Stroke(2f))
+                you?.let { drawCircle(HomewardColors.Green.copy(alpha = 0.22f * (1f - pulse) + 0.06f), 12f + 10f * pulse, Offset(it.x, it.y)) }
+            }
+        }
+
+        Place(unit, R.drawable.landmark_bar, "Bar", Offset(41f, 128f), palette.label)
+        Place(unit, R.drawable.landmark_catedral, "Cathedral", Offset(321f, 138f), palette.label)
+        Place(unit, R.drawable.landmark_police, "Police", POLICE, palette.label)
+        Place(unit, R.drawable.landmark_hospital, "Hospital", Offset(63f, 318f), palette.label)
+        Place(unit, R.drawable.landmark_arcos, "Arcos da Lapa", Offset(334f, 334f), palette.label)
+        Place(unit, R.drawable.landmark_steps, "Selarón steps", Offset(309f, 418f), palette.label)
+
+        MapLabel(unit, redZoneLabel, HomewardType.MapLabel, centerX = 153f, y = 114f, color = palette.zoneLabel)
+        // The avenue's name, written just above it.
+        Text(
+            "AV. MEM DE SÁ", style = HomewardType.MapLabel, color = palette.avenueLabel,
+            modifier = Modifier.offset(unit * 292, unit * 254).graphicsLayer { rotationZ = 7.5f },
+        )
+
+        // You: a green dot with a white edge, and an arrow on the side you are walking toward.
+        you?.let { spot ->
             Canvas(Modifier.fillMaxSize()) {
                 scale(unit.toPx(), unit.toPx(), pivot = Offset.Zero) {
-                    drawCircle(HomewardColors.Blue.copy(alpha = 0.22f * (1f - pulse) + 0.06f), 14f + 12f * pulse, Offset(spot.x, spot.y))
+                    val center = Offset(spot.x, spot.y)
+                    heading?.let { degrees ->
+                        rotate(degrees, pivot = center) {
+                            // Drawn pointing north (up); the rotate above turns it to the real direction.
+                            val arrow = Path().apply { moveTo(center.x, center.y - 19f); lineTo(center.x + 6.5f, center.y - 9f); lineTo(center.x - 6.5f, center.y - 9f); close() }
+                            drawPath(arrow, Color.White, style = Stroke(3f, join = StrokeJoin.Round))
+                            drawPath(arrow, HomewardColors.Green)
+                        }
+                    }
+                    drawCircle(Color.White, 9.5f, center)
+                    drawCircle(HomewardColors.Green, 7f, center)
                 }
             }
         }
-
-        Landmark(unit, R.drawable.landmark_bar, "Bar", x = 20f, y = 100f, w = 42, h = 42)
-        Landmark(unit, R.drawable.landmark_catedral, "Cathedral", x = 292f, y = 96f, w = 58, h = 58)
-        Landmark(unit, R.drawable.landmark_police, "Police station", x = POLICE_X, y = POLICE_Y, w = 50, h = 50)
-        Landmark(unit, R.drawable.landmark_hospital, "Hospital", x = 40f, y = 292f, w = 46, h = 46)
-        Landmark(unit, R.drawable.landmark_arcos, "Arcos da Lapa", x = ARCOS_X, y = 300f, w = 96, h = 54)
-        Landmark(unit, R.drawable.landmark_tram, "Tram", x = ARCOS_X + 6f + 60f * tram, y = 301f, w = 24, h = 13)
-        Landmark(unit, R.drawable.landmark_steps, "Selarón steps", x = 286f, y = 390f, w = 46, h = 48)
-
-        // Police lights: red and blue take turns glowing.
-        Canvas(Modifier.fillMaxSize()) {
-            scale(unit.toPx(), unit.toPx(), pivot = Offset.Zero) {
-                val red = ((sin(blink * 2 * Math.PI) + 1) / 2).toFloat()
-                drawCircle(HomewardColors.Red.copy(alpha = 0.45f * red), 6f, Offset(POLICE_X + 22.2f, POLICE_Y + 5.2f))
-                drawCircle(HomewardColors.Blue.copy(alpha = 0.45f * (1f - red)), 6f, Offset(POLICE_X + 27.8f, POLICE_Y + 5.2f))
-            }
-        }
-
-        // Only the labels that help in an emergency.
-        MapLabel(unit, "POLICE", centerX = 249, y = 322, color = palette.label)
-        MapLabel(unit, "HOSPITAL", centerX = 63, y = 343, color = palette.label)
-        MapLabel(unit, redZoneLabel, centerX = 153, y = 114, color = palette.zoneLabel)
-        // The avenue's name, written along it in white.
-        Text(
-            "AV. MEM DE SÁ", style = HomewardType.MapLabel, color = palette.avenueLabel,
-            modifier = Modifier.offset(unit * 292, unit * 268).rotate(7.5f),
-        )
-
-        // You: the person stands with their feet on the spot.
-        person?.let { Landmark(unit, R.drawable.landmark_person, "You are here", x = it.x - 12f, y = it.y - 37f, w = 24, h = 38) }
     }
 }
 
-private const val POLICE_X = 224f
-private const val POLICE_Y = 270f
-private const val ARCOS_X = 286f
+private val POLICE = Offset(249f, 298f)
+private const val BADGE = 24f // badge size on the map's grid
 
-// One picture, placed by its top-left corner on the drawing's grid.
+// One place: a small badge centered on `center`, with its name underneath.
 @Composable
-private fun BoxWithConstraintsScope.Landmark(unit: Dp, @DrawableRes picture: Int, name: String, x: Float, y: Float, w: Int, h: Int) {
-    Image(painterResource(picture), contentDescription = name, modifier = Modifier.offset(unit * x, unit * y).size(unit * w, unit * h))
+private fun BoxWithConstraintsScope.Place(unit: Dp, @DrawableRes badge: Int, name: String, center: Offset, labelColor: Color) {
+    Image(painterResource(badge), contentDescription = name, modifier = Modifier.offset(unit * (center.x - BADGE / 2), unit * (center.y - BADGE / 2)).size(unit * BADGE))
+    MapLabel(unit, name, HomewardType.PlaceLabel, centerX = center.x, y = center.y + BADGE / 2 + 2f, color = labelColor)
 }
 
-// A small capital-letter label, centered on centerX.
+// A small label, centered on centerX.
 @Composable
-private fun BoxWithConstraintsScope.MapLabel(unit: Dp, text: String, centerX: Int, y: Int, color: Color) {
+private fun BoxWithConstraintsScope.MapLabel(unit: Dp, text: String, style: TextStyle, centerX: Float, y: Float, color: Color) {
     val boxWidth = 140.dp
     Box(Modifier.offset(unit * centerX - boxWidth / 2, unit * y).width(boxWidth), contentAlignment = Alignment.TopCenter) {
-        Text(text, style = HomewardType.MapLabel, color = color, textAlign = TextAlign.Center)
+        Text(text, style = style, color = color, textAlign = TextAlign.Center)
     }
 }

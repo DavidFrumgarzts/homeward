@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.device.GeoPoint
 import app.homeward.features.checkin.CheckInSender
+import app.homeward.features.lapamap.Heading
 import app.homeward.features.lapamap.LapaIllustratedMap
 import app.homeward.features.lapamap.LapaMapProjection
 import app.homeward.features.policecall.PoliceCaller
@@ -43,8 +44,10 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
 
     // Walking toward a red zone? Buzz once (ApproachDetector decides when) and the banner shows.
     val detector = remember { ApproachDetector() }
+    var heading by remember { mutableStateOf<Float?>(null) } // which way you're walking; null until you move
     LaunchedEffect(Unit) {
         AppServices.locationUpdates.stream().collect { point ->
+            Heading.between(here, point)?.let { heading = it }
             here = point
             val nowHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             if (detector.update(point, pack.zones, nowHour, System.currentTimeMillis()) != null) AppServices.haptics.warn()
@@ -58,7 +61,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
         if (LapaMapProjection.contains(here)) {
             // "RED ZONE / AFTER 11PM": the hour comes from the saved pack.
             val avoid = pack.zones.firstOrNull { it.level == ZoneLevel.Avoid }
-            LapaIllustratedMap(LapaMapProjection.toSpot(here), "RED ZONE" + (avoid?.let { "\nAFTER ${NearbyFeed.clock(it.riskyFromHour).uppercase()}" } ?: ""), Modifier.fillMaxSize())
+            LapaIllustratedMap(LapaMapProjection.toSpot(here), heading, "RED ZONE" + (avoid?.let { "\nAFTER ${NearbyFeed.clock(it.riskyFromHour).uppercase()}" } ?: ""), Modifier.fillMaxSize())
         } else {
             SafetyMapView(here, pack.zones, Modifier.fillMaxSize(), you = here, highlight = if (showSafePlace) safePlace?.place else null, bottomCoveredPx = sheetHeightPx)
         }

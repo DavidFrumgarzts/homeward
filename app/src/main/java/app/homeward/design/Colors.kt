@@ -31,12 +31,13 @@ object HomewardColors {
     val OnNightMuted = Color(0xFF93A3C7)
     val Sky = Color(0xFF7FB2FF)          // the safe route on the night map
 
-    // Illustrated map colors (features/lapamap).
-    val MapPaper = Color(0xFFF7EDD8)
-    val MapStreet = Color(0xFFEFDFBF)
-    val MapStreetMajor = Color(0xFFE6D2A6)
-    val MapPark = Color(0xFFCFE3C4)
-    val MapTree = Color(0xFF7FB77E)
-    val MapTreeLine = Color(0xFF3E7B4F)
-    val MapNavy = Color(0xFF1F3A6E)      // the main avenue, landmark outlines and labels
+    // Illustrated map colors (features/lapamap): a light grey city map with white streets.
+    val MapPaper = Color(0xFFE9EBEE)     // the ground between streets
+    val MapStreet = Color(0xFFFFFFFF)
+    val MapPark = Color(0xFFCFE6CB)
+    val MapSand = Color(0xFFFAF3DF)      // a few cream blocks, for variety
+    val MapWater = Color(0xFFB9E0F7)
+    val MapTree = Color(0xFFA5D3A0)
+    val MapTreeLine = Color(0xFF5E9B6B)
+    val MapNavy = Color(0xFF1F3A6E)      // landmark outlines and labels
 }
