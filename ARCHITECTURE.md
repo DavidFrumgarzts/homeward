@@ -11,6 +11,9 @@ Find the file for any feature without reading the whole app. All code is in
 | Read a safety photo (taxi plate) | **On device** | `features/safetyphoto/SafetyPhotoReader.kt` |
 | Explain a red zone | **On device** | `features/safetymap/ZoneWarningWriter.kt` |
 | Ask Beacon: answer a question from the saved pack | **On device**, cloud fallback | `features/ask/AskBeacon.kt`, `AskBeaconPrompt.kt` |
+| Research travel scams and fair prices for the pack (Reddit threads, forums, advisories) | **Cloud** (Gemini + Google Search) | `features/scancheck/ScamResearcher.kt`, `ScamResearchPrompt.kt` |
+| Scan check: read a photo of a board, meter, ticket or price | **On device**, cloud only after she agrees | `features/scancheck/ScanReader.kt` |
+| Scan check: Looks fair / Be careful / Walk away | **No AI**, numbers compared with the pack | `features/scancheck/ScanJudge.kt` |
 | Red zone ahead? Buzz now? Nearest open safe place? Push or SMS? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `ApproachDetector.kt`, `SafePlacePicker.kt`, `ChannelChooser.kt` |
 | Map of the city | Downloaded once on wifi, then offline | `features/offlinemap/` |
 | Real safe places (police, hospitals, pharmacies, gas stations) | OpenStreetMap, downloaded on wifi | `features/osmplaces/` |
@@ -45,5 +48,8 @@ Both AI models are created in one place: `ai/AiModels.kt`.
 | Colors / spacing | `design/Colors.kt`, `design/components/` |
 | Ask Beacon answer is wrong or vague | `features/ask/AskBeaconPrompt.kt` (+ `AskBeaconPromptTest`): the AI only knows the facts listed there |
 | Illustrated Lapa map: dot in the wrong place, landmark misplaced | `features/lapamap/LapaMapProjection.kt` (+ test), `LapaIllustratedMap.kt` |
+| Scan verdict wrong (rate, price, "Nothing saved") | `features/scancheck/ScanJudge.kt` (+ `ScanJudgeTest`), the pack's `scams` |
+| Scan reads nothing from a photo | `features/scancheck/ScanReader.kt` prompt, `ScanReadingParser.kt` (+ test) |
+| Yellow ring missing or in the wrong place | `features/scancheck/RecommendedPlace.kt`, `lapamap/LapaBadges.kt`, `features/home/HomeScreen.kt` |
 | Opening story (map route, text) | `features/onboarding/StoryStep.kt`, `StoryMap.kt` |
 | Fonts (Sora / Inter not showing) | `design/Type.kt`: `HomewardFonts` still uses the system font until the .ttf files are added to `res/font` |

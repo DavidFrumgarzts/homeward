@@ -26,19 +26,23 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
+import app.homeward.app.AppServices
 import app.homeward.device.Speaker
+import app.homeward.features.scancheck.RecommendedPlace
+import java.util.Calendar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // One line of the chat. `fromYou` = the traveler's question; otherwise Beacon's answer.
-private data class ChatLine(val fromYou: Boolean, val text: String)
+// `place` is the saved place Beacon recommended in this answer (picked in code), for "Show on map".
+private data class ChatLine(val fromYou: Boolean, val text: String, val place: String? = null)
 
 // Chat with Beacon (Figma "08 Ask Beacon"): the cop at the top, your questions in blue on the right,
 // Beacon's answers in white on the left, and a box to type the next one. It keeps the last answers in mind
 // for follow-ups. Tap the cop to hear the last answer read out loud (the phone's own voice, works offline).
-// `firstQuestion` is what was tapped on Home ("" opens an empty chat).
+// `firstQuestion` is what was tapped on Home ("" opens an empty chat). `onShowPlace` opens Home with that place blinking yellow.
 @Composable
-fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit) {
+fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit, onShowPlace: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val lines = remember { mutableStateListOf<ChatLine>() }
@@ -57,8 +61,10 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit) {
         lines += ChatLine(fromYou = true, text = q.trim()); typed = ""; thinking = true
         scope.launch {
             val answer = AskBeacon.answer(q.trim(), earlier)
+            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+            val place = RecommendedPlace.pick(q.trim(), AppServices.packStore.load(), AppServices.location.lastKnown(), hour)?.name
             thinking = false
-            lines += ChatLine(fromYou = false, text = answer.text)
+            lines += ChatLine(fromYou = false, text = answer.text, place = place)
             shownChars = 0
             while (shownChars < answer.text.length) { delay(18); shownChars = (shownChars + 2).coerceAtMost(answer.text.length) }
         }
@@ -82,6 +88,11 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit) {
             itemsIndexed(lines) { i, line ->
                 val newest = i == lines.lastIndex && !line.fromYou
                 Bubble(line.fromYou, if (newest) line.text.take(shownChars) else line.text)
+                val doneTyping = !newest || shownChars >= line.text.length
+                if (line.place != null && doneTyping) {
+                    Text("Show ${line.place} on the map", style = HomewardType.Label, color = HomewardColors.Primary,
+                        modifier = Modifier.padding(top = 6.dp, start = 4.dp).clickable { onShowPlace(line.place) }.padding(vertical = 6.dp))
+                }
             }
             if (thinking) item { Bubble(fromYou = false, text = "…") }
             // Ready-made questions before the first one
