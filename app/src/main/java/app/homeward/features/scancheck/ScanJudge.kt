@@ -41,7 +41,10 @@ object ScanJudge {
 
     private fun judgePrice(reading: ScanReading, pack: SafetyPack): ScanVerdict? {
         for (seen in reading.prices) for (w in pack.scams) {
-            val fair = w.fairPrices.firstOrNull { it.currency.equals(seen.currency, true) && sameThing(it.item, seen.item) } ?: continue
+            // A typed price has no item name: then the warning's kind has to match instead (a Tour price vs. a camel ride).
+            val fair = w.fairPrices.firstOrNull {
+                it.currency.equals(seen.currency, true) && if (seen.item.isBlank()) w.kind == reading.kind else sameThing(it.item, seen.item)
+            } ?: continue
             val verdict = when {
                 seen.amount <= fair.high -> Verdict.LooksFair
                 seen.amount <= fair.high * CAREFUL_PRICE_FACTOR -> Verdict.BeCareful

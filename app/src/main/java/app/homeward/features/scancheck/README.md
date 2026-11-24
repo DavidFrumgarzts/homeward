@@ -13,3 +13,6 @@ Looks fair, Be careful or Walk away, offline, from scam reports saved in the pac
 - `ScamResearchParser.kt`: PURE LOGIC, research answer to `ScamWarning`s; drops broken or unsourced items.
 - `ScamResearchSchedule.kt`: PURE LOGIC, when to research (online, pack has no scams, once a day per city).
 - `ScamResearcher.kt`: CLOUD, runs the research from `PackUpdater` and saves the scams into the pack. Never throws.
+- `ScanScreen.kt`: photo -> on-device read (or ask before the cloud, or type it) -> confirm -> verdict. Debug builds can switch to the Bucharest demo.
+- `ScanConfirmForm.kt`: "We read" — she checks or types the kind and the number before anything is judged.
+- `ScanVerdictCard.kt`: Looks fair / Be careful / Walk away, why, what to do, the safer place, and the pack source.

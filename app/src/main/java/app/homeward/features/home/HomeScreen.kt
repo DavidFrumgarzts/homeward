@@ -34,7 +34,7 @@ import java.util.Calendar
 // Inside Lapa the map is the illustrated one (lapamap/); anywhere else it is the real street map (safetymap/).
 // This file only wires the pieces together.
 @Composable
-fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) -> Unit) {
+fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) -> Unit, onScan: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pack = remember { AppServices.packStore.load() }
@@ -89,6 +89,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
         HomeBottomSheet(
             police = pack.police, contactNames = contactNames, safePlace = safePlace,
             onAsk = onAsk,
+            onScan = onScan,
             onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },
             onImOk = {
                 scope.launch {

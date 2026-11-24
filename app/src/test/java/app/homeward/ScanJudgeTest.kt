@@ -54,6 +54,11 @@ class ScanJudgeTest {
         assertEquals(Verdict.WalkAway, ScanJudge.judge(camel(1500.0), giza).verdict)
     }
 
+    @Test fun typedPriceWithoutItemMatchesByKindAndCurrency() {
+        val typed = ScanReading(ScamKind.Tour, prices = listOf(SeenPrice("", "EGP", 1500.0)))
+        assertEquals(Verdict.WalkAway, ScanJudge.judge(typed, giza).verdict)
+    }
+
     @Test fun noNumbersNoMatchIsUnknown() {
         val v = ScanJudge.judge(ScanReading(ScamKind.Other, "museum opening hours"), bucharest)
         assertEquals(Verdict.Unknown, v.verdict)

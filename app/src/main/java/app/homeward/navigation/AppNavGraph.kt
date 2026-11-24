@@ -12,6 +12,7 @@ import app.homeward.features.ask.AskBeaconScreen
 import app.homeward.features.contacts.ContactsScreen
 import app.homeward.features.home.HomeScreen
 import app.homeward.features.onboarding.OnboardingFlow
+import app.homeward.features.scancheck.ScanScreen
 import app.homeward.app.AppServices
 import app.homeward.features.sos.SosComposeScreen
 import app.homeward.features.sos.SosSentScreen
@@ -34,12 +35,14 @@ fun AppNavGraph() {
                 onSos = { nav.navigate(Screen.SosCompose.route) },
                 onEditContacts = { nav.navigate(Screen.Contacts.route) },
                 onAsk = { question -> nav.navigate("${Screen.Ask.route}?q=${Uri.encode(question)}") },
+                onScan = { nav.navigate(Screen.Scan.route) },
             )
         }
         composable(Screen.SosCompose.route) {
             SosComposeScreen(sos, onBack = { nav.popBackStack() }, onSent = { nav.navigate(Screen.SosSent.route) })
         }
         composable(Screen.SosSent.route) { SosSentScreen(sos) }
+        composable(Screen.Scan.route) { ScanScreen(onBack = { nav.popBackStack() }, onShowPlace = { nav.popBackStack() }) }
         composable(Screen.Contacts.route) { ContactsScreen(onBack = { nav.popBackStack() }) }
         composable("${Screen.Ask.route}?q={q}", arguments = listOf(navArgument("q") { type = NavType.StringType; defaultValue = "" })) { entry ->
             AskBeaconScreen(firstQuestion = entry.arguments?.getString("q").orEmpty(), onBack = { nav.popBackStack() })

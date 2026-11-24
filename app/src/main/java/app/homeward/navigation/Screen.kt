@@ -9,4 +9,5 @@ enum class Screen(val route: String) {
     SosSent("sos_sent"),
     Contacts("contacts"),
     Ask("ask"), // Ask Beacon; the question travels as ask?q=…
+    Scan("scan"), // the scan check: is this exchange board, meter or price legit?
 }
