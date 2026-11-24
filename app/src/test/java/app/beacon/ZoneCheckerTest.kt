@@ -17,5 +17,6 @@ class ZoneCheckerTest {
     @Test fun overnightRangeIsRiskyAt2am() = assertTrue(ZoneChecker.isRiskyAt(red, 2))
     @Test fun overnightRangeIsSafeAtNoon() = assertFalse(ZoneChecker.isRiskyAt(red, 12))
     @Test fun redZoneFoundWhenCloseAtNight() = assertEquals(red, ZoneChecker.redZoneAhead(GeoPoint(0.011, 0.005), listOf(red), hour = 1))
+    @Test fun distanceIsToEdgeNotCorner() = assertTrue(ZoneChecker.distanceToZone(GeoPoint(0.011, 0.005), red) in 100.0..125.0)
     @Test fun noRedZoneInDaytime() = assertNull(ZoneChecker.redZoneAhead(GeoPoint(0.011, 0.005), listOf(red), hour = 14))
 }

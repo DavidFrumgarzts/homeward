@@ -24,7 +24,7 @@ Hybrid inference with `InferenceMode.PREFER_ON_DEVICE`: everything that must wor
 the city research runs in the cloud with Google Search grounding. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Run it
-1. Install [Android Studio](https://developer.android.com/studio) and open this folder. Let it create the Gradle wrapper.
+1. Install [Android Studio](https://developer.android.com/studio) and open this folder (or build from the terminal with `./gradlew assembleDebug`, Java 17).
 2. Create a Firebase project, add an Android app with package `app.beacon`, enable **Firebase AI Logic**
    (Gemini Developer API) and **App Check**, and download `google-services.json` into `app/` (it is git-ignored).
 3. Run on a phone with Gemini Nano (Pixel 9 or newer, recent Samsung flagships) to see on-device AI.

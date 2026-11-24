@@ -26,7 +26,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        // Firebase hybrid/on-device AI is a public preview; allow its APIs everywhere.
+        optIn.add("com.google.firebase.ai.type.PublicPreviewAPI")
+    }
 }
 
 dependencies {
