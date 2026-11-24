@@ -9,6 +9,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
@@ -49,6 +50,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
     }
     var showSafePlace by remember { mutableStateOf(false) }
     var popup by remember { mutableStateOf<String?>(null) }
+    var sheetHeightPx by remember { mutableStateOf(0) } // measured, so the map can keep you above the sheet
 
     // Photo: take picture -> on-device AI reads it -> queued for family until online.
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
@@ -60,7 +62,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
     }
 
     Box(Modifier.fillMaxSize()) {
-        SafetyMapView(here, pack.zones, Modifier.fillMaxSize(), you = here, highlight = if (showSafePlace) safePlace?.place else null)
+        SafetyMapView(here, pack.zones, Modifier.fillMaxSize(), you = here, highlight = if (showSafePlace) safePlace?.place else null, bottomCoveredPx = sheetHeightPx)
 
         redZone?.let { zone ->
             RedZoneBanner(zone, ZoneChecker.distanceToZone(here, zone).toInt(), modifier = Modifier.padding(16.dp), onClick = {
@@ -74,11 +76,12 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
 
         HomeBottomSheet(
             city = pack.city, country = pack.country, police = pack.police, contactNames = contactNames, onEditContacts = onEditContacts,
+            nearby = remember(here) { NearbyFeed.build(here, pack, hour) },
             onSos = onSos,
             onPhoto = { camera.launch(null) },
             onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },
             onPolice = { PoliceCaller.dial(context, pack.police) },
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged { sheetHeightPx = it.height },
         )
     }
 

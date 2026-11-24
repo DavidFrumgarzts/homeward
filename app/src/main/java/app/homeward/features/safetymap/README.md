@@ -3,3 +3,4 @@
 - `ApproachDetector.kt`: pure logic. Buzz only when walking TOWARD a risky red zone, once per zone per 15 min.
 - `ZoneWarningWriter.kt`: on-device AI rephrases the saved reasons into one warning.
 - `SafetyMapView.kt`: the map with zones drawn. Home uses it full-screen.
+- `ZoneLabel.kt`: Citizen-style pill label on the map ("R. dos Inválidos · after 11pm").

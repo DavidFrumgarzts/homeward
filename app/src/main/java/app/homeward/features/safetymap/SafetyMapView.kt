@@ -26,6 +26,8 @@ fun SafetyMapView(
     you: GeoPoint? = null,
     highlight: SafePlace? = null,
     interactive: Boolean = true,
+    // Pixels hidden by the bottom sheet. The map shifts up by half of it so "you" stay in view.
+    bottomCoveredPx: Int = 0,
 ) {
     AndroidView(modifier = modifier, factory = { ctx ->
         MapView(ctx).apply {
@@ -36,9 +38,11 @@ fun SafetyMapView(
         map.setMultiTouchControls(interactive)
         map.isClickable = interactive
         map.controller.setZoom(16.5)
+        map.setMapCenterOffset(0, -bottomCoveredPx / 2)
         map.controller.setCenter(OsmPoint(center.lat, center.lng))
         map.overlays.clear()
         zones.forEach { map.overlays.add(zoneShape(it)) }
+        zones.filter { it.level != ZoneLevel.Safer }.forEach { map.overlays.add(zoneLabel(map, it)) }
         map.overlays.add(CopyrightOverlay(map.context)) // map credit, required by the tile license
         you?.let { map.overlays.add(pin(map, it, "You")) }
         highlight?.let { map.overlays.add(pin(map, GeoPoint(it.lat, it.lng), it.name)) }
@@ -64,4 +68,16 @@ private fun pin(map: MapView, p: GeoPoint, label: String) = Marker(map).apply {
     position = OsmPoint(p.lat, p.lng)
     title = label
     setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+}
+
+// Citizen-style label pinned at the zone's center, e.g. "R. dos Inválidos · after 11pm".
+private fun zoneLabel(map: MapView, zone: SafetyZone) = Marker(map).apply {
+    val lat = zone.polygon.map { it[0] }.average()
+    val lng = zone.polygon.map { it[1] }.average()
+    position = OsmPoint(lat, lng)
+    val dot = if (zone.level == ZoneLevel.Avoid) AColor.rgb(217, 43, 51) else AColor.rgb(224, 161, 15)
+    val hours = if (zone.riskyFromHour == 0 && zone.riskyToHour == 24) "" else " · after ${app.homeward.features.home.NearbyFeed.clock(zone.riskyFromHour)}"
+    icon = ZoneLabel.make(map.context.resources, zone.name.replace("Rua ", "R. ") + hours, dot)
+    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+    setInfoWindow(null) // label only, no popup
 }

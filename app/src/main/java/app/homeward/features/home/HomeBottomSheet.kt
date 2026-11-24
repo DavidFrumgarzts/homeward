@@ -30,6 +30,7 @@ fun HomeBottomSheet(
     country: String,
     police: String,
     contactNames: String,
+    nearby: List<NearbyFeed.Item>,
     onEditContacts: () -> Unit,
     onSos: () -> Unit,
     onPhoto: () -> Unit,
@@ -67,5 +68,6 @@ fun HomeBottomSheet(
             RoundAction("Safe place", Icons.Outlined.Place, onSafePlace)
             RoundAction("Police $police", Icons.Outlined.Phone, onPolice)
         }
+        NearbyList(nearby)
     }
 }
