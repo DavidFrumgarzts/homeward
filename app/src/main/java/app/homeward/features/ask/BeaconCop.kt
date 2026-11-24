@@ -29,8 +29,9 @@ import kotlin.math.sin
 // What the cop is doing right now.
 enum class CopMood { Idle, Thinking, Talking }
 
-// Beacon's face in the chat: a small friendly police officer, drawn in the same line style as the map
-// (Figma "Character/Beacon cop"). It is drawn here, piece by piece, so the pieces can move:
+// Beacon's face in the chat: a classic cartoon police officer (peaked cap with a gold badge, navy shirt
+// with a collar, pocket and badge, dark outlines), with a friendly face. Figma: "Character/Beacon cop".
+// It is drawn here, piece by piece, so it stays sharp at any size and the pieces can move:
 //   always   -> a gentle bob, and a blink every few seconds
 //   Thinking -> the eyes look up and three dots bounce
 //   Talking  -> the mouth opens and closes
@@ -43,52 +44,73 @@ fun BeaconCop(mood: CopMood, size: Dp = 88.dp, modifier: Modifier = Modifier) {
     val talk by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(260, easing = LinearEasing)), label = "talk")
     val dots by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "dots")
 
-    val navy = HomewardColors.MapNavy
-    val cream = Color(0xFFFFF8EC)
+    val line = Color(0xFF14213D)      // dark outline
+    val uniform = Color(0xFF2B3D66)   // navy shirt and cap
+    val uniformLight = Color(0xFF3A5088)
+    val skin = Color(0xFFF2C6A0)
+    val hair = Color(0xFF2B2118)
+    val gold = Color(0xFFF2B33D)
     Canvas(modifier.size(size * 64f / 72f, size)) {
         val unit = this.size.height / 72f
         scale(unit, unit, pivot = Offset.Zero) {
             translate(top = sin(bob * 2 * Math.PI).toFloat() * 0.8f) {
-                // Uniform
-                val body = Path().apply { moveTo(9f, 71f); cubicTo(9f, 53f, 19f, 45f, 32f, 45f); cubicTo(45f, 45f, 55f, 53f, 55f, 71f); close() }
-                drawPath(body, HomewardColors.Primary)
-                drawPath(body, navy, style = Stroke(2f, join = StrokeJoin.Round))
-                drawPath(Path().apply { moveTo(26f, 46f); lineTo(32f, 53f); lineTo(38f, 46f) }, cream, style = Stroke(2.2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                // Badge on the chest
-                val badge = Path().apply { moveTo(42f, 56f); lineTo(45.5f, 57.4f); lineTo(45.5f, 60f); cubicTo(45.5f, 62f, 44f, 63.2f, 42f, 63.8f); cubicTo(40f, 63.2f, 38.5f, 62f, 38.5f, 60f); lineTo(38.5f, 57.4f); close() }
-                drawPath(badge, Color(0xFFF6B93B)); drawPath(badge, navy, style = Stroke(1.2f, join = StrokeJoin.Round))
+                val outline = Stroke(2.2f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                val thin = Stroke(1.5f, cap = StrokeCap.Round, join = StrokeJoin.Round)
 
-                // Head
-                drawCircle(cream, 15f, Offset(32f, 29f)); drawCircle(navy, 15f, Offset(32f, 29f), style = Stroke(2f))
-                // Cap
-                drawPath(Path().apply { moveTo(17.5f, 18f); cubicTo(17.5f, 6f, 46.5f, 6f, 46.5f, 18f); close() }, navy)
-                drawRoundRect(navy, Offset(14f, 16.5f), Size(36f, 5f), CornerRadius(2.5f))
-                drawCircle(Color(0xFFF6B93B), 2.7f, Offset(32f, 11.5f))
+                // Neck, then the uniform shirt over it
+                drawRect(skin, Offset(26.5f, 44f), Size(11f, 10f))
+                val shirt = Path().apply { moveTo(5f, 72f); cubicTo(5f, 59f, 13f, 53f, 24f, 51f); lineTo(40f, 51f); cubicTo(51f, 53f, 59f, 59f, 59f, 72f); close() }
+                drawPath(shirt, uniform); drawPath(shirt, line, style = outline)
+                drawLine(line, Offset(32f, 59f), Offset(32f, 72f), strokeWidth = 1.5f)
+                // Collar
+                val collarLeft = Path().apply { moveTo(25f, 50f); lineTo(32f, 59f); lineTo(26.5f, 63f); lineTo(21f, 53f); close() }
+                val collarRight = Path().apply { moveTo(39f, 50f); lineTo(32f, 59f); lineTo(37.5f, 63f); lineTo(43f, 53f); close() }
+                listOf(collarLeft, collarRight).forEach { drawPath(it, uniformLight); drawPath(it, line, style = thin) }
+                // Chest pocket and gold badge
+                drawRoundRect(line, Offset(12.5f, 63f), Size(9.5f, 7.5f), CornerRadius(1f), style = thin)
+                drawLine(line, Offset(12.5f, 65.6f), Offset(22f, 65.6f), strokeWidth = 1.2f)
+                val badge = Path().apply { moveTo(45f, 60.5f); lineTo(49f, 62f); lineTo(49f, 65f); cubicTo(49f, 67.4f, 47.2f, 68.8f, 45f, 69.5f); cubicTo(42.8f, 68.8f, 41f, 67.4f, 41f, 65f); lineTo(41f, 62f); close() }
+                drawPath(badge, gold); drawPath(badge, line, style = thin)
 
-                // Eyes: closed for a moment at the end of each blink cycle; looking up while thinking
+                // Ears, head, sideburns
+                listOf(18.6f, 45.4f).forEach { x -> drawCircle(skin, 3.2f, Offset(x, 34f)); drawCircle(line, 3.2f, Offset(x, 34f), style = thin) }
+                val head = Path().apply { moveTo(19f, 26f); cubicTo(19f, 41f, 24f, 49f, 32f, 49f); cubicTo(40f, 49f, 45f, 41f, 45f, 26f); close() }
+                drawPath(head, skin); drawPath(head, line, style = outline)
+                drawRect(hair, Offset(19.8f, 26f), Size(2.6f, 6.5f)); drawRect(hair, Offset(41.6f, 26f), Size(2.6f, 6.5f))
+
+                // Peaked cap: wide crown, band, dark visor, gold badge
+                val crown = Path().apply { moveTo(13f, 22.5f); cubicTo(10.5f, 10f, 23f, 5f, 32f, 5f); cubicTo(41f, 5f, 53.5f, 10f, 51f, 22.5f); cubicTo(44f, 19.5f, 20f, 19.5f, 13f, 22.5f); close() }
+                drawPath(crown, uniform); drawPath(crown, line, style = outline)
+                val band = Path().apply { moveTo(16.5f, 22f); cubicTo(22f, 19.6f, 42f, 19.6f, 47.5f, 22f); lineTo(47.5f, 27f); lineTo(16.5f, 27f); close() }
+                drawPath(band, uniformLight); drawPath(band, line, style = thin)
+                val visor = Path().apply { moveTo(16.5f, 27f); cubicTo(21f, 31.5f, 43f, 31.5f, 47.5f, 27f); cubicTo(42f, 25.6f, 22f, 25.6f, 16.5f, 27f); close() }
+                drawPath(visor, line); drawPath(visor, line, style = thin)
+                val capBadge = Path().apply { moveTo(32f, 9f); lineTo(35.4f, 10.4f); lineTo(35.4f, 13.2f); cubicTo(35.4f, 15.2f, 33.9f, 16.5f, 32f, 17.2f); cubicTo(30.1f, 16.5f, 28.6f, 15.2f, 28.6f, 13.2f); lineTo(28.6f, 10.4f); close() }
+                drawPath(capBadge, gold); drawPath(capBadge, line, style = thin)
+
+                // Face. Eyes close for a moment at the end of each blink cycle and look up while thinking.
                 val blinking = blinkClock > 0.95f
-                val eyeY = if (mood == CopMood.Thinking) 28f else 30f
-                listOf(26f, 38f).forEach { x ->
-                    if (blinking) drawLine(navy, Offset(x - 2f, eyeY), Offset(x + 2f, eyeY), strokeWidth = 1.8f, cap = StrokeCap.Round)
-                    else drawCircle(navy, 1.9f, Offset(x, eyeY))
+                val eyeY = if (mood == CopMood.Thinking) 35f else 36.2f
+                drawLine(line, Offset(23.8f, 33.2f), Offset(28.8f, 32.6f), strokeWidth = 1.7f, cap = StrokeCap.Round)
+                drawLine(line, Offset(35.2f, 32.6f), Offset(40.2f, 33.2f), strokeWidth = 1.7f, cap = StrokeCap.Round)
+                listOf(26.6f, 37.4f).forEach { x ->
+                    if (blinking) drawLine(line, Offset(x - 1.8f, eyeY), Offset(x + 1.8f, eyeY), strokeWidth = 1.7f, cap = StrokeCap.Round)
+                    else drawCircle(line, 1.7f, Offset(x, eyeY))
                 }
-                // Cheeks
-                drawCircle(HomewardColors.Red.copy(alpha = 0.18f), 2.6f, Offset(22.5f, 34f)); drawCircle(HomewardColors.Red.copy(alpha = 0.18f), 2.6f, Offset(41.5f, 34f))
-
-                // Mouth
+                drawPath(Path().apply { moveTo(32.2f, 37f); quadraticBezierTo(34f, 40f, 31.4f, 40.6f) }, line, style = Stroke(1.4f, cap = StrokeCap.Round))
                 when (mood) {
                     CopMood.Talking -> {
-                        val open = 1.2f + 2.6f * abs(sin(talk * Math.PI)).toFloat()
-                        drawOval(navy, Offset(32f - 3.2f, 36.5f - open), Size(6.4f, open * 2))
+                        val open = 1f + 2.2f * abs(sin(talk * Math.PI)).toFloat()
+                        drawOval(line, Offset(32f - 3f, 43.6f - open), Size(6f, open * 2))
                     }
-                    CopMood.Thinking -> drawLine(navy, Offset(29f, 37f), Offset(35f, 37f), strokeWidth = 1.8f, cap = StrokeCap.Round)
-                    CopMood.Idle -> drawPath(Path().apply { moveTo(27.5f, 35.5f); quadraticBezierTo(32f, 39.5f, 36.5f, 35.5f) }, navy, style = Stroke(1.8f, cap = StrokeCap.Round))
+                    CopMood.Thinking -> drawLine(line, Offset(29.2f, 44f), Offset(34.8f, 44f), strokeWidth = 1.7f, cap = StrokeCap.Round)
+                    CopMood.Idle -> drawPath(Path().apply { moveTo(27.6f, 42.6f); quadraticBezierTo(32f, 46.4f, 36.4f, 42.6f) }, line, style = Stroke(1.7f, cap = StrokeCap.Round))
                 }
             }
             // Three bouncing dots beside the head while thinking
             if (mood == CopMood.Thinking) repeat(3) { i ->
                 val lift = abs(sin((dots + i * 0.18f) * Math.PI)).toFloat() * 3f
-                drawCircle(HomewardColors.Primary, 1.8f, Offset(52f + i * 5f, 24f - lift))
+                drawCircle(HomewardColors.Primary, 1.8f, Offset(54f + i * 4.2f, 30f - lift))
             }
         }
     }
