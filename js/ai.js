@@ -28,6 +28,20 @@ export async function aiReady() {
   return (await modelPromise) !== null;
 }
 
+// Reads a photo (scan check). Returns the model's text, or "" when AI isn't available or fails.
+export async function askAiAboutImage(prompt, file) {
+  modelPromise ??= loadModel();
+  const model = await modelPromise;
+  if (!model) return "";
+  try {
+    const data = await new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = fail; r.readAsDataURL(file); });
+    const result = await model.generateContent([prompt, { inlineData: { data, mimeType: file.type || "image/jpeg" } }]);
+    return result.response.text().trim();
+  } catch {
+    return "";
+  }
+}
+
 // Returns the model's text, or null when AI isn't available (the caller then uses its fallback).
 export async function askAi(prompt) {
   modelPromise ??= loadModel();
