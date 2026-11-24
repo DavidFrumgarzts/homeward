@@ -1,5 +1,6 @@
 package app.homeward.features.safetypack
 
+import app.homeward.features.scancheck.ScamWarning
 import kotlinx.serialization.Serializable
 
 // Everything the app needs to keep you safe in one city, saved on the phone so it works offline.
@@ -17,6 +18,7 @@ data class SafetyPack(
     val zones: List<SafetyZone>,
     val builtAtMillis: Long,
     val placesFromOsm: Boolean = false, // true once safe places come from OpenStreetMap (osmplaces/)
+    val scams: List<ScamWarning> = emptyList(), // reported scams + fair prices, for the scan check (scancheck/)
 )
 
 @Serializable
