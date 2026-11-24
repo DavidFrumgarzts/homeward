@@ -24,6 +24,7 @@ object AppServices {
     fun init(context: Context) { appContext = context.applicationContext }
 
     val contacts by lazy { TrustedContactsStore(appContext) }
+    val sosLog by lazy { app.homeward.features.sos.SosLog(appContext) }
     val location by lazy { LocationReader(appContext) }
     val locationUpdates by lazy { LocationUpdates(appContext) }
     val haptics by lazy { Haptics(appContext) }

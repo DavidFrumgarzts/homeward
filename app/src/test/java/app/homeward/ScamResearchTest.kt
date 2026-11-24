@@ -22,6 +22,17 @@ class ScamResearchTest {
     @Test fun notWhenScamsSaved() = assertFalse(ScamResearchSchedule.shouldTry(DemoBucharestPack.pack, 0L, 25 * hour, online = true))
     @Test fun notTwiceADay() = assertFalse(ScamResearchSchedule.shouldTry(noScams, 23 * hour, 25 * hour, online = true))
 
+    @Test fun notDuringOrRightAfterAnSos() {
+        assertFalse(ScamResearchSchedule.shouldTry(noScams, 0L, 25 * hour, online = true, sosSentMillis = 24 * hour))
+        assertTrue(ScamResearchSchedule.shouldTry(noScams, 0L, 25 * hour, online = true, sosSentMillis = 20 * hour))
+    }
+
+    @Test fun promptListsThePackPlacesForTheSaferOption() {
+        val p = ScamResearchPrompt.forCity("Bucharest", "Romania", "2026-11-24", listOf("BCR bank ATM, Bd. Regina Elisabeta", "Police station, Old Town"))
+        assertTrue(p.contains("BCR bank ATM, Bd. Regina Elisabeta"))
+        assertTrue(p.contains("saferOption"))
+    }
+
     @Test fun brokenAnswerIsEmpty() = assertTrue(ScamResearchParser.parse("Sorry, I couldn't find anything.").isEmpty())
 
     @Test fun itemWithoutSourcesIsDroppedAndValidItemKept() {

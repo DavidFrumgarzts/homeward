@@ -58,7 +58,10 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
     // On the drawn map: its badge if it has one (police, hospital), else its GPS spot on the drawing.
     val shownSpot = shown?.let { LapaBadges.spotFor(it) ?: LapaMapProjection.toSpot(GeoPoint(it.lat, it.lng)) }
     val ringOn = rememberBlinkOn(shown)
-    val sheetPlace = shown?.let { SafePlacePicker.Pick(it, here.metersTo(GeoPoint(it.lat, it.lng)).toInt(), "") } ?: safePlace
+    val sheetPlace = shown?.let {
+        val m = here.metersTo(GeoPoint(it.lat, it.lng)).toInt()
+        SafePlacePicker.Pick(it, m, "${it.name}, $m m. Beacon recommended it.")
+    } ?: safePlace
 
     // Walking toward a red zone? Buzz once (ApproachDetector decides when) and the banner shows.
     val detector = remember { ApproachDetector() }
@@ -110,7 +113,7 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
             police = pack.police, contactNames = contactNames, safePlace = sheetPlace,
             onAsk = onAsk,
             onScan = onScan,
-            onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },
+            onSafePlace = { showSafePlace = true; popup = sheetPlace?.reason ?: "No open safe place saved nearby." },
             onImOk = {
                 scope.launch {
                     val reached = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CheckInSender.send() }

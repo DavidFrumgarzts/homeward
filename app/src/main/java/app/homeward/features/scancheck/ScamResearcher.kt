@@ -17,9 +17,10 @@ object ScamResearcher {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val pack = AppServices.packStore.load()
         val now = System.currentTimeMillis()
-        if (!ScamResearchSchedule.shouldTry(pack, prefs.getLong(LAST_TRY + pack.city, 0L), now, AppServices.network.hasInternet())) return
+        val sos = AppServices.sosLog.lastSentMillis()
+        if (!ScamResearchSchedule.shouldTry(pack, prefs.getLong(LAST_TRY + pack.city, 0L), now, AppServices.network.hasInternet(), sos)) return
         prefs.edit().putLong(LAST_TRY + pack.city, now).apply()
-        val answer = runCatching { AiModels.cloudResearch.ask(ScamResearchPrompt.forCity(pack.city, pack.country, LocalDate.now().toString())) }
+        val answer = runCatching { AiModels.cloudResearch.ask(ScamResearchPrompt.forCity(pack.city, pack.country, LocalDate.now().toString(), pack.safePlaces.map { it.name })) }
             .getOrNull() ?: return
         val scams = ScamResearchParser.parse(answer.text)
         if (scams.isEmpty()) return

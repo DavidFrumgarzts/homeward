@@ -52,9 +52,13 @@ fun ScanVerdictCard(verdict: ScanVerdict, pack: SafetyPack, photo: Bitmap?, aiBa
         }
         Spacer(Modifier.height(12.dp))
         Text("What to do: ${verdict.whatToDo}", style = HomewardType.Body)
-        RecommendedPlace.byName(verdict.saferOption, pack)?.let { place ->
+        val place = RecommendedPlace.byName(verdict.saferOption, pack)
+        if (place != null) {
             Spacer(Modifier.height(14.dp))
             PrimaryButton("Show ${place.name} on the map", Modifier.fillMaxWidth()) { onShowPlace(place.name) }
+        } else if (verdict.saferOption.isNotBlank()) {
+            Spacer(Modifier.height(8.dp))
+            Text("Better: ${verdict.saferOption}", style = HomewardType.Body) // a tip, not a saved place
         }
         verdict.warning?.let { w ->
             Spacer(Modifier.height(14.dp))

@@ -38,6 +38,7 @@ class SosViewModel : ViewModel() {
     }
 
     fun send(onDone: () -> Unit) = viewModelScope.launch {
+        AppServices.sosLog.markSent() // background work (scam research) stays quiet for a while
         results = withContext(Dispatchers.IO) { AppServices.sosDispatcher.sendToAll(AppServices.contacts.all(), draft) }
         onDone()
     }

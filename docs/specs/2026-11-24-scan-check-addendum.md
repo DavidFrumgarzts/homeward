@@ -176,12 +176,17 @@ Colours: Looks fair uses green (`HomewardColors.Green`), Be careful uses yellow 
 **What she sees.** Tapping it opens Home with that place highlighted:
 - A yellow (`HomewardColors.Yellow`) ring around the place blinks on and off (about once a second) for 8 seconds,
   then stays as a steady yellow ring until she taps the map or opens another screen.
-- On the illustrated Lapa map, the ring is drawn at the place's own coordinates, projected with
+- On the illustrated Lapa map, a recommended police station or hospital inside the drawn area is ringed on its
+  drawn badge (the drawing isn't to scale, so its GPS spot can land next to her dot). Any other place is ringed at
+  its own coordinates, projected with
   `LapaMapProjection.toSpot(lat, lng)`, so it works for any pack place, including the OpenStreetMap ones that
   `PlacesEnricher` swaps in, not only the drawn Police and Hospital badges. If the place falls outside the drawn
   area, Home shows the street map instead. *(Builder's call.)* On the street map
   (`SafetyMapView`), it is a yellow circle overlay on the place's marker, and the map centres between her and it.
 - The bottom sheet's nearest-place card shows the same place, so the sheet and the map agree.
+- The highlight is used once: going to another screen and back shows the normal Home, with no ring.
+- Scam research never runs within 2 hours of a sent SOS (`sos/SosLog.kt`, a stand-in until the incident state
+  machine exists), and its prompt lists the pack's place names so `saferOption` can name one.
 - With reduced motion turned on in Android settings, no blinking: a steady yellow ring.
 
 **How it's passed.** The route `home?place=<name>`. Home reads it, finds the `SafePlace`, and passes it to the map

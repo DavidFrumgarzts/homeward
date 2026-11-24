@@ -3,7 +3,8 @@ package app.homeward.features.scancheck
 // The instructions sent to the CLOUD model (with Google Search) to collect scams travelers report in a city.
 // A separate call from SafetyPackPrompt, so the pack research prompt stays untouched.
 object ScamResearchPrompt {
-    fun forCity(city: String, country: String, today: String) = """
+    // `placeNames`: the pack's saved places, so "saferOption" can name one and the scan can show it on the map.
+    fun forCity(city: String, country: String, today: String, placeNames: List<String> = emptyList()) = """
         You are collecting travel scams for an offline safety app, for a traveler in $city, $country. Today is $today.
         Use Google Search. Look at what travelers report: Reddit threads (r/travel, r/solotravel and the subreddit
         for $city or $country), travel forums, and embassy or government travel advice. Keep an item only if you
@@ -11,6 +12,8 @@ object ScamResearchPrompt {
         Never describe people, nationalities or groups: describe the practice and the place only.
         For money exchange, give today's fair rate from a central bank or a major rate site in "fairRates"
         (1 unit of "from" = "rate" units of "to"). For fares and offers, give a fair price range in "fairPrices".
+        For "saferOption", copy one of these saved places exactly when it is a good alternative, else write a short tip:
+        ${placeNames.take(40).joinToString("; ").ifBlank { "(none saved)" }}
 
         Return ONLY JSON, no other text:
         {"scams": [{"title": "...", "kind": "Money|Taxi|Tour|Shop|Ticket|Other", "where": "streets or places",

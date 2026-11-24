@@ -1,6 +1,7 @@
 package app.homeward.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,7 +40,8 @@ fun AppNavGraph() {
                 onEditContacts = { nav.navigate(Screen.Contacts.route) },
                 onAsk = { question -> nav.navigate("${Screen.Ask.route}?q=${Uri.encode(question)}") },
                 onScan = { nav.navigate(Screen.Scan.route) },
-                highlightName = entry.arguments?.getString("place").orEmpty(),
+                // Read once, then cleared: coming back to Home later must not blink the old place again.
+                highlightName = remember(entry) { entry.arguments?.getString("place").orEmpty().also { entry.arguments?.putString("place", "") } },
             )
         }
         composable(Screen.SosCompose.route) {
