@@ -17,3 +17,6 @@ app/google-services.json
 .env
 .DS_Store
 .kotlin/
+
+# Beacon web: the Firebase web config is added locally, not committed
+web/firebase-config.js
