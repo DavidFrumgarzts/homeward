@@ -3,10 +3,12 @@ One folder per feature. Each file says at the top what it does and whether it us
 | Folder | Feature | Runs |
 |---|---|---|
 | `home/` | Map-first home: map, red-zone alert, SOS sheet | UI |
-| `sos/` | Write and send the SOS | on-device AI + SMS/push |
+| `incident/` | The incident state machine and everything an SOS does (contracts, engine, messages, updates) | offline logic; AI only rewrites her sentence |
+| `sos/` | The SOS screens, and sending by SMS with honest delivery status | UI + SMS |
+| `session/` | Foreground service that keeps location going during an SOS | GPS, no AI |
 | `safetypack/` | Country safety pack (numbers, places, zones) | cloud AI once, then offline |
 | `safetymap/` | Map drawing + red-zone logic (shown on Home) | offline logic + on-device AI |
-| `safeplace/` | Pick the nearest open safe place | offline logic |
+| `safeplace/` | Pick the nearest open place to get help | offline logic |
 | `osmplaces/` | Real safe places from OpenStreetMap | download on wifi, then offline |
 | `offlinemap/` | Google Maps-like map, saved to the phone per city | download once on wifi |
 | `safetyphoto/` | Read taxi plates etc., send when back online | on-device AI |

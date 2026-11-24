@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
 import app.homeward.design.components.WhiteCard
 import app.homeward.features.safetypack.Phrase
@@ -24,7 +22,7 @@ fun LocalPhrasesCard(phrases: List<Phrase>) {
         Text("Show someone nearby", style = HomewardType.Label)
         phrases.take(3).forEach {
             Spacer(Modifier.height(10.dp))
-            Text(it.local, fontSize = 28.sp, lineHeight = 34.sp, fontWeight = FontWeight.Bold, color = HomewardColors.Text)
+            Text(it.local, style = HomewardType.Display.copy(fontSize = 28.sp, lineHeight = 34.sp))
             Text(it.english, style = HomewardType.Small)
         }
     }

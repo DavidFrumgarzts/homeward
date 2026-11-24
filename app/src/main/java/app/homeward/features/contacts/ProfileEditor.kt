@@ -3,12 +3,14 @@ package app.homeward.features.contacts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
+import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
 import app.homeward.profile.Pronoun
 
@@ -24,7 +26,8 @@ fun ProfileEditor() {
         Text("In messages, refer to me as", style = HomewardType.Small)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(Pronoun.UseName to "my name", Pronoun.She to "she", Pronoun.He to "he", Pronoun.They to "they").forEach { (pronoun, label) ->
-                FilterChip(profile.pronoun == pronoun, { save(profile.copy(pronoun = pronoun)) }, label = { Text(label) }, shape = RoundedCornerShape(50), modifier = Modifier.heightIn(min = 48.dp))
+                FilterChip(profile.pronoun == pronoun, { save(profile.copy(pronoun = pronoun)) }, label = { Text(label) }, shape = RoundedCornerShape(50), modifier = Modifier.heightIn(min = 48.dp),
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = HomewardColors.PrimaryTint, selectedLabelColor = HomewardColors.Primary))
             }
         }
     }

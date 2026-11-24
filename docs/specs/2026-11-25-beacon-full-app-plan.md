@@ -42,7 +42,8 @@ Checked on Nov 24 against the pages in section 12 of the prompt.
 12. **Locale bug.** `"%.4f".format(...)` in `GeoPoint.short()` and `MapsLink` follows the phone's language, so some phones would write `-22,9133` and break the map link. Forced to `Locale.US`.
 13. **Engine and service order.** Section 6 puts the `IncidentEngine` in the session service's scope, but the service is Phase 4. Phase 1 adds a minimal `SafetySessionService` (foreground type `location`) so location updates keep going with the screen off; the microphone type, notification actions and the rest arrive in Phase 4.
 14. **Stale docs fixed as files are touched.** README says Java 17; `ARCHITECTURE.md` says the SOS goes by push when online and that the fonts are missing; `design/README.md` names the old Figma file; `design/components/README.md` lists components that do not exist.
-15. **Open product question (not built).** After "Hold for SOS", nothing reaches contacts until she presses Send. If she cannot, nobody is told. An automatic send after a short countdown would close that gap; it is not in the prompt, so it is only raised in the stop report.
+15. **Location on Home.** Section 3 says location is read only while a Safe Walk or SOS she started is running. Home already follows GPS while it is open, for the red-zone warning, and that stays: it is foreground only, and nothing is sent. Background reading happens only inside `SafetySessionService`.
+16. **Open product question (not built).** After "Hold for SOS", nothing reaches contacts until she presses Send. If she cannot, nobody is told. An automatic send after a short countdown would close that gap; it is not in the prompt, so it is only raised in the stop report.
 
 ## Files
 
@@ -79,3 +80,22 @@ As in section 11 of the prompt: session service with microphone, tile, widget, S
 ## Phase reports
 
 (appended below as each phase ends)
+
+### Phase 1: Android vertical slice (Nov 24)
+
+**Built.** The contracts; `IncidentEngine` with a pure reducer; Hold for SOS (1.5 s, with a fill; double tap with TalkBack); SOS compose (description, mic through the phone's speech-to-text screen, five quick picks, editable message with an On device / Cloud / No AI badge); the SOS sent screen as the active-session screen with honest delivery wording; the outbox with sent and delivered reports; the three cards (reviewed checklist, message, phrase to show someone nearby); location updates, low-battery note, "I'm safe now, end SOS"; a minimal `SafetySessionService`; a profile (name, how to refer to her) instead of the hard-coded "Noa" / "her"; debug-only test mode; `shared/` with five schemas, the Rio fixture, a demo incident and nine test-vector files; a recorded Lapa walk in `docs/demo/`.
+
+**Verified, and how.**
+- Unit tests: 88 pass (49 before), in both debug and release variants: every reducer edge, the engine with a fake phone, throttle, messages, wording, outbox, and the nine shared vector files. `./gradlew test assembleDebug` is green.
+- Emulator (`Pixel_9`, Android 17 / API 37): onboarding with the new name field, three permissions; Home on the illustrated map at the bar; a tap on Hold for SOS does nothing, a 2-second hold opens compose with a usable message at once; a quick pick changes the message, checklist and phrase; Send shows "Saved on your phone", then "Mom knows" with the green tick only after the (fake) delivery report; the recorded walk (`docs/demo/play-route.sh`) produced one location update after the 2-minute gap and 200 m, and the screen then said when it was sent; "I'm safe now" asked for confirmation, sent the ended message and stopped the service; with airplane mode on, Send stayed at "Saved on your phone. It sends when you have signal", and went to "Mom knows" within seconds of turning it off.
+- The foreground service was confirmed running with type `location` (`dumpsys activity services`) and gone after the SOS ended.
+
+**Not verified here.**
+- **The "Cloud" badge.** The emulator has no Gemini Nano (logcat: "On-device model is not available", fallback to cloud), and the cloud call was refused: App Check rejected this install's debug token (403, "App attestation failed"). The app correctly fell back to the plain message with the "No AI" badge. Once the token is registered, "Cloud" should show; logcat tag `FirebaseAppCheck` prints the token and a ready-made `firebase appcheck:debugtokens:create ...` command.
+- Needs a real Android phone with a SIM: real SMS sending, the radio's sent and delivered reports (`SmsStatusReceiver`), "waiting for signal" from a real no-service result, Gemini Nano and the "On device" badge, speech-to-text on the compose screen, battery-low update, GPS with the screen off for a long stretch.
+
+**Section 4 facts re-checked.** (1) foreground-only: confirmed in Firebase's docs, not testable here. (2) single-turn text or text plus one Bitmap: confirmed; structured output is now also listed for on-device. (3) quota errors `BUSY` and `PER_APP_BATTERY_USE_QUOTA_EXCEEDED`: confirmed in the docs. (4) inference modes and `inferenceSource`: confirmed in the docs and in the library (`InferenceSource.ON_DEVICE` / `IN_CLOUD`); the fallback from on-device to cloud was seen in logcat. (5) Nano 4: `OnDeviceModelOption.PREVIEW` / `PREVIEW_FAST` exist in `firebase-ai` 18.2.0, and each model has its own `onDeviceExtension.checkStatus()` / `download()`, so "Nano 4 if downloadable, else stable" can be built as asked (Phase 5). (6) to (10) were not touched by this phase.
+
+**Cut or moved.** The on-device model picking the situation (key words only for now) and the online "machine translated" custom sentence move to Phase 5 with the other new model instances. The session service has no microphone type or notification buttons yet (Phase 4).
+
+**Mockup changes made (section 9).** SOS sent: green tick and "knows" only for delivered messages, otherwise "Saved on your phone" / "Sent to Mom" with the same layout; the screen now continues below the mockup's cards with the checklist, the phrase, the location line and "I'm safe now, end SOS". Contacts: "Only when you tap it. Beacon shares where you are only in an SOS or a Safe Walk you start." Get ready: "places to get help". New screens with no mockup, built in the same style: SOS compose, and the name / "refer to me as" block on the contacts step.

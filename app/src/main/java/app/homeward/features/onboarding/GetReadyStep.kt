@@ -62,7 +62,7 @@ fun GetReadyStep(onDone: () -> Unit) {
         val redZones = p?.zones?.filter { it.level != ZoneLevel.Safer }.orEmpty()
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Item(Icons.Outlined.WarningAmber, HomewardColors.Red, HomewardColors.RedTint, "${if (p == null) "Red" else redZones.size.toString() + " red"} zones mapped", redZones.joinToString(", ") { it.name }.ifBlank { "Checking the city" }, done = p != null)
-            Item(Icons.Outlined.Place, HomewardColors.Primary, HomewardColors.PrimaryTint, "${p?.safePlaces?.size ?: ""} places to get help".trim(), "Police, hospitals, pharmacies", done = p != null)
+            Item(Icons.Outlined.Place, HomewardColors.Primary, HomewardColors.PrimaryTint, p?.let { "${it.safePlaces.size} places to get help" } ?: "Places to get help", "Police, hospitals, pharmacies", done = p != null)
             Item(Icons.AutoMirrored.Outlined.MenuBook, HomewardColors.Amber, HomewardColors.AmberTint, "$city safety pack", p?.let { "Police ${it.police}, ambulance ${it.ambulance}, embassy, key phrases" } ?: "Local numbers and phrases", done = p != null)
             Item(Icons.Outlined.Memory, HomewardColors.Primary, HomewardColors.PrimaryTint, "AI for your phone", aiLine, done = aiDone)
         }

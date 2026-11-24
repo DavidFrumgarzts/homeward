@@ -1,5 +1,11 @@
 # Safety app: first screens and code structure
 
+> **Updated Nov 25, 2026.** Two decisions below were reversed by the full-app plan (`2026-11-25-beacon-full-app-plan.md`):
+> 1. **Live location updates to contacts are now in scope**, but only while an SOS she started is active (after 200 m or 5 minutes, at most one text every 2 minutes). Nothing is shared outside an SOS, except an "I'm OK" message when she turned location on for it.
+> 2. **The dark navy theme is replaced** by the warm, light Figma "Beacon v2" look in `design/Colors.kt` (paper background, ink text, blue primary, red only for SOS, the police call and red zones).
+>
+> The app is called Beacon; "Homeward" remains the repo and package name. The rest of this document is kept as the record of the first design.
+
 Working name: **Homeward** (placeholder, easy to rename).
 
 ## Why
@@ -11,7 +17,7 @@ David's sister went to India after the army with no research and often no signal
 
 ## Non-goals (this step)
 - Onboarding, the safety pack screen, safety photos, safe places, parent updates. They get their own screens next.
-- Live location tracking (cut: users keep Find My / Life360 for the map).
+- Live location tracking (cut: users keep Find My / Life360 for the map). **Reversed, see the note at the top:** updates are sent during an active SOS.
 
 ## Anti-goals
 - A screen that feels scary or busy. It must be calm for daily use and fast in a panic.
@@ -38,7 +44,7 @@ David's sister went to India after the army with no research and often no signal
 - Big **Call local police (112)** button and the nearest safe place with directions.
 
 ## Look
-- Dark theme by default (night use, battery, discreet), high contrast.
+- Dark theme by default (night use, battery, discreet), high contrast. **Reversed, see the note at the top.**
 - Colors: deep navy background, warm coral-red for SOS only, calm green for "OK" status, soft white text.
 - Type: Inter. Large sizes; nothing under 15pt.
 - Big touch targets (48dp minimum, SOS much bigger).
