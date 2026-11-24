@@ -10,7 +10,6 @@ import app.homeward.features.safetypack.SafetyZone
 import app.homeward.features.safetypack.ZoneLevel
 import app.homeward.features.offlinemap.MapStyle
 import org.osmdroid.views.CustomZoomButtonsController
-import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
@@ -40,10 +39,9 @@ fun SafetyMapView(
         map.controller.setZoom(16.5)
         map.setMapCenterOffset(0, -bottomCoveredPx / 2)
         map.controller.setCenter(OsmPoint(center.lat, center.lng))
-        map.overlays.clear()
+        map.overlays.clear() // map credit is drawn by HomeScreen, above the bottom sheet
         zones.forEach { map.overlays.add(zoneShape(it)) }
         zones.filter { it.level != ZoneLevel.Safer }.forEach { map.overlays.add(zoneLabel(map, it)) }
-        map.overlays.add(CopyrightOverlay(map.context)) // map credit, required by the tile license
         you?.let { map.overlays.add(pin(map, it, "You")) }
         highlight?.let { map.overlays.add(pin(map, GeoPoint(it.lat, it.lng), it.name)) }
         map.invalidate()

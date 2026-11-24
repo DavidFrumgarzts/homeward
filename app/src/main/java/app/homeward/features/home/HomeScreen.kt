@@ -9,13 +9,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
+import app.homeward.design.HomewardType
 import app.homeward.device.GeoPoint
 import app.homeward.features.checkin.CheckInSender
 import app.homeward.features.lapamap.Heading
 import app.homeward.features.lapamap.LapaIllustratedMap
 import app.homeward.features.lapamap.LapaMapProjection
+import app.homeward.features.offlinemap.MapStyle
 import app.homeward.features.policecall.PoliceCaller
 import app.homeward.features.safeplace.SafePlacePicker
 import app.homeward.features.safetymap.ApproachDetector
@@ -65,6 +68,13 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) ->
         } else {
             SafetyMapView(here, pack.zones, Modifier.fillMaxSize(), you = here, highlight = if (showSafePlace) safePlace?.place else null, bottomCoveredPx = sheetHeightPx)
         }
+
+        // Map credit, required by the OpenStreetMap license (map tiles and safe places). Sits just above the sheet.
+        Text(
+            MapStyle.credit, style = HomewardType.PlaceLabel,
+            modifier = Modifier.align(Alignment.BottomEnd)
+                .padding(bottom = with(LocalDensity.current) { sheetHeightPx.toDp() } + 6.dp, end = 12.dp),
+        )
 
         redZone?.let { zone ->
             RedZoneBanner(zone, ZoneChecker.distanceToZone(here, zone).toInt(), modifier = Modifier.statusBarsPadding().padding(16.dp), onClick = {
