@@ -9,12 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.homeward.design.HomewardColors
+import app.homeward.design.HomewardType
 
-// Full-width button for the one main action on a screen. Calm blue by default;
+// Full-width button for the one main action on a screen (Figma "Button/Primary"). Blue by default;
 // pass color = HomewardColors.Red only for emergency actions (send SOS, call police).
 @Composable
 fun PrimaryButton(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, color: Color = HomewardColors.Primary, onClick: () -> Unit) {
@@ -22,7 +21,7 @@ fun PrimaryButton(label: String, modifier: Modifier = Modifier, enabled: Boolean
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(56.dp),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = ButtonDefaults.buttonColors(containerColor = color),
-    ) { Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold) }
+    ) { Text(label, style = HomewardType.Label, color = Color.White) }
 }

@@ -7,19 +7,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 
-// The white rounded card with a soft shadow used for most blocks (contacts, safe place, delivery list).
+// The flat white rounded card used for most blocks (feature rows, contacts, answers).
+// No shadow: white on the warm background is enough, as in the Figma design.
 @Composable
 fun WhiteCard(modifier: Modifier = Modifier, padding: Int = 16, content: @Composable ColumnScope.() -> Unit) {
-    val shape = RoundedCornerShape(20.dp)
-    Column(
-        modifier
-            .shadow(6.dp, shape, ambientColor = HomewardColors.Text.copy(alpha = 0.06f), spotColor = HomewardColors.Text.copy(alpha = 0.08f))
-            .background(HomewardColors.Surface, shape)
-            .padding(padding.dp),
-        content = content,
-    )
+    val shape = RoundedCornerShape(22.dp)
+    Column(modifier.clip(shape).background(HomewardColors.Surface).padding(padding.dp), content = content)
 }

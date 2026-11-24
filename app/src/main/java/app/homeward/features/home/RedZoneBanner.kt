@@ -3,7 +3,6 @@ package app.homeward.features.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -24,17 +23,17 @@ import app.homeward.features.safetypack.SafetyZone
 // and risky at this hour. Tap it for the reasons and the nearest open safe place.
 @Composable
 fun RedZoneBanner(zone: SafetyZone, meters: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(22.dp)
     Row(
         modifier.fillMaxWidth().shadow(8.dp, shape).background(HomewardColors.Surface, shape).clickable(onClick = onClick).padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(Modifier.size(40.dp).background(HomewardColors.Red, CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).background(HomewardColors.Red, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
             Icon(Icons.Outlined.WarningAmber, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f)) {
-            Text(if (meters == 0) "You're in a red zone" else "Red zone in $meters m", style = HomewardType.Heading)
+            Text(if (meters == 0) "You're in a red zone" else "Red zone in $meters m", style = HomewardType.Label)
             Text("${zone.name} · empty at night", style = HomewardType.Small, maxLines = 1)
         }
         Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = HomewardColors.TextMuted)

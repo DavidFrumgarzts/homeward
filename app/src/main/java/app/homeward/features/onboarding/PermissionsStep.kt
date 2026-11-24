@@ -17,27 +17,26 @@ import app.homeward.design.HomewardType
 import app.homeward.design.components.IconCircle
 import app.homeward.design.components.WhiteCard
 
-// Step 3: explain the two permissions in plain words, then ask Android for them in one go.
+// Setup step 3: explain the two permissions in plain words, then ask Android for them in one go.
 // Moving on works either way; the app falls back gracefully if one is denied.
 @Composable
 fun PermissionsStep(onNext: () -> Unit) {
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { onNext() }
     StepLayout(
         step = OnboardingStep.Permissions,
-        title = "Two things Homeward needs",
-        subtitle = "Nothing leaves your phone until you send an SOS.",
+        title = "Two things Beacon needs",
         button = "Allow",
         onButton = { ask.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.SEND_SMS)) },
     ) {
-        Reason(Icons.Outlined.Place, "Location", "To warn you before red zones and put your spot in an SOS. Works with GPS, no signal needed.")
+        Reason(Icons.Outlined.Place, "Location", "To warn you before red zones and add your spot to an SOS. GPS works with no signal.")
         Reason(Icons.AutoMirrored.Outlined.Chat, "Send text messages", "So your SOS reaches family even with no mobile data.")
     }
 }
 
 @Composable
 private fun Reason(icon: ImageVector, title: String, detail: String) {
-    WhiteCard(Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    WhiteCard(Modifier.fillMaxWidth(), padding = 14) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             IconCircle(icon)
             Column { Text(title, style = HomewardType.Label); Text(detail, style = HomewardType.Small) }
         }

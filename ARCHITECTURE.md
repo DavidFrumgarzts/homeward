@@ -10,6 +10,7 @@ Find the file for any feature without reading the whole app. All code is in
 | Write the SOS from her note | **On device** (Gemini Nano), cloud fallback | `features/sos/SosMessageWriter.kt` |
 | Read a safety photo (taxi plate) | **On device** | `features/safetyphoto/SafetyPhotoReader.kt` |
 | Explain a red zone | **On device** | `features/safetymap/ZoneWarningWriter.kt` |
+| Ask Beacon: answer a question from the saved pack | **On device**, cloud fallback | `features/ask/AskBeacon.kt`, `AskBeaconPrompt.kt` |
 | Red zone ahead? Buzz now? Nearest open safe place? Push or SMS? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `ApproachDetector.kt`, `SafePlacePicker.kt`, `ChannelChooser.kt` |
 | Map of the city | Downloaded once on wifi, then offline | `features/offlinemap/` |
 | Real safe places (police, hospitals, pharmacies, gas stations) | OpenStreetMap, downloaded on wifi | `features/osmplaces/` |
@@ -42,3 +43,7 @@ Both AI models are created in one place: `ai/AiModels.kt`.
 | Safety photos never arrive | `features/safetyphoto/OutboxSender.kt`, `device/ConnectivityWatcher.kt` |
 | Safe places look made up / empty | `features/osmplaces/OsmPlacesFetcher.kt` (server busy?), `PlacesEnricher.kt` |
 | Colors / spacing | `design/Colors.kt`, `design/components/` |
+| Ask Beacon answer is wrong or vague | `features/ask/AskBeaconPrompt.kt` (+ `AskBeaconPromptTest`): the AI only knows the facts listed there |
+| Illustrated Lapa map: dot in the wrong place, landmark misplaced | `features/lapamap/LapaMapProjection.kt` (+ test), `LapaIllustratedMap.kt` |
+| Opening story (map route, text) | `features/onboarding/StoryStep.kt`, `StoryMap.kt` |
+| Fonts (Sora / Inter not showing) | `design/Type.kt`: `HomewardFonts` still uses the system font until the .ttf files are added to `res/font` |

@@ -5,6 +5,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import android.net.Uri
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import app.homeward.features.ask.AskBeaconScreen
 import app.homeward.features.contacts.ContactsScreen
 import app.homeward.features.home.HomeScreen
 import app.homeward.features.onboarding.OnboardingFlow
@@ -26,12 +30,19 @@ fun AppNavGraph() {
             OnboardingFlow(onFinished = { nav.navigate(Screen.Home.route) { popUpTo(Screen.Onboarding.route) { inclusive = true } } })
         }
         composable(Screen.Home.route) {
-            HomeScreen(onSos = { nav.navigate(Screen.SosCompose.route) }, onEditContacts = { nav.navigate(Screen.Contacts.route) })
+            HomeScreen(
+                onSos = { nav.navigate(Screen.SosCompose.route) },
+                onEditContacts = { nav.navigate(Screen.Contacts.route) },
+                onAsk = { question -> nav.navigate("${Screen.Ask.route}?q=${Uri.encode(question)}") },
+            )
         }
         composable(Screen.SosCompose.route) {
             SosComposeScreen(sos, onBack = { nav.popBackStack() }, onSent = { nav.navigate(Screen.SosSent.route) })
         }
         composable(Screen.SosSent.route) { SosSentScreen(sos) }
         composable(Screen.Contacts.route) { ContactsScreen(onBack = { nav.popBackStack() }) }
+        composable("${Screen.Ask.route}?q={q}", arguments = listOf(navArgument("q") { type = NavType.StringType; defaultValue = "" })) { entry ->
+            AskBeaconScreen(firstQuestion = entry.arguments?.getString("q").orEmpty(), onBack = { nav.popBackStack() })
+        }
     }
 }

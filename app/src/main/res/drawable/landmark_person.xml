@@ -1,0 +1,6 @@
+<!-- "You are here": a minimal person. Made by docs/design/landmarks/make_landmarks.py: edit there, not here. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="36dp" android:viewportWidth="24" android:viewportHeight="36">
+    <path android:pathData="M5.5,32.5 C5.5,22 8,14.8 12,14.8 C16,14.8 18.5,22 18.5,32.5 a2.2,2.2 0 0 1 -2.2,2.2 h-8.6 a2.2,2.2 0 0 1 -2.2,-2.2 z" android:fillColor="#2F6BFF" android:strokeColor="#1F3A6E" android:strokeWidth="1.8" android:strokeLineJoin="round"/>
+    <path android:pathData="M6.8,7.0a5.2,5.2 0 1 0 10.4,0a5.2,5.2 0 1 0 -10.4,0z" android:fillColor="#FFF8EC" android:strokeColor="#1F3A6E" android:strokeWidth="1.8"/>
+</vector>

@@ -1,76 +1,114 @@
 package app.homeward.features.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import app.homeward.R
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
-import app.homeward.design.components.RoundAction
-import app.homeward.design.components.StatusDot
+import app.homeward.design.components.WhiteCard
+import app.homeward.features.safeplace.SafePlacePicker
 
-// Find My-style sheet at the bottom of Home: where you are, pack status, the SOS button,
-// and three round actions. Nothing else.
+// The sheet at the bottom of Home (Figma "07 Home"), top to bottom:
+// Ask Beacon box, two ready-made questions, the nearest open safe place, I'm OK + Police, and the SOS button.
 @Composable
 fun HomeBottomSheet(
-    city: String,
-    country: String,
     police: String,
     contactNames: String,
-    nearby: List<NearbyFeed.Item>,
-    onEditContacts: () -> Unit,
-    onSos: () -> Unit,
-    onPhoto: () -> Unit,
+    safePlace: SafePlacePicker.Pick?,
+    onAsk: (String) -> Unit,       // "" opens Ask Beacon empty; a ready-made question asks it right away
     onSafePlace: () -> Unit,
-    onPolice: () -> Unit,
     onImOk: () -> Unit,
+    onPolice: () -> Unit,
+    onSos: () -> Unit,
+    onEditContacts: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier.fillMaxWidth().shadow(12.dp, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .background(HomewardColors.Surface, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier.fillMaxWidth().background(HomewardColors.Background, RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
+            .navigationBarsPadding().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(Modifier.align(Alignment.CenterHorizontally).size(40.dp, 4.dp).background(HomewardColors.Border, RoundedCornerShape(2.dp)))
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(city, style = HomewardType.Title)
-            StatusDot("$country pack saved · works offline", HomewardColors.Green)
-        }
-        // SOS: the biggest thing on screen, one tap.
-        Column(
-            Modifier.fillMaxWidth().shadow(8.dp, RoundedCornerShape(18.dp)).background(HomewardColors.Red, RoundedCornerShape(18.dp))
-                .clickable(onClick = onSos).padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(Modifier.size(40.dp, 5.dp).background(HomewardColors.Border, RoundedCornerShape(3.dp)))
+
+        // Ask Beacon
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(HomewardColors.Surface).clickable { onAsk("") }.padding(start = 18.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("SOS", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("Works with no signal", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+            Text("Ask Beacon anything", style = HomewardType.Body, color = HomewardColors.TextMuted, modifier = Modifier.weight(1f))
+            Box(Modifier.size(48.dp).background(HomewardColors.Primary, RoundedCornerShape(16.dp)), contentAlignment = Alignment.Center) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = Color.White)
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Is this area OK now?", "Where's a safe place?").forEach { q ->
+                Text(q, style = HomewardType.Small, color = HomewardColors.Text, modifier = Modifier.clip(RoundedCornerShape(50)).border(1.dp, HomewardColors.Border, RoundedCornerShape(50)).clickable { onAsk(q) }.padding(horizontal = 12.dp, vertical = 8.dp))
+            }
+        }
+
+        // Nearest open safe place
+        safePlace?.let { pick ->
+            WhiteCard(Modifier.fillMaxWidth().clickable(onClick = onSafePlace), padding = 14) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(Modifier.size(40.dp).background(HomewardColors.MapPaper, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                        when (pick.place.kind.lowercase()) {
+                            "police" -> Image(painterResource(R.drawable.landmark_police), null, Modifier.size(30.dp))
+                            "hospital" -> Image(painterResource(R.drawable.landmark_hospital), null, Modifier.size(30.dp))
+                            else -> Icon(Icons.Outlined.Place, null, tint = HomewardColors.Green)
+                        }
+                    }
+                    Column {
+                        Text("${pick.place.name} · ${NearbyFeed.distance(pick.meters)}", style = HomewardType.Label, maxLines = 1)
+                        Text(if (pick.place.open24h) "Open 24 hours" else "Open now", style = HomewardType.Small)
+                    }
+                }
+            }
+        }
+
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuickAction("I'm OK", Icons.Outlined.Check, HomewardColors.Green, Modifier.weight(1f), onImOk)
+            QuickAction("Police $police", Icons.Outlined.Phone, HomewardColors.Red, Modifier.weight(1f), onPolice)
+        }
+
+        // SOS: the biggest thing on the sheet, and the only red one.
+        Box(Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(20.dp)).background(HomewardColors.Red).clickable(onClick = onSos), contentAlignment = Alignment.Center) {
+            Text("SOS · works with no signal", style = HomewardType.Heading, color = Color.White)
         }
         // Who gets the SOS, with a way to change it.
         Row(Modifier.fillMaxWidth().clickable(onClick = onEditContacts), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(if (contactNames.isBlank()) "No one gets your SOS yet" else "SOS goes to $contactNames", style = HomewardType.Small, modifier = Modifier.weight(1f))
-            Text(if (contactNames.isBlank()) "Add" else "Edit", color = HomewardColors.Primary, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+            Text(if (contactNames.isBlank()) "No one gets your SOS yet" else "Goes to $contactNames", style = HomewardType.Small, modifier = Modifier.weight(1f), maxLines = 1)
+            Text(if (contactNames.isBlank()) "Add" else "Edit", style = HomewardType.Small, color = HomewardColors.Primary)
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-            RoundAction("I'm OK", Icons.Outlined.CheckCircle, onImOk)
-            RoundAction("Photo", Icons.Outlined.PhotoCamera, onPhoto)
-            RoundAction("Safe place", Icons.Outlined.Place, onSafePlace)
-            RoundAction("Police $police", Icons.Outlined.Phone, onPolice)
-        }
-        NearbyList(nearby)
+    }
+}
+
+@Composable
+private fun QuickAction(label: String, icon: ImageVector, tint: Color, modifier: Modifier, onClick: () -> Unit) {
+    Row(
+        modifier.clip(RoundedCornerShape(18.dp)).background(HomewardColors.Surface).clickable(onClick = onClick).padding(vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp))
+        Text(label, style = HomewardType.Label)
     }
 }

@@ -8,4 +8,5 @@ enum class Screen(val route: String) {
     SosCompose("sos"),
     SosSent("sos_sent"),
     Contacts("contacts"),
+    Ask("ask"), // Ask Beacon; the question travels as ask?q=…
 }

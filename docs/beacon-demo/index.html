@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beacon Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Just the phone on Beacon's warm paper background. You tap the real buttons on each screen. */
+  --bg: #F7F4EE; --ink: #101A33; --muted: #5E6880; --primary: #2F6BFF; --line: #DCD5C9;
+}
+/* Beacon's own screens are light and warm, so the page keeps the same paper look in dark mode on purpose. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #F7F4EE; --ink: #101A33; --muted: #5E6880; --primary: #2F6BFF; --line: #DCD5C9; color-scheme: light; }
+}
+:root[data-theme="dark"] { --bg: #F7F4EE; --ink: #101A33; --muted: #5E6880; --primary: #2F6BFF; --line: #DCD5C9; color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font-family: "Inter", system-ui, sans-serif; font-size: 16px; }
+.wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.col { display: grid; gap: 16px; justify-items: center; width: 100%; }
+.phone { position: relative; width: min(360px, 100%, calc((100vh - 130px) * 393 / 852)); aspect-ratio: 393 / 852; border-radius: 40px; overflow: hidden; background: #F7F4EE; box-shadow: 0 0 0 8px #101A33, 0 24px 60px rgba(16, 26, 51, .22); }
+.phone img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hot { position: absolute; border: 0; background: transparent; cursor: pointer; border-radius: 18px; padding: 0; }
+.hot:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.phone.hint .hot { animation: pulse .7s ease-out 2; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(47,107,255,.55); } 100% { box-shadow: 0 0 0 14px rgba(47,107,255,0); } }
+@media (prefers-reduced-motion: reduce) { .phone.hint .hot { animation: none; outline: 3px solid var(--primary); } }
+.bar { display: flex; align-items: center; gap: 14px; }
+.dots { display: flex; gap: 6px; }
+.dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.dots span.on { background: var(--primary); }
+.link { font: 500 14px "Inter", system-ui, sans-serif; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 6px 4px; }
+.link:hover { color: var(--ink); }
+.link:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
+.tip { margin: 0; color: var(--muted); font-size: 14px; text-align: center; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="col">
+    <div class="phone" id="phone"><img id="shot" alt="" width="786" height="1704"></div>
+    <div class="bar">
+      <button class="link" id="back" type="button">Back</button>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+      <button class="link" id="restart" type="button">Start over</button>
+    </div>
+    <p class="tip" id="tip" aria-live="polite"></p>
+  </div>
+</div>
+<script>
+// Each screen lists its tappable areas in the design's own 393 x 852 coordinates: [x, y, width, height, target screen, label].
+const BTN = [24, 760, 345, 56];
+const screens = [
+  { name: "The night without Beacon", tip: "Tap the blue button", hot: [[...BTN, 2, "See the same night with Beacon"], [318, 48, 60, 36, 3, "Skip"]] },
+  { name: "The same night with Beacon", tip: "Tap Start with Beacon", hot: [[...BTN, 3, "Start with Beacon"], [318, 48, 60, 36, 3, "Skip"]] },
+  { name: "Welcome", tip: "", hot: [[...BTN, 4, "Set up in 1 minute"]] },
+  { name: "Who should hear from you", tip: "", hot: [[...BTN, 5, "Continue"]] },
+  { name: "One press, even in your pocket", tip: "", hot: [[...BTN, 6, "Add the tile"]] },
+  { name: "Getting Rio ready", tip: "", hot: [[...BTN, 7, "Start exploring Rio"]] },
+  { name: "Home", tip: "Try Ask Beacon, or the red SOS button", hot: [[20, 486, 353, 60, 8, "Ask Beacon anything"], [20, 560, 132, 36, 8, "Way to my hostel"], [20, 754, 353, 64, 9, "Hold for SOS"]] },
+  { name: "Chat with Beacon", tip: "Tap the screen to go back to the map", hot: [[0, 0, 393, 852, 7, "Back to the map"]] },
+  { name: "SOS sent", tip: "This is the end. Tap the screen to return to the map.", hot: [[0, 0, 393, 852, 7, "Back to the map"]] },
+];
+const phone = document.getElementById("phone"), shot = document.getElementById("shot");
+const dots = document.getElementById("dots"), tip = document.getElementById("tip");
+const history = [];
+let current = 1;
+screens.forEach((s, i) => { dots.appendChild(document.createElement("span")); new Image().src = "img/" + (i + 1) + ".png"; });
+function show(n, remember = true) {
+  if (remember && n !== current) history.push(current);
+  current = n;
+  const s = screens[n - 1];
+  shot.src = "img/" + n + ".png"; shot.alt = "Beacon: " + s.name;
+  phone.querySelectorAll(".hot").forEach(h => h.remove());
+  s.hot.forEach(([x, y, w, h, to, label]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "hot"; b.setAttribute("aria-label", label);
+    b.style.left = (x / 393 * 100) + "%"; b.style.top = (y / 852 * 100) + "%";
+    b.style.width = (w / 393 * 100) + "%"; b.style.height = (h / 852 * 100) + "%";
+    b.addEventListener("click", e => { e.stopPropagation(); show(to); });
+    phone.appendChild(b);
+  });
+  [...dots.children].forEach((d, i) => d.classList.toggle("on", i === n - 1));
+  tip.textContent = s.tip;
+  document.getElementById("back").style.visibility = history.length ? "visible" : "hidden";
+}
+// A tap that misses every button briefly shows where the buttons are.
+phone.addEventListener("click", () => { phone.classList.remove("hint"); void phone.offsetWidth; phone.classList.add("hint"); });
+document.getElementById("back").addEventListener("click", () => { if (history.length) show(history.pop(), false); });
+document.getElementById("restart").addEventListener("click", () => { history.length = 0; show(1, false); });
+show(1, false);
+</script>
+</body>
+</html>

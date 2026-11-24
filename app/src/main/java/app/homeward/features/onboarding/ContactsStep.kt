@@ -15,14 +15,13 @@ import app.homeward.design.HomewardType
 import app.homeward.design.components.WhiteCard
 import app.homeward.features.contacts.ContactsEditor
 
-// Step 2: add at least one person who gets the SOS. "Continue" stays off until there's one.
+// Setup step 2 (Figma "04 Who gets your SOS"): add at least one person. "Continue" stays off until there's one.
 @Composable
 fun ContactsStep(onNext: () -> Unit) {
     var count by remember { mutableIntStateOf(0) }
     StepLayout(
         step = OnboardingStep.Contacts,
-        title = "Who gets your SOS?",
-        subtitle = "They see your exact location only after you send an SOS. Add at least one person.",
+        title = "Who should hear from you?",
         button = "Continue",
         buttonEnabled = OnboardingSteps.canContinue(OnboardingStep.Contacts, count),
         onButton = onNext,
@@ -33,8 +32,8 @@ fun ContactsStep(onNext: () -> Unit) {
         WhiteCard(Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Share my location when I say I'm OK", style = HomewardType.Label)
-                    Text("Only when you tap \"I'm OK\". No live tracking.", style = HomewardType.Small)
+                    Text("Add my location to \"I'm OK\"", style = HomewardType.Label)
+                    Text("Only when you tap it. Beacon never tracks you.", style = HomewardType.Small)
                 }
                 Switch(share, { share = it; AppServices.locationSharing.onCheckIn = it },
                     colors = SwitchDefaults.colors(checkedTrackColor = HomewardColors.Primary))

@@ -1,7 +1,5 @@
 package app.homeward.features.home
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -15,21 +13,24 @@ import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.device.GeoPoint
 import app.homeward.features.checkin.CheckInSender
+import app.homeward.features.lapamap.LapaIllustratedMap
+import app.homeward.features.lapamap.LapaMapProjection
 import app.homeward.features.policecall.PoliceCaller
 import app.homeward.features.safeplace.SafePlacePicker
 import app.homeward.features.safetymap.ApproachDetector
 import app.homeward.features.safetymap.SafetyMapView
 import app.homeward.features.safetymap.ZoneChecker
 import app.homeward.features.safetymap.ZoneWarningWriter
-import app.homeward.features.safetyphoto.PhotoOutbox
-import app.homeward.features.safetyphoto.SafetyPhotoReader
+import app.homeward.features.safetypack.ZoneLevel
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-// Home is the map (like Find My / Waze): full-screen safety map that follows you live, a red-zone
-// alert on top (plus a buzz) when you walk toward one, and a bottom sheet with SOS + three actions. This file only wires them up.
+// Home is the map: it follows you live, shows a red-zone alert on top (plus a buzz) when you walk
+// toward one, and has a bottom sheet with Ask Beacon, the nearest safe place and SOS.
+// Inside Lapa the map is the illustrated one (lapamap/); anywhere else it is the real street map (safetymap/).
+// This file only wires the pieces together.
 @Composable
-fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
+fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit, onAsk: (String) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pack = remember { AppServices.packStore.load() }
@@ -51,22 +52,19 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
     }
     var showSafePlace by remember { mutableStateOf(false) }
     var popup by remember { mutableStateOf<String?>(null) }
-    var sheetHeightPx by remember { mutableStateOf(0) } // measured, so the map can keep you above the sheet
-
-    // Photo: take picture -> on-device AI reads it -> queued for family until online.
-    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
-        if (bitmap != null) scope.launch {
-            val line = SafetyPhotoReader.read(bitmap)
-            AppServices.photoOutbox.add(PhotoOutbox.Entry(line, here.lat, here.lng, System.currentTimeMillis()))
-            popup = "Saved: $line\nSent to $contactNames when you have connection."
-        }
-    }
+    var sheetHeightPx by remember { mutableStateOf(0) } // measured, so the real map can keep you above the sheet
 
     Box(Modifier.fillMaxSize()) {
-        SafetyMapView(here, pack.zones, Modifier.fillMaxSize(), you = here, highlight = if (showSafePlace) safePlace?.place else null, bottomCoveredPx = sheetHeightPx)
+        if (LapaMapProjection.contains(here)) {
+            // "RED ZONE / AFTER 11PM": the hour comes from the saved pack.
+            val avoid = pack.zones.firstOrNull { it.level == ZoneLevel.Avoid }
+            LapaIllustratedMap(LapaMapProjection.toSpot(here), "RED ZONE" + (avoid?.let { "\nAFTER ${NearbyFeed.clock(it.riskyFromHour).uppercase()}" } ?: ""), Modifier.fillMaxSize())
+        } else {
+            SafetyMapView(here, pack.zones, Modifier.fillMaxSize(), you = here, highlight = if (showSafePlace) safePlace?.place else null, bottomCoveredPx = sheetHeightPx)
+        }
 
         redZone?.let { zone ->
-            RedZoneBanner(zone, ZoneChecker.distanceToZone(here, zone).toInt(), modifier = Modifier.padding(16.dp), onClick = {
+            RedZoneBanner(zone, ZoneChecker.distanceToZone(here, zone).toInt(), modifier = Modifier.statusBarsPadding().padding(16.dp), onClick = {
                 scope.launch {
                     showSafePlace = true
                     popup = ZoneWarningWriter.write(zone) + "\n\n" + zone.reasons.joinToString("\n") { "• $it" } +
@@ -76,18 +74,18 @@ fun HomeScreen(onSos: () -> Unit, onEditContacts: () -> Unit) {
         }
 
         HomeBottomSheet(
-            city = pack.city, country = pack.country, police = pack.police, contactNames = contactNames, onEditContacts = onEditContacts,
-            nearby = remember(here) { NearbyFeed.build(here, pack, hour) },
-            onSos = onSos,
-            onPhoto = { camera.launch(null) },
+            police = pack.police, contactNames = contactNames, safePlace = safePlace,
+            onAsk = onAsk,
             onSafePlace = { showSafePlace = true; popup = safePlace?.reason ?: "No open safe place saved nearby." },
-            onPolice = { PoliceCaller.dial(context, pack.police) },
             onImOk = {
                 scope.launch {
                     val reached = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CheckInSender.send() }
                     popup = if (reached.isEmpty()) "Add someone first (Edit)." else "Sent \"I'm OK\" to ${reached.joinToString(", ")}."
                 }
             },
+            onPolice = { PoliceCaller.dial(context, pack.police) },
+            onSos = onSos,
+            onEditContacts = onEditContacts,
             modifier = Modifier.align(Alignment.BottomCenter).onSizeChanged { sheetHeightPx = it.height },
         )
     }

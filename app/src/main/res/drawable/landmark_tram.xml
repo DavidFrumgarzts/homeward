@@ -1,0 +1,10 @@
+<!-- The yellow Santa Teresa tram. Made by docs/design/landmarks/make_landmarks.py: edit there, not here. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="13dp" android:viewportWidth="24" android:viewportHeight="13">
+    <path android:pathData="M4.3,11.2a1.7,1.7 0 1 0 3.4,0a1.7,1.7 0 1 0 -3.4,0z" android:fillColor="#1F3A6E"/>
+    <path android:pathData="M16.3,11.2a1.7,1.7 0 1 0 3.4,0a1.7,1.7 0 1 0 -3.4,0z" android:fillColor="#1F3A6E"/>
+    <path android:pathData="M3.6,1.0h16.8a2.6,2.6 0 0 1 2.6,2.6v4.2a2.6,2.6 0 0 1 -2.6,2.6h-16.8a2.6,2.6 0 0 1 -2.6,-2.6v-4.2a2.6,2.6 0 0 1 2.6,-2.6z" android:fillColor="#F6B93B" android:strokeColor="#1F3A6E" android:strokeWidth="1.5"/>
+    <path android:pathData="M4.8,3.2h2.4a0.8,0.8 0 0 1 0.8,0.8v2.0a0.8,0.8 0 0 1 -0.8,0.8h-2.4a0.8,0.8 0 0 1 -0.8,-0.8v-2.0a0.8,0.8 0 0 1 0.8,-0.8z" android:fillColor="#FFF8EC" android:strokeColor="#1F3A6E" android:strokeWidth="0.9"/>
+    <path android:pathData="M10.8,3.2h2.4a0.8,0.8 0 0 1 0.8,0.8v2.0a0.8,0.8 0 0 1 -0.8,0.8h-2.4a0.8,0.8 0 0 1 -0.8,-0.8v-2.0a0.8,0.8 0 0 1 0.8,-0.8z" android:fillColor="#FFF8EC" android:strokeColor="#1F3A6E" android:strokeWidth="0.9"/>
+    <path android:pathData="M16.8,3.2h2.4a0.8,0.8 0 0 1 0.8,0.8v2.0a0.8,0.8 0 0 1 -0.8,0.8h-2.4a0.8,0.8 0 0 1 -0.8,-0.8v-2.0a0.8,0.8 0 0 1 0.8,-0.8z" android:fillColor="#FFF8EC" android:strokeColor="#1F3A6E" android:strokeWidth="0.9"/>
+</vector>

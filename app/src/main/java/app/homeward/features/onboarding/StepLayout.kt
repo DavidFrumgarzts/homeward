@@ -10,32 +10,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
-import app.homeward.design.components.ProgressDots
 import app.homeward.design.components.PrimaryButton
+import app.homeward.design.components.ProgressDots
 
-// Shared frame for every onboarding step: progress dots, title, short text, content, one blue button at the bottom.
+// Shared frame for every setup step: progress bars, optional picture, title, content,
+// and one blue button at the bottom. No subheadline: the title says it.
 @Composable
 fun StepLayout(
     step: OnboardingStep,
     title: String,
-    subtitle: String,
     button: String,
     buttonEnabled: Boolean = true,
-    footnote: String? = null,
     onButton: () -> Unit,
-    header: (@Composable () -> Unit)? = null, // shown above the title (the logo on Welcome)
+    header: (@Composable () -> Unit)? = null, // shown above the title (the picture on Welcome)
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    Column(Modifier.fillMaxSize().background(HomewardColors.Background).padding(horizontal = 24.dp, vertical = 28.dp)) {
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            Spacer(Modifier.height(20.dp))
-            ProgressDots(step.ordinal, OnboardingSteps.all.size)
+    Column(Modifier.fillMaxSize().background(HomewardColors.Background).systemBarsPadding().padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 24.dp)) {
+        ProgressDots(OnboardingSteps.progressIndex(step), OnboardingSteps.SETUP_STEPS)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = 24.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             header?.invoke()
             Text(title, style = HomewardType.Title)
-            Text(subtitle, style = HomewardType.Small)
             content()
         }
         PrimaryButton(button, enabled = buttonEnabled, onClick = onButton)
-        footnote?.let { Text(it, style = HomewardType.Small, modifier = Modifier.padding(top = 8.dp)) }
     }
 }

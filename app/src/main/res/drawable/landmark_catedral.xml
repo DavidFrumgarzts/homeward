@@ -1,0 +1,15 @@
+<!-- Rio's cone-shaped cathedral. Made by docs/design/landmarks/make_landmarks.py: edit there, not here. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="58dp" android:height="58dp" android:viewportWidth="58" android:viewportHeight="58">
+    <path android:pathData="M6.0,55.4a23.0,2.2 0 1 0 46.0,0a23.0,2.2 0 1 0 -46.0,0z" android:fillColor="#1F3A6E" android:fillAlpha="0.12"/>
+    <path android:pathData="M9,51 L22,9 H36 L49,51 Z" android:fillColor="#FFF8EC"/>
+    <path android:pathData="M36,9 L49,51 H39 L31.5,9 Z" android:fillColor="#EBD9B5"/>
+    <path android:pathData="M27,9 L25.5,51 h7 L31,9 z" android:fillColor="#2F6BFF"/>
+    <path android:pathData="M26.7,20h4.6" android:strokeColor="#F6B93B" android:strokeWidth="3"/>
+    <path android:pathData="M26.3,30h5.4" android:strokeColor="#E5484D" android:strokeWidth="3"/>
+    <path android:pathData="M26,40h6" android:strokeColor="#F6B93B" android:strokeWidth="3"/>
+    <path android:pathData="M18.6,20h20.8M15.5,30h27M12.4,40h33.2" android:strokeColor="#1F3A6E" android:strokeWidth="1.2"/>
+    <path android:pathData="M9,51 L22,9 H36 L49,51 Z" android:strokeColor="#1F3A6E" android:strokeWidth="2" android:strokeLineJoin="round"/>
+    <path android:pathData="M29,2.5v6.5M26.4,4.8h5.2" android:strokeColor="#1F3A6E" android:strokeWidth="1.8" android:strokeLineCap="round"/>
+    <path android:pathData="M7.0,51.0h44.0a1.0,1.0 0 0 1 1.0,1.0v1.2000000000000002a1.0,1.0 0 0 1 -1.0,1.0h-44.0a1.0,1.0 0 0 1 -1.0,-1.0v-1.2000000000000002a1.0,1.0 0 0 1 1.0,-1.0z" android:fillColor="#FFF8EC" android:strokeColor="#1F3A6E" android:strokeWidth="1.6"/>
+</vector>
