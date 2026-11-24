@@ -9,3 +9,7 @@ Looks fair, Be careful or Walk away, offline, from scam reports saved in the pac
 - `RecommendedPlace.kt`: PURE LOGIC, the saved place Beacon recommends (decided in code), and finding a place by name. Tested in `RecommendedPlaceTest`.
 - `ScanReadingParser.kt`: PURE LOGIC, turns the model's messy answer into a `ScanReading` (accepts "4,20", lower-case currencies). Tested in `ScanReadingParserTest`.
 - `ScanReader.kt`: HYBRID AI, reads the photo (on the phone when it can). Reads only; decides nothing.
+- `ScamResearchPrompt.kt`: the cloud prompt (Google Search; Reddit threads, forums, embassy advice; sources required).
+- `ScamResearchParser.kt`: PURE LOGIC, research answer to `ScamWarning`s; drops broken or unsourced items.
+- `ScamResearchSchedule.kt`: PURE LOGIC, when to research (online, pack has no scams, once a day per city).
+- `ScamResearcher.kt`: CLOUD, runs the research from `PackUpdater` and saves the scams into the pack. Never throws.
