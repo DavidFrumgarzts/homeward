@@ -5,9 +5,9 @@
 const CACHE = "beacon-v4";
 const FILES = ["/", "/index.html", "/styles.css",
   "/js/app.js", "/js/map.js", "/js/cop.js", "/js/ai.js", "/js/ask.js", "/js/sos.js", "/js/pack.js", "/js/store.js",
-  "/js/firebase.js", "/js/messages.js", "/js/situation.js", "/js/incident.js", "/js/html.js", "/js/router.js", "/js/areas.js", "/js/trip.js",
+  "/js/firebase.js", "/js/messages.js", "/js/situation.js", "/js/incident.js", "/js/html.js", "/js/router.js", "/js/areas.js", "/js/trip.js", "/js/booking.js",
   "/js/prompts.js", "/js/family.js", "/js/familydata.js", "/js/familymap.js", "/js/summary.js", "/js/timeline.js", "/js/demo.js",
-  "/js/scan.js", "/js/scams.js", "/js/cityscams.js", "/js/emergency.js", "/js/router.js", "/js/areas.js", "/js/trip.js",
+  "/js/scan.js", "/js/scams.js", "/js/cityscams.js", "/js/emergency.js", "/js/router.js", "/js/areas.js", "/js/trip.js", "/js/booking.js",
   "/fixtures/demo-incident.json", "/fixtures/rio-lapa-pack.json"];
 
 self.addEventListener("install", (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())));
