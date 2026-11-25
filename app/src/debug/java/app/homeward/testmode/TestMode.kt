@@ -21,9 +21,11 @@ object TestMode {
     fun fakeSms(context: Context): Boolean = prefs(context).getBoolean("fake_sms", isEmulator())
     fun setFakeSms(context: Context, on: Boolean) = prefs(context).edit().putBoolean("fake_sms", on).apply()
 
+    // One fake radio for the whole app, so a text that goes to several contacts is listed once.
+    private val fake by lazy { FakeSmsGateway { text -> messages.value = messages.value + text } }
+
     // The gateway to use instead of the real one, or null to send real texts.
-    fun smsGateway(context: Context): SmsGateway? =
-        if (fakeSms(context)) FakeSmsGateway { text -> messages.value = messages.value + text } else null
+    fun smsGateway(context: Context): SmsGateway? = if (fakeSms(context)) fake else null
 
     private fun prefs(context: Context) = context.getSharedPreferences("test_mode", Context.MODE_PRIVATE)
 
