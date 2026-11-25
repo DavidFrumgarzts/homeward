@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import app.homeward.R
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
+import app.homeward.design.components.BlinkingRing
 
 // The illustrated map of Lapa (Figma "Map/Lapa illustrated"): a drawn base, small place badges with
 // their names, the red zone, and a green dot where you are. Used on Home and in the opening story.
@@ -46,6 +47,7 @@ import app.homeward.design.HomewardType
 // pointing that way. Null (standing still, or not known yet) shows the dot with no arrow.
 // `redZoneLabel` comes from the saved safety pack, e.g. "RED ZONE\nAFTER 11PM".
 // `extra` draws on top of the streets, in the map's grid (the story uses it for the walk).
+// `highlight` is the place Beacon recommends: a yellow ring blinks around it (design/components/BlinkingRing).
 //
 // Two small things move: a ring pulses around the police badge (red, then blue), and a soft circle
 // pulses under your dot.
@@ -56,6 +58,7 @@ fun LapaIllustratedMap(
     redZoneLabel: String,
     modifier: Modifier = Modifier,
     palette: LapaMapPalette = LapaMapPalette.Day,
+    highlight: LapaMapProjection.Spot? = null,
     extra: DrawScope.() -> Unit = {},
 ) {
     val loop = rememberInfiniteTransition(label = "map")
@@ -80,7 +83,7 @@ fun LapaIllustratedMap(
         Place(unit, R.drawable.landmark_bar, "Bar", Offset(41f, 128f), palette.label)
         Place(unit, R.drawable.landmark_catedral, "Cathedral", Offset(321f, 138f), palette.label)
         Place(unit, R.drawable.landmark_police, "Police", POLICE, palette.label)
-        Place(unit, R.drawable.landmark_hospital, "Hospital", Offset(63f, 318f), palette.label)
+        Place(unit, R.drawable.landmark_hospital, "Hospital", Offset(LapaBadges.HOSPITAL.x, LapaBadges.HOSPITAL.y), palette.label)
         Place(unit, R.drawable.landmark_arcos, "Arcos da Lapa", Offset(334f, 334f), palette.label)
         Place(unit, R.drawable.landmark_steps, "Selarón steps", Offset(309f, 418f), palette.label)
 
@@ -90,6 +93,9 @@ fun LapaIllustratedMap(
             "AV. MEM DE SÁ", style = HomewardType.MapLabel, color = palette.avenueLabel,
             modifier = Modifier.offset(unit * 292, unit * 254).graphicsLayer { rotationZ = 7.5f },
         )
+
+        // The recommended place: a yellow ring that blinks, then stays.
+        highlight?.let { h -> BlinkingRing(Modifier.offset(unit * (h.x - 22f), unit * (h.y - 22f)).size(unit * 44f), key = h) }
 
         // You: a green dot with a white edge, and an arrow on the side you are walking toward.
         you?.let { spot ->
@@ -112,7 +118,7 @@ fun LapaIllustratedMap(
     }
 }
 
-private val POLICE = Offset(249f, 298f)
+private val POLICE = Offset(LapaBadges.POLICE.x, LapaBadges.POLICE.y)
 private const val BADGE = 24f // badge size on the map's grid
 
 // One place: a small badge centered on `center`, with its name underneath.

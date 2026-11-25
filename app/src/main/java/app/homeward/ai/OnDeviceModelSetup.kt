@@ -14,6 +14,9 @@ object OnDeviceModelSetup {
 
     enum class State { Ready, Downloading, NotSupported }
 
+    // True when Gemini Nano is on this phone and can run now (the scan check asks before using the cloud otherwise).
+    suspend fun isReady(): Boolean = runCatching { FirebaseAIOnDevice.checkStatus() == OnDeviceModelStatus.AVAILABLE }.getOrDefault(false)
+
     suspend fun ensureDownloaded(onState: (State) -> Unit) {
         when (FirebaseAIOnDevice.checkStatus()) {
             OnDeviceModelStatus.AVAILABLE -> onState(State.Ready)

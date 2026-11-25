@@ -1,5 +1,11 @@
 package app.homeward.features.safetypack
 
+import app.homeward.features.scancheck.FairPrice
+import app.homeward.features.scancheck.FairRate
+import app.homeward.features.scancheck.ScamKind
+import app.homeward.features.scancheck.ScamLevel
+import app.homeward.features.scancheck.ScamWarning
+
 // Hand-made pack for the demo video (Lapa, Rio de Janeiro). Coordinates are approximate.
 // Real users get a pack built by SafetyPackBuilder. Check numbers before relying on them.
 object DemoRioPack {
@@ -44,5 +50,40 @@ object DemoRioPack {
             ),
         ),
         builtAtMillis = 0,
+        scams = rioScams,
     )
 }
+
+// Demo scam warnings for Rio. Prices and rates are approximate, for the demo; real packs get them from ScamResearcher.
+private val rioScams = listOf(
+    ScamWarning(
+        title = "Unofficial airport taxis", kind = ScamKind.Taxi, where = "Galeão airport arrivals",
+        signs = listOf("driver approaches you inside the terminal", "no meter", "price given only after you get in"),
+        whatToDo = "Use the official taxi desk or a ride app, and agree the price before you go.",
+        level = ScamLevel.Careful,
+        fairPrices = listOf(FairPrice("taxi airport to Lapa", "BRL", 90.0, 130.0)),
+        sources = listOf("https://www.reddit.com/r/rio/search/?q=airport+taxi"), reports = 3,
+    ),
+    ScamWarning(
+        title = "Card machine overcharge at beach kiosks", kind = ScamKind.Shop, where = "Copacabana and Ipanema beach kiosks",
+        signs = listOf("card machine turned away from you", "screen covered", "asked to type the PIN twice"),
+        whatToDo = "Read the amount on the screen before you pay, or pay in cash.",
+        level = ScamLevel.Avoid,
+        sources = listOf("https://www.reddit.com/r/rio/search/?q=card+machine"), reports = 4,
+    ),
+    ScamWarning(
+        title = "Street money changers", kind = ScamKind.Money, where = "Copacabana and Centro sidewalks",
+        signs = listOf("cambio offered on the street", "better rate than the banks", "counting notes fast"),
+        whatToDo = "Change money at a bank or an official casa de câmbio, or use an ATM inside a bank.",
+        level = ScamLevel.Avoid,
+        fairRates = listOf(FairRate("USD", "BRL", 5.40, 8)),
+        sources = listOf("https://www.reddit.com/r/travel/search/?q=rio+money+exchange"), reports = 3,
+    ),
+    ScamWarning(
+        title = "\"Free\" bracelet or gift, then a demand for money", kind = ScamKind.Other, where = "Lapa steps and beach promenades",
+        signs = listOf("ties a bracelet on your wrist", "free gift", "asks for money after"),
+        whatToDo = "Keep your hands to yourself, say \"Não, obrigado\" and keep walking.",
+        level = ScamLevel.Careful,
+        sources = listOf("https://www.reddit.com/r/solotravel/search/?q=rio+bracelet"), reports = 2,
+    ),
+)

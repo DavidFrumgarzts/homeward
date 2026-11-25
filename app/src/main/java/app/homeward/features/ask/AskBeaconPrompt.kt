@@ -6,6 +6,7 @@ import app.homeward.features.safeplace.SafePlacePicker
 import app.homeward.features.safetymap.ZoneChecker
 import app.homeward.features.safetypack.SafetyPack
 import app.homeward.features.safetypack.ZoneLevel
+import app.homeward.features.scancheck.RecommendedPlace
 
 // PURE LOGIC: builds the prompt for Ask Beacon. Tested in AskBeaconPromptTest.
 // The on-device model is small and can't search, so we hand it every fact it may use:
@@ -28,6 +29,8 @@ object AskBeaconPrompt {
             .take(5)
             .joinToString("\n") { (p, m) -> "- ${p.name} (${p.kind})${m?.let { d -> ", $d m away" }.orEmpty()}, ${if (p.open24h) "open 24h" else "open now"}" }
         val phrases = pack.localPhrases.take(6).joinToString("\n") { "- ${it.english} = ${it.local}" }
+        // The place to recommend is picked in code (RecommendedPlace) so the map can make the same one blink.
+        val recommend = RecommendedPlace.pick(question, pack, here, hour)?.let { "\nRecommend ${it.name} first." }.orEmpty()
         val chat = earlier.takeLast(2).joinToString("\n") { (q, a) -> "Traveler: $q\nBeacon: $a" }.ifBlank { "(nothing yet)" }
 
         return """
@@ -35,7 +38,7 @@ object AskBeaconPrompt {
             Answer the question using ONLY the facts below. Copy phone numbers and names exactly.
             If asked whether the area is OK, use the distances and hours under "Streets to avoid", and name a safer street or place.
             If the facts don't cover it, say "I don't have that saved. Police: ${pack.police}."
-            Write at most 3 short steps, plain words, no headings.
+            Write at most 3 short steps, plain words, no headings.$recommend
 
             FACTS
             Police: ${pack.police}. Ambulance: ${pack.ambulance}. Embassy: ${pack.embassyName}, ${pack.embassyPhone}.

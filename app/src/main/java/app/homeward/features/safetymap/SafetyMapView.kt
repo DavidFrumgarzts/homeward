@@ -27,6 +27,7 @@ fun SafetyMapView(
     interactive: Boolean = true,
     // Pixels hidden by the bottom sheet. The map shifts up by half of it so "you" stay in view.
     bottomCoveredPx: Int = 0,
+    highlightRing: Boolean = false, // the recommended place's yellow ring (blinks: Home toggles this)
 ) {
     AndroidView(modifier = modifier, factory = { ctx ->
         MapView(ctx).apply {
@@ -43,9 +44,20 @@ fun SafetyMapView(
         zones.forEach { map.overlays.add(zoneShape(it)) }
         zones.filter { it.level != ZoneLevel.Safer }.forEach { map.overlays.add(zoneLabel(map, it)) }
         you?.let { map.overlays.add(pin(map, it, "You")) }
-        highlight?.let { map.overlays.add(pin(map, GeoPoint(it.lat, it.lng), it.name)) }
+        highlight?.let {
+            if (highlightRing) map.overlays.add(ring(it.lat, it.lng))
+            map.overlays.add(pin(map, GeoPoint(it.lat, it.lng), it.name))
+        }
         map.invalidate()
     }
+}
+
+// The yellow "go here" ring around the recommended place (Figma yellow, same as HomewardColors.Yellow).
+private fun ring(lat: Double, lng: Double) = Polygon().apply {
+    points = Polygon.pointsAsCircle(OsmPoint(lat, lng), 35.0)
+    fillPaint.color = AColor.argb(70, 224, 161, 15)
+    outlinePaint.color = AColor.rgb(224, 161, 15)
+    outlinePaint.strokeWidth = 6f
 }
 
 // Zone polygon colored by level: soft fill + solid outline.
