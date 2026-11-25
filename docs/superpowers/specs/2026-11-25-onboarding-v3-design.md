@@ -17,7 +17,6 @@ A new traveler thinks "what's in it for me?" on every screen. Each screen shows 
 
 ## Non-goals (later, not in this build)
 
-- Figma screen 4 (no signal, sick, route to a hospital hours away by car): the router is for walking, and phones' browsers can't run the AI offline yet.
 - Figma screens 5's "they can ask how you are any time" and 6 (dangerous area, family told automatically). They need background location, a relay and the Android app.
 - Dangerous areas found by AI. Tested 2026-11-25: asked for areas official sources name, Gemini with Google Search returned none for Jaipur or Rio.
 - Google's Gmail verification. The Gmail part stays in testing mode.
@@ -41,6 +40,7 @@ A new traveler thinks "what's in it for me?" on every screen. Each screen shows 
 | 1 | The real night | Map picture: her hotel, "Nearest hospital · 8 hours by road", the story sentence | "See it with Beacon" |
 | 2 | Booking found | Three buttons, then the real result: hotel, dates, a map with the hotel and hospitals around it, and the 30-minute warning when it applies | Gmail sign-in, "Try a sample booking", "Paste a booking", Skip |
 | 3 | Safe way back | Map picture: Beacon's route on main, lit streets around a dangerous area, next to the fastest one, saved for no signal | Location (real browser prompt) |
+| 4 | No signal, sick | Airplane mode: "I feel very sick. Where do I go?" answered from what's saved (AI on the computer in Chrome; saved-facts answer elsewhere, labeled honestly), call 108, and the saved car route to the nearest hospital | Nothing new |
 | 7 | SOS, one-tap calls | What her people get in an SOS, and one-tap police and ambulance | Name and trusted people (contact picker where the browser has one, fields otherwise) |
 | 8 | Late at night | Map picture with yellow rings on safe places | Nothing (it's a feature: after 9 p.m. Home's map rings nearby 24-hour places in blinking yellow) |
 | 9 | Scam check | The ATM photo and Beacon's verdict | Camera (real browser prompt) |
@@ -67,6 +67,12 @@ Proven in a throwaway test on 2026-11-25 (Jaipur, hotel on MI Road to Bar Pallad
 - **Planning a trip:** in Ask Beacon she says where she's going ("Tonight I'm going to Bar Palladio, then back to my hotel"). The AI picks out the place, Nominatim finds it, Beacon saves the streets, the areas and both routes, then says "Saved for no signal: the way there and back".
 - **With no signal:** "Way back to my hotel" opens the saved route, or works out a new one from where she is if she's inside the saved streets. Outside them: direction and distance, and "not a full route".
 - **Map credit:** "© OpenStreetMap contributors" wherever a route is shown.
+
+### Car route to the nearest hospital (screen 4 and the booking check)
+
+- When a booking or a city pack is saved, Beacon asks the free OpenStreetMap car router (FOSSGIS OSRM, `routing.openstreetmap.de/routed-car`) for the drive to the nearest hospitals, and saves the time and the road line on the phone.
+- With no signal, "I feel very sick" answers with the ambulance number and the saved drive ("AIIMS Jodhpur, 3 h 40 by car, route saved") and shows the line on Beacon's map.
+- While online, "Open in Google Maps" hands the drive to Google Maps for live turn-by-turn directions with traffic. Not Google's Routes API: its terms forbid drawing its routes on a non-Google map and keeping them for offline use.
 
 ### Dangerous areas: a team list plus her own marks
 
