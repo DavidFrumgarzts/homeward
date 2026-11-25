@@ -110,7 +110,7 @@ As in section 11 of the prompt: session service with microphone, tile, widget, S
 - Android's Ask Beacon now answers from saved facts by plain rules when no model can (the web already did).
 
 **Verified, and how.**
-- Tests: Android 101 unit tests (debug and release); rules 18; web 79 unit and 5 browser tests on the Auth, Firestore and Hosting emulators. I ran all three suites myself after the web agent finished.
+- Tests: Android 102 unit tests (debug and release); rules 18; web 79 unit and 5 browser tests on the Auth, Firestore and Hosting emulators. I ran all three suites myself after the web agent finished.
 - Rules reviewed by hand against what Android and web write, then deployed. The database was created the same day with the default locked rules, so nothing was overwritten.
 - Emulator to real project: an SOS on the `Pixel_9` emulator wrote its trip, share, incident and updates with no refusals; the message carried the family link; the screen said "Live link: up to date."
 - **Hosted, live:** `https://homeward-6999c.web.app` is deployed (26 files: the page, styles, `sw.js`, `js/`, `fixtures/`). `/__/firebase/init.json` has an `appId`. The Android emulator's SOS opened at `/f/{its share id}` in a browser and showed the alert, the location update, the trail on the map and "Ended". `/demo` replays the made-up incident. `firebase-config.js`, the tests and `package.json` are not served.
