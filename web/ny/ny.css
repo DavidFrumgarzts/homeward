@@ -1,0 +1,9 @@
+/* Beacon New York: only what differs from ../styles.css (the real street map instead of the drawing). */
+#map { position: absolute; inset: 0; background: #E9EBEE; }
+.mapwrap .hint { z-index: 500; }
+.leaflet-control-attribution { font-size: 10px; }
+.dot.big { width: 14px; height: 14px; }
+button.card { width: 100%; text-align: left; }
+.chat-top h2 { margin: 0; }
+/* Grey streets like the drawn map: OSM's colors toned down. */
+.leaflet-tile-pane { filter: grayscale(1) brightness(1.06) contrast(.88); }

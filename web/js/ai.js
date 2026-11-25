@@ -8,7 +8,7 @@ import { firebase, signedIn, SDK } from "./firebase.js";
 
 const CLOUD_MODEL = "gemini-3.5-flash-lite"; // same cloud model as the Android app
 
-let modelPromise = null;
+let modelPromise = null, searchPromise = null;
 
 async function loadModel() {
   try {
@@ -61,4 +61,44 @@ export async function warmUp(onProgress = () => {}) {
   if (!model?.initializeDeviceModel) return;
   try { await model.initializeDeviceModel((loaded) => onProgress(Math.max(0, Math.min(1, loaded)))); onProgress(1); }
   catch { /* no built-in model in this browser: the cloud answers */ }
+}
+
+// Reads a photo (scan check). Returns the model's text, or "" when AI isn't available or fails.
+export async function askAiAboutImage(prompt, file) {
+  modelPromise ??= loadModel();
+  const model = await modelPromise;
+  if (!model) return "";
+  try {
+    const data = await new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = fail; r.readAsDataURL(file); });
+    const result = await model.generateContent([prompt, { inlineData: { data, mimeType: file.type || "image/jpeg" } }]);
+    return result.response.text().trim();
+  } catch {
+    return "";
+  }
+}
+
+// Gemini in the cloud with Google Search, for looking up a city's reported scams while online.
+async function loadSearchModel() {
+  try {
+    const fb = await firebase();
+    if (!fb?.appCheck || !fb.config.appId) return null;
+    await signedIn();
+    const { getAI, getGenerativeModel, GoogleAIBackend } = await import(`${SDK}/firebase-ai.js`);
+    return getGenerativeModel(getAI(fb.app, { backend: new GoogleAIBackend() }), { model: CLOUD_MODEL, tools: [{ googleSearch: {} }] });
+  } catch {
+    return null;
+  }
+}
+
+// Asks Gemini with Google Search (needs a connection). Returns the text, or null when AI isn't set up or it fails.
+export async function askAiWithSearch(prompt) {
+  searchPromise ??= loadSearchModel();
+  const model = await searchPromise;
+  if (!model || !navigator.onLine) return null;
+  try {
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim() || null;
+  } catch {
+    return null;
+  }
 }
