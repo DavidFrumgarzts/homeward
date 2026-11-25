@@ -1,5 +1,5 @@
-// Remembers things on this device: your name, who gets your SOS, and whether setup is done.
-// Everything stays in the browser (localStorage); nothing is sent anywhere.
+// Remembers things on this device: your name, who gets your SOS, whether setup is done, and the ids
+// of your trip's family link. Everything here stays in the browser (localStorage).
 const KEY = "beacon.v1";
 
 function read() {
@@ -15,6 +15,12 @@ export const store = {
   get contacts() { return read().contacts || []; },
   addContact(name, phone) { const d = read(); write({ ...d, contacts: [...(d.contacts || []), { name: name.trim(), phone }] }); },
   removeContact(index) { const d = read(); write({ ...d, contacts: (d.contacts || []).filter((_, i) => i !== index) }); },
+  // Her trip and its family link in Firestore: { tripId, shareId, created }. Made at the first SOS.
+  get trip() { return read().trip || null; },
+  set trip(value) { write({ ...read(), trip: value }); },
+  // An SOS that could not be written to Firestore yet (first visit with no connection).
+  get pending() { return read().pending || null; },
+  set pending(value) { write({ ...read(), pending: value }); },
   get setupDone() { return !!read().setupDone; },
   set setupDone(value) { write({ ...read(), setupDone: value }); },
   reset() { try { localStorage.removeItem(KEY); } catch { /* nothing to clear */ } },

@@ -2,57 +2,105 @@
 
 **Safety help that works with no signal.** Built for #BuildHybridAI 2026 (Firebase AI Logic).
 
+**Prepare online, rely on it offline:** the cloud model with Google Search builds a city's safety pack while you have wifi, and the on-device model answers from that pack when you have nothing.
+
 After the army, my sister went to India with no plan, no local numbers and often no signal. Nothing happened,
 but if it had, she couldn't have reached anyone. Beacon is for that moment, for her and for the family at home.
 
 > Find My tells your mom where you are. Beacon tells her what's happening and what to do.
 
-## What it does
-- **Red-zone warnings on the walk home (offline):** the map buzzes when you head toward a red area at night,
-  says why, and shows the nearest open safe place. In Lapa, Rio, the map is an illustrated one; everywhere
-  else it is a real street map saved to your phone.
-- **Ask Beacon (on-device AI, cloud fallback):** a chat that answers from the city's safety pack: "What's the
-  police number?", "Is this area OK now?", "Where's a safe place?". It only uses saved facts and never
-  guesses a phone number.
-- **SOS by text, with no signal (on-device AI):** type or tap what's happening. Gemini Nano on the phone writes
-  a clear SOS with your location. You check it, then it goes out by SMS. "I'm OK" lets family know you got home.
-- **Safety pack (cloud):** when you land, Gemini with Google Search researches the city: police and ambulance
-  numbers, your embassy, emergency phrases, and green / yellow / red areas by time of night. Safe places (police,
-  hospitals, pharmacies, 24h gas stations) come from **OpenStreetMap**, so they're real, not AI guesses.
-  Everything is saved on the phone.
-- **Safety photos (on-device AI):** snap a taxi plate; the phone reads it offline and sends it to family when
-  you're back online.
-- **One-tap local police** with the right number for the country.
+Beacon is three native apps on one Firebase project: **Android**, **iOS** and **Web** (desktop Chrome). The repo and the code package are still called `homeward`, the project's first name.
 
-## How it uses Firebase AI Logic
-Hybrid inference with `InferenceMode.PREFER_ON_DEVICE`: everything that must work offline runs on Gemini Nano;
-the city research runs in the cloud with Google Search grounding. See [ARCHITECTURE.md](ARCHITECTURE.md).
+## What it does
+
+- **Red-zone warnings on the walk home (offline):** the map buzzes when you head toward a red area at night, says why, and shows the nearest open place to get help. In Lapa, Rio, the map is an illustrated one; everywhere else it is a real street map.
+- **Ask Beacon (on-device AI, cloud fallback):** a chat that answers from the city's safety pack: "What's the police number?", "Is this area OK now?". It only uses saved facts and never guesses a phone number. With no AI at all, plain rules answer from the same facts.
+- **Hold for SOS:** hold the red button, say what's happening in a few words. The phone's AI rewrites them into one clear sentence; the app adds your location, the time, a map link and what to do. You check it, then it goes to your trusted contacts.
+- **Honest delivery:** the app says "Saved on your phone", "Sent to Mom" or "Mom knows", and only says "knows" when the message was reported delivered. With no signal the message waits on the phone and goes out when signal returns.
+- **While the SOS is on:** a checklist for your situation, one tap to call the local emergency number, the nearest open place, a phrase in the local language to show someone nearby, and location updates to your contacts (after 200 m or 5 minutes). "I'm safe now" ends it and tells them.
+- **Family view (web):** the SOS text carries a link. A contact opens it in a browser and follows the incident live: a map, how old the last position is, what happened, the local emergency numbers, and a short "what should I do?" written on their own computer.
+- **Safety pack (cloud):** Gemini with Google Search researches the city: police and ambulance numbers, your embassy, emergency phrases, and areas by time of night. Places to get help (police, hospitals, pharmacies, 24h gas stations) come from **OpenStreetMap**, so they're real, not AI guesses.
+- **Safety photos (on-device AI):** snap a taxi plate; the phone reads it offline and sends it to family when you're back online.
+
+## How it uses Firebase AI Logic (hybrid inference)
+
+Every AI-written text carries a badge taken from the SDK's own answer: **On device** (or "On this computer"), **Cloud**, or **No AI**.
+
+| Job | Android (Gemini Nano via AICore) | iOS (Apple Foundation Models) | Web (Gemini Nano in Chrome) |
+|---|---|---|---|
+| Research a city for the pack | Cloud only, with Google Search | Cloud only (wired, no screen yet) | Phase 5 (trip planner) |
+| Rewrite her words into the SOS sentence | On device first, cloud fallback, plain template last | On device first, cloud fallback, plain template last | On this computer first, cloud fallback, plain sentence last |
+| Ask Beacon: answer from the saved pack | On device first, cloud fallback, plain rules last | On device first, cloud fallback, plain rules last | On this computer first, cloud fallback, plain rules last |
+| Family view: "What's happening and what should I do?" | | | On the contact's computer first, cloud fallback, fixed wording last |
+| Read a safety photo, explain a red zone | On device | | |
+| State machine, updates, checklist, phrase, delivery wording, zones | No AI | No AI | No AI |
+
+The model only rewrites or answers from text it is given. Phone numbers, places, coordinates and links come from the saved pack or from code, never from model output. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Run it
-1. Install [Android Studio](https://developer.android.com/studio) and open this folder (or build from the terminal with `./gradlew assembleDebug`, Java 17).
-2. Create a Firebase project, add an Android app with package `app.homeward`, enable **Firebase AI Logic**
-   (Gemini Developer API) and **App Check**, and download `google-services.json` into `app/` (it is git-ignored).
-3. Run on a phone with Gemini Nano (Pixel 9 or newer, recent Samsung flagships) to see on-device AI.
-   Other phones fall back to the cloud.
-4. App Check: copy the debug token from Logcat into Firebase console > App Check > Manage debug tokens.
-5. Optional, for the Google Maps-like look: request a free key at carto.com/basemaps/apikey and add
-   `CARTO_KEY=your_key` to `local.properties` (git-ignored). Without it the app uses plain OpenStreetMap tiles.
 
-The package name is still `app.homeward`, the project's first name. The app is called Beacon on the phone.
+### Android
 
-## Status
-Working: opening story, setup (contacts, permissions, getting ready offline), safety pack build and offline storage,
-illustrated Lapa map and offline street map, live red-zone warning with vibration, safe place picker, Ask Beacon,
-on-device SOS writing, SMS sending, "I'm OK" check-in, safety photo reading and sending when back online, police call,
-contacts editing.
+Gradle here needs Java 21 (not the Java 25 bundled with Android Studio):
 
-Not built yet: push between phones (needs a Cloud Function; SOS goes by SMS until then), walking route around red zones.
-On-device Gemini Nano has so far been tested only on an emulator, which uses the cloud fallback.
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=~/Library/Android/sdk
+```
 
-Design: Figma file "Beacon v2". Team: David Frumgarzts (design), Alwis Lim and Julia (tech).
+```bash
+./gradlew test assembleDebug
+```
 
-Map and safe places: © OpenStreetMap contributors (ODbL), credited on the map screen. Standard OpenStreetMap tiles;
-streets you have viewed stay available offline.
+```bash
+~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+- `app/google-services.json` must be on disk (Firebase console > Project settings > the Android app, package `app.homeward`). It is git-ignored.
+- On an emulator, debug builds run in **Test mode: no real SMS**: nothing is sent, and each text is shown as sent, then delivered, so the screens can be checked. Release builds always use the real sender.
+- On-device AI needs a phone with Gemini Nano (Pixel 9 or newer, recent Samsung flagships). Emulators have none and fall back to the cloud.
+- Optional: `CARTO_KEY=your_key` in `local.properties` for the Google Maps-like map style. Without it the app uses plain OpenStreetMap tiles.
+- A recorded walk for demos: `./docs/demo/play-route.sh` plays it into a running emulator.
+
+### iOS
+
+See [ios/README.md](ios/README.md): `xcodebuild` and `xcrun simctl` commands, signing with a free Apple ID, what is built.
+
+### Web
+
+See [web/README.md](web/README.md). In short: `python3 web/serve.py`, then open http://localhost:4173 in desktop Chrome. `/demo` shows the family view with a made-up incident.
+
+### Backend
+
+Firestore rules, their tests and the deploy command are in [firebase/README.md](firebase/README.md). The data layout is in [shared/schema/README.md](shared/schema/README.md).
+
+### App Check (needed before any cloud AI call works)
+
+App Check is enforced for Firebase AI Logic in the project. Each debug install prints its own debug token once; paste it in Firebase console > App Check > Apps > that app's menu > Manage debug tokens.
+
+- Android: Logcat, tag `FirebaseAppCheck` (it also prints a ready-made `firebase appcheck:debugtokens:create ...` command).
+- iOS: the Xcode console, line `Firebase App Check debug token: ...`.
+- Web: Chrome's DevTools console on localhost, line `Firebase App Check debug token: ...`.
+
+Until a token is registered the apps still work: answers come from the plain rules and the SOS uses the plain sentence, marked "No AI".
+
+## What the three apps share
+
+`shared/` holds the data shapes, the demo pack for Lapa, a demo incident, the prompt texts and nine files of test vectors. Each platform's unit tests run the vectors, so zones, the place picker, the messages and the incident state machine give the same answers everywhere.
+
+## Status (Nov 25, 2026)
+
+- **Android:** opening story, setup, safety pack, illustrated and street maps, red-zone warning, Ask Beacon, Hold for SOS with the incident engine, honest SMS delivery with an outbox, location updates, the family link, Firestore sync, "I'm OK", safety photos, police call. Checked on an emulator; not yet on a real phone.
+- **Web:** the traveler flow, the family view and `/demo`.
+- **iOS:** setup, Home on Apple Maps, Ask Beacon, SOS through Messages with Firestore sync.
+- **Not built yet:** the Quick Settings tile, widget, Safe Walk, listening and safety checks (the state machine already handles them), the web trip planner, iOS Live Activity and Action Button, walking routes.
+- **Needs real hardware to prove:** Gemini Nano on Android and the "On device" badge, real SMS sending and delivery reports, Apple's on-device model and the Messages composer on an iPhone.
+
+The plan, what was verified and how, and what is still open are in [docs/specs/2026-11-25-beacon-full-app-plan.md](docs/specs/2026-11-25-beacon-full-app-plan.md).
+
+Design: Figma file "Beacon v2" (exported screens in `docs/beacon-demo/img/`). Team: David Frumgarzts (design), Alwis Lim and Julia (tech).
+
+Map and places: © OpenStreetMap contributors (ODbL), credited on the map screens.
 
 ## License
+
 Apache 2.0

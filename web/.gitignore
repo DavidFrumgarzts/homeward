@@ -1,0 +1,6 @@
+# Development tools and test output: never shipped.
+node_modules/
+test-results/
+playwright-report/
+# Local settings (see firebase-config.example.js and appcheck-config.example.js).
+appcheck-config.js

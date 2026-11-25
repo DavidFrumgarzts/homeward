@@ -88,3 +88,47 @@ textarea.field { height: 120px; padding: 14px 16px; resize: none; line-height: 1
 .check { width: 132px; height: 132px; align-self: center; }
 .outline { border: 1.5px solid var(--line); border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
 .phrase { font: 700 22px/28px var(--body); }
+
+/* Where an AI answer ran: "On this computer" (green) or "Cloud" (blue). */
+[hidden] { display: none !important; }
+.badge { display: inline-block; align-self: flex-start; border-radius: 999px; padding: 3px 10px; font-size: 12px; line-height: 16px; font-weight: 500; }
+.badge.device { background: var(--green-tint); color: #17764E; }
+.badge.cloud { background: var(--blue-tint); color: #1D4FD0; }
+.bubbles .badge { margin-top: -6px; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card.col { flex-direction: column; align-items: stretch; gap: 10px; padding: 18px; }
+#ai-status { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; z-index: 10; white-space: nowrap; }
+
+/* Family view (/f/{shareId} and /demo): one column on a phone, map beside the cards on a wide screen. */
+#app.wide { max-width: 1040px; overflow: visible; }
+.family { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.fam-head { display: flex; flex-direction: column; gap: 6px; }
+.fam-head .stamp { color: var(--muted); }
+.pill { display: inline-block; vertical-align: middle; border-radius: 999px; padding: 3px 10px; font: 500 13px/18px var(--body); letter-spacing: 0; }
+.pill.live { background: var(--red-tint); color: #B4282D; }
+.pill.ok { background: var(--green-tint); color: #17764E; }
+.fam-demo { position: relative; background: var(--amber-tint); border-radius: 16px; padding: 10px 14px 13px; display: flex; gap: 12px; justify-content: space-between; align-items: center; color: var(--ink); overflow: hidden; }
+.fam-demo i { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: var(--amber); transition: width .5s linear; }
+.fam-demo .link { flex: none; }
+.fam-grid { display: grid; gap: 16px; }
+.fam-left, .fam-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.fam-map { height: 320px; border-radius: 22px; overflow: hidden; background: #E9EBEE; }
+.fam-nomap { padding: 24px; }
+.fam-age { font: 600 24px/30px var(--display); letter-spacing: -.4px; }
+.fam-text { white-space: pre-wrap; }
+.tel { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 60px; border-radius: 18px; padding: 10px 18px; border: 1.5px solid var(--line); text-decoration: none; color: var(--ink); }
+.tel b { font: 600 20px/26px var(--display); white-space: nowrap; }
+.tel.red { background: var(--red); border-color: var(--red); color: #fff; }
+.fam-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.fam-list li { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: start; }
+.fam-list time { font-size: 13px; line-height: 20px; color: var(--muted); }
+.fam-list li.k-alert .label { color: #B4282D; }
+.fam-list li.k-ended .label { color: #17764E; }
+.fam-dot { border-radius: 50%; box-sizing: border-box; }
+.fam-dot.latest { width: 22px; height: 22px; background: var(--green); border: 4px solid #fff; box-shadow: 0 0 0 8px rgba(34, 160, 107, .22); }
+.fam-dot.start { width: 14px; height: 14px; background: #fff; border: 3px solid #1F3A6E; }
+@media (min-width: 860px) {
+  .fam-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+  .fam-left { position: sticky; top: 20px; }
+  .fam-map { height: min(520px, 60vh); }
+}
