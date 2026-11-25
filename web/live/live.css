@@ -7,3 +7,11 @@ button.card { width: 100%; text-align: left; }
 .chat-top h2 { margin: 0; }
 /* Grey streets like the drawn map: OSM's colors toned down. */
 .leaflet-tile-pane { filter: grayscale(1) brightness(1.06) contrast(.88); }
+/* After 9 p.m.: safe places nearby blink yellow, slowly, all night. */
+.night-ring { fill: #E0A10F; fill-opacity: .25; stroke: #E0A10F; stroke-width: 3; animation: night-ring 1.2s ease-in-out infinite; }
+@keyframes night-ring { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .night-ring { animation: none; } }
+.hotel-pin span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; background: #2F6BFF; border: 2px solid #fff; font-size: 13px; }
+.map-tools { position: absolute; right: 12px; top: 12px; z-index: 600; }
+.map-tools button { background: #fff; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 500; box-shadow: 0 1px 3px rgba(16,26,51,.15); }
+.route-card { display: flex; flex-direction: column; gap: 4px; }

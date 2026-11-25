@@ -53,16 +53,18 @@ export async function planTrip({ from, hotel, place, city }, onStep = () => {}) 
   return trip;
 }
 
-// The way back from `at`, using only what's saved. {route, fastest} or {direction, partial:true} or null (no trip).
+// The way back from `at`, using only what's saved: {route, fastest}, {arrived} within 60 m,
+// {direction, partial:true} off the saved streets, or null when no trip is saved.
 export function wayBack(at) {
   const trip = savedTrip(), g = savedGraph();
   if (!trip) return null;
+  if (directionTo(at, trip.home).metres < 60) return { arrived: true, trip };
   const safe = g && route(g, at, trip.home, "safe");
   // Off the saved streets (more than ~150 m from any of them): direction and distance only.
-  if (!safe || safe.path.length < 2 || distanceToStart(g, at) > 150) return { direction: directionTo(at, trip.home), partial: true, trip };
+  if (!safe || safe.path.length < 2 || nearestStreetM(g, at) > 150) return { direction: directionTo(at, trip.home), partial: true, trip };
   return { route: safe, fastest: route(g, at, trip.home, "fastest"), trip };
 }
-function distanceToStart(g, at) {
+function nearestStreetM(g, at) {
   let best = Infinity;
   for (const n of g.nodes) { const d = Math.hypot((n[0] - at[0]) * 111320, (n[1] - at[1]) * 111320 * Math.cos((at[0] * Math.PI) / 180)); if (d < best) best = d; }
   return best;
