@@ -220,7 +220,7 @@ function home(highlight = null) {
   $("#ask").onclick = () => ask("");
   $("#talk").onclick = () => ask("", true);
   app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => ask(b.dataset.q)));
-  $("#ok").href = smsLink(store.contacts.map((c) => c.phone), checkInText(store.name, here.real));
+  $("#ok").href = smsLink(store.contacts.map((c) => c.phone), checkInText(store.name, store.shareLocation ? here.real : null));
   holdToStart($("#sos"), () => sos());
   $("#scan").onclick = () => scanScreen(app, { back: () => home(), showPlace: (name) => home(name), backIcon: icon.back });
   $("#edit").onclick = () => contacts(true);
