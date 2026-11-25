@@ -4,11 +4,12 @@
 // and Ask, Scan and SOS need no signal. The map's street tiles need a connection (the tile provider doesn't allow saving them).
 import { store, cleanPhone, joinNames } from "../../js/store.js";
 import { askAi } from "../../js/ai.js";
-import { scanScreen } from "../../js/scan.js";
+import { scanScreen } from "./scan.js";
 import { recommends, judge } from "../../js/scams.js";
 import { smsLink } from "../../js/sos.js";
 import { ny } from "./nypack.js";
 import { placesAround, nearest, saved, meters } from "./places.js";
+import { city, scamsHere, savedAt, arriveAt, research } from "./city.js";
 
 const app = document.getElementById("app");
 const $ = (s) => app.querySelector(s);
@@ -32,7 +33,7 @@ const helpPlace = () => nearest(here.places, where(), ["police", "hospital"]) ||
 function setup() {
   app.innerHTML = `<div class="screen">
     <h1>Beacon for New York</h1>
-    <p>If something goes wrong, Beacon writes a clear message for the people you trust, with where you are. It also checks prices and offers against scams travelers report.</p>
+    <p>If something goes wrong, Beacon writes a clear message for the people you trust, with where you are. Point the camera at a deal or a stranger's offer and it tells you if travelers report it as a scam.</p>
     <input class="field" id="name" placeholder="Your first name" value="${esc(store.name)}" autocomplete="given-name">
     <div class="label">Who should hear from you?</div>
     ${store.contacts.map((c, i) => `<div class="card"><div class="grow"><div class="label">${esc(c.name)}</div><p class="small">${esc(c.phone)}</p></div><button class="link small" data-del="${i}">Remove</button></div>`).join("")}
@@ -81,9 +82,19 @@ function home(highlight = null) {
   $("#place")?.addEventListener("click", () => home(card.name));
   const okText = `${store.name || "I"} ${store.name ? "is" : "am"} OK · ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}${here.at ? `\nWhere: https://maps.google.com/?q=${here.at.lat.toFixed(5)},${here.at.lng.toFixed(5)}` : ""}`;
   $("#ok").href = smsLink(store.contacts.map((c) => c.phone), okText);
-  $("#scan").onclick = () => scanScreen(app, { back: () => home(), showPlace: (name) => home(name), backIcon: icon.back, packs: { ny }, placeNames: here.places.map((p) => p.name) });
+  $("#scan").onclick = openScan;
   $("#sos").onclick = () => sos();
   $("#edit").onclick = setup;
+}
+
+// The scan check, with the scams saved for the city you're in (and whether they're being updated).
+function scanStatus() {
+  if (city.researching) return `Looking up the latest reports for ${city.name}…`;
+  const at = savedAt();
+  return at ? `Updated from the web ${new Date(at).toLocaleDateString([], { month: "short", day: "numeric" })}. Works with no signal.` : "Saved on this phone. Works with no signal.";
+}
+function openScan() {
+  scanScreen(app, { back: () => home(), backIcon: icon.back, city: city.name, scams: scamsHere(), status: scanStatus() });
 }
 
 // The street map (OpenStreetMap through Leaflet): you as a green dot, places to get help, and a yellow ring
@@ -112,8 +123,9 @@ function drawMap(shown) {
 function watchGps() {
   if (!navigator.geolocation) return;
   navigator.geolocation.watchPosition(async (pos) => {
-    const first = !here.at;
+    const first = !here.at, before = here.at;
     here.at = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    if (first || meters(before, here.at) > 20000) arriveAt(here.at, refreshScan); // landed somewhere new: work out the city, research its scams
     if (first || !saved() || meters(saved().center, here.at) > 1500) here.places = await placesAround(here.at);
     if ($(".sheet") && first) home(); // redraw Home once with your real position; later moves don't reset the screen
   }, () => {}, { enableHighAccuracy: true, maximumAge: 15000 });
@@ -125,8 +137,8 @@ function facts() {
   return `Emergency (police, fire, ambulance): ${ny.police}. Non-emergency city help: ${ny.nonEmergency}.
 Closest places to get help:
 ${near.map((p) => `- ${p.name} (${KIND_LABEL[p.kind]}), ${dist(p.meters)} away, open 24 hours`).join("\n") || "- (none saved yet)"}
-Scams travelers report in New York:
-${ny.scams.map((s) => `- ${s.title} (${s.where}): ${s.whatToDo}`).join("\n")}`;
+Scams travelers report in ${city.name}:
+${scamsHere().map((s) => `- ${s.title} (${s.where}): ${s.whatHappens || ""} ${s.whatToDo}`).join("\n")}`;
 }
 
 function plainAnswer(question) {
@@ -135,7 +147,7 @@ function plainAnswer(question) {
   if (/follow|unsafe|scared|danger/.test(q)) return `Go into a busy shop, hotel lobby or restaurant now and stay where people are.${place ? ` ${place.name} is ${dist(place.meters)} away.` : ""} If you're in danger, call 911.`;
   if (/hurt|hospital|doctor|bleed|sick/.test(q)) return `If it's serious, call 911.${hospital ? ` The nearest hospital is ${hospital.name}, ${dist(hospital.meters)} away.` : ""}`;
   if (/pharmac|medicine|drug ?store/.test(q)) return pharmacy ? `${pharmacy.name} is ${dist(pharmacy.meters)} away and open 24 hours.` : "I don't have a 24-hour pharmacy saved near you.";
-  const scam = judge({ kind: "Other", text: q }, ny.scams);
+  const scam = judge({ kind: "Other", text: q }, scamsHere());
   if (scam.warning) return `${scam.warning.title} is a known scam (${scam.warning.where}). ${scam.whatToDo}`;
   if (recommends(question)) return place ? `${place.name} is ${dist(place.meters)} away and open 24 hours. Walk there on a busy, lit street. In an emergency, call 911.` : "Call 911 in an emergency. Go online once so I can save places near you.";
   if (/police|number|emergency|call/.test(q)) return `Emergency (police, fire, ambulance): 911. For non-emergencies, call 311.`;
@@ -167,7 +179,7 @@ function ask(question) {
     const pick = recommends(text) ? helpPlace() : null;
     chat.push({ you: true, text }); thinking = true; draw();
     const earlier = chat.slice(-5, -1).map((l) => `${l.you ? "Traveler" : "Beacon"}: ${l.text}`).join("\n") || "(nothing yet)";
-    const reply = (await askAi(`You are Beacon, a calm safety helper for a traveler in New York. Answer using ONLY the facts below. Copy names and numbers exactly.
+    const reply = (await askAi(`You are Beacon, a calm safety helper for a traveler in ${city.name}. Answer using ONLY the facts below. Copy names and numbers exactly.
 If the facts don't cover it, say "I don't have that saved. In an emergency, call 911." At most 3 short steps, plain words.${pick ? `\nRecommend ${pick.name} first.` : ""}
 FACTS
 ${facts()}
@@ -229,10 +241,14 @@ function sent() {
   $("#back").onclick = () => home();
 }
 
+// Redraws the scan screen when the city or its saved scams change while it's open.
+function refreshScan() { if (app.querySelector("h1")?.textContent === "Is this legit?" && app.querySelector("#photo")) openScan(); }
+
 // ---------- Start ----------
 if (new URLSearchParams(location.search).has("reset")) store.reset();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 watchGps();
+research(refreshScan); // New York until the phone says where you are
 // Until the phone says where you are, show places around Times Square (or the last saved spot).
 if (!here.places.length) placesAround(saved()?.center || TIMES_SQUARE).then((p) => { if (here.places.length) return; here.places = p; if ($(".sheet")) home(); });
 store.setupDone && store.contacts.length ? home() : setup();

@@ -52,7 +52,7 @@ export function parseNumber(text) {
 }
 
 export const LABEL = { fair: "Looks fair", careful: "Be careful", walk: "Walk away", unknown: "Nothing saved about this" };
-const TIP = { Money: "Use a bank ATM and decline the conversion it offers.", Taxi: "Use the official taxi desk or a ride app, and agree the price first.",
+export const TIP = { Money: "Use a bank ATM and decline the conversion it offers.", Taxi: "Use the official taxi desk or a ride app, and agree the price first.",
   Tour: "Agree the full price before you start.", Shop: "Check the amount on the card machine before you pay.",
   Ticket: "Buy tickets only at the official counter.", Other: "If someone insists, say no and keep walking." };
 

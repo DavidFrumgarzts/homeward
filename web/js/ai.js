@@ -7,15 +7,38 @@
 const FIREBASE = "https://www.gstatic.com/firebasejs/12.4.0"; // check the current version when wiring this up
 const CLOUD_MODEL = "gemini-3.5-flash-lite";                  // same cloud model as the Android app
 
-let modelPromise = null;
+let modelPromise = null, searchPromise = null, appPromise = null;
 
-async function loadModel() {
-  try {
+// The one Firebase app for this page (both models share it), or null without firebase-config.js.
+function firebaseApp() {
+  appPromise ??= (async () => {
     const { firebaseConfig } = await import("../firebase-config.js");
     if (!firebaseConfig?.apiKey) return null;
     const { initializeApp } = await import(`${FIREBASE}/firebase-app.js`);
+    return initializeApp(firebaseConfig);
+  })().catch(() => null);
+  return appPromise;
+}
+
+// Gemini in the cloud with Google Search turned on, for researching a city's scams while online.
+async function loadSearchModel() {
+  try {
+    const app = await firebaseApp();
+    if (!app) return null;
+    const { getAI, getGenerativeModel, GoogleAIBackend } = await import(`${FIREBASE}/firebase-ai.js`);
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
+    return getGenerativeModel(ai, { model: CLOUD_MODEL, tools: [{ googleSearch: {} }] });
+  } catch {
+    return null;
+  }
+}
+
+async function loadModel() {
+  try {
+    const app = await firebaseApp();
+    if (!app) return null;
     const { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } = await import(`${FIREBASE}/firebase-ai.js`);
-    const ai = getAI(initializeApp(firebaseConfig), { backend: new GoogleAIBackend() });
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
     return getGenerativeModel(ai, { mode: InferenceMode.PREFER_ON_DEVICE, inCloudParams: { model: CLOUD_MODEL } });
   } catch {
     return null; // no config file, blocked network, or an old browser
@@ -47,6 +70,19 @@ export async function askAi(prompt) {
   modelPromise ??= loadModel();
   const model = await modelPromise;
   if (!model) return null;
+  try {
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+// Asks Gemini with Google Search (needs a connection). Returns the text, or null when AI isn't set up or it fails.
+export async function askAiWithSearch(prompt) {
+  searchPromise ??= loadSearchModel();
+  const model = await searchPromise;
+  if (!model || !navigator.onLine) return null;
   try {
     const result = await model.generateContent(prompt);
     return result.response.text().trim() || null;
