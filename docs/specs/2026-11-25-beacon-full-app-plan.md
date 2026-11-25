@@ -129,3 +129,46 @@ As in section 11 of the prompt: session service with microphone, tile, widget, S
 - App Check on Android still uses the debug provider in every build. A release APK that judges sideload cannot pass Play Integrity, so how judges' installs get past App Check has to be decided before Phase 7.
 
 **Left over.** One test trip named "Web test" and two anonymous users may remain in the real project from the web agent's first run (its cleanup output was cut off). The incidents I made from the emulator (traveler "Noa") are also there.
+
+### Phase 3: iOS core (Nov 24)
+
+**Built** (`ios/`, by a parallel agent to a written brief; reviewed, built and tested again by the main session).
+- `ios/Beacon.xcodeproj`, written by hand with synchronized folders. Swift 6 language mode, minimum iOS 18.1, Firebase 12.19.3 through Swift Package Manager (FirebaseAILogic, AppCheck, Auth, Firestore). 87 Swift files, a README in every folder.
+- AI in one file: `HybridModel(primary: Apple's system model, secondary: gemini-3.5-flash-lite)`, a new session per request, and a badge from `rawResponse.modelVersion`. Every caller has a no-AI fallback.
+- Screens: the two-part story on the drawn Lapa map, welcome, contacts (her name, how to refer to her, the iOS contact picker), location permission, get ready (bundled Rio pack, an honest line about Apple Intelligence on this device); Home on MapKit with the pack's zones and places and the bottom sheet; Ask Beacon; SOS compose, Send through `MFMessageComposeViewController`, the active screen, end with confirmation.
+- Firestore: trip, share, incident and updates in the shared shapes, the family link in the text, location updates under the same throttle as Android while the SOS is on.
+- The pure logic ported from Kotlin: zones, place picker, approach detector, situation, checklist, phrase picker, update throttle, messages, delivery wording, the incident state machine.
+
+**Verified, and how.**
+- `xcodebuild test` on an iPhone 17 simulator: 38 tests, 0 failures, including all nine files in `shared/test-vectors/` (a test fails if a new vector file has no port). Run by the agent and again by the main session.
+- Simulator walk (by the agent, with screenshots `docs/walkthrough/img/ios-01` to `ios-14`): setup, Home, Ask Beacon, hold for SOS, compose, Send with the "Test mode: Messages is not available in the simulator" card, a location update on the recorded walk, end.
+- Real project: the console logged every write as accepted (trip, share, incident, alert, update, ended). The main session then opened that incident's family link on the hosted site and saw the alert, the update and "Ended". So an SOS from the iPhone simulator and one from the Android emulator both appear in the same web family view.
+
+**Found out.**
+- **Foundation Models in the simulator:** it reports available, but every request fails with "Simulator is not supported", and the SDK falls back to cloud. So on the simulator "Cloud" is the pass, once the debug token is registered. The get-ready step says so on the simulator.
+- The cloud call is refused (401, invalid App Check token) until the iOS debug token is registered; the app then shows "No AI: saved answer" or "No AI: plain text".
+- Firestore logs "AppCheck failed" and carries on: App Check is not enforced for Firestore. If someone enforces it, iOS and web writes need valid tokens too.
+- `xcrun simctl location start` ignores waypoints passed as arguments when they start with a minus sign; the recorded walk has to go in on stdin.
+
+**Not verified.** Needs a real iPhone: the "On device" badge, the Messages sheet and pressing send, the dialer, the hold haptic, VoiceOver, App Attest, signing. Not exercised on the simulator: "Saved on your phone" with no connection (the simulator shares the Mac's network), the contact picker, "I'm OK" on Home, the red-zone banner (the walk ran outside the risky hours).
+
+**Different from Android, on purpose.**
+- The iOS sent screen has its own wording for its two paths (Messages, and the live link) and never says a contact "knows": iOS cannot learn whether a text was delivered.
+- Home's button says "Hold for SOS" without "works with no signal": on an iPhone she must press send in Messages.
+- No mic button on compose; the keyboard's dictation does that job.
+- Location is "While Using" only, so updates go out while Beacon is on screen. "Always" with background updates is for the Safe Walk phase.
+- `IncidentReducer.swift` is 173 lines, over the 150-line aim.
+
+**Not done yet.** The iOS prompts are not yet tested against `shared/prompts/` (those files landed after the port). The cloud research model is wired but no screen calls it. Widget, Live Activity, Action Button and Control Center are Phase 5.
+
+### Stop after Phase 3 (stretch 1)
+
+Phases 1 to 3 are done; Phase 4 has not been started. Three branches, each on top of the one before: `beacon/phase-1-slice`, `beacon/phase-2-backend`, `beacon/phase-3-ios`. Nothing is pushed.
+
+**Decisions needed before Phase 4.**
+1. **Walking routes.** Google's terms (item 8 at the top) do not allow a Routes API route on a non-Google map, and only allow caching coordinates for 30 days, not step text. Choose: (a) Google routes online only, on a Google map view, with offline answers limited to direction and distance plus the hand-checked Lapa route; or (b) an OpenStreetMap-based router whose routes can be stored and drawn on every Beacon map.
+2. **Hold for SOS, then no Send.** Nothing reaches contacts until she presses Send. Should an alert go out by itself after a short countdown?
+3. **Judges' APK and App Check.** A sideloaded release APK cannot pass Play Integrity. Decide how judges' installs get a valid token (for example a shared debug token for the judging build).
+4. **"Open now, hours not listed."** For OpenStreetMap places with no opening hours the app assumes daytime hours and says "Open now". Saying "hours not listed" instead would be more honest; it changes shared wording on all three platforms.
+
+**Housekeeping.** The walkthrough screenshots show the family links of test trips (made-up names, simulated positions). Delete those test documents in the Firestore console before the repo goes public. `docs/walkthrough/index.html` still shows the old "Homeward" screenshots; it is rebuilt in Phase 7.
