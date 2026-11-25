@@ -12,6 +12,7 @@ import { placesAround, nearest, saved, meters } from "./places.js";
 import { city, scamsHere, savedAt, fromMemory, arriveAt, research, numbers } from "./city.js";
 import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow } from "./trips.js";
 import { drawExtras } from "./routemap.js";
+import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused } from "./answering.js";
 import { placeFromPlan, placePrompt, readPlace } from "../../js/trip.js";
 
 const app = document.getElementById("app");
@@ -57,6 +58,11 @@ function setup() {
     <input class="field" id="cphone" placeholder="Phone with country code, +1 212 555 0100" inputmode="tel">
     <p class="error" id="error"></p>
     <button class="link left" id="add">Add this person</button>
+    ${store.contacts.length ? `<div class="card col"><div class="label">They can ask how you are, any time</div>
+      <p class="small">Beacon answers by itself with where you are, your route and your plans, locked so only they can read it. You see every answer here.</p>
+      <a class="btn quiet" id="sendlink" href="#">Send them their check-in link</a>
+      <label class="row small"><input type="checkbox" id="pause" ${paused() ? "checked" : ""}> Pause answers for now</label>
+      ${answersSent().slice(0, 5).map((a) => `<p class="small">${esc(a.who)} asked at ${new Date(a.askedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Beacon answered</p>`).join("")}</div>` : ""}
     <div class="grow"></div>
     <button class="btn" id="done">Start</button>
   </div>`;
@@ -67,6 +73,14 @@ function setup() {
     store.name = $("#name").value; store.addContact(name, phone); return true;
   };
   $("#add").onclick = () => add() && setup();
+  $("#pause")?.addEventListener("change", (e) => setPaused(e.target.checked));
+  $("#sendlink")?.addEventListener("click", async (e) => {
+    e.preventDefault(); store.name = $("#name").value;
+    const link = await checkinLink({ city: city.name, country: city.country });
+    if (!link) return ($("#error").textContent = "Beacon needs a connection once to make the link.");
+    location.href = smsLink(store.contacts.map((c) => c.phone), `${store.name || "I"} added you to Beacon. Open this to see how ${store.name || "I"} ${store.name ? "is" : "am"} any time: ${link}`);
+    answer();
+  });
   app.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { store.removeContact(+b.dataset.del); setup(); }));
   $("#done").onclick = () => {
     if (!add()) return;
@@ -157,6 +171,7 @@ function watchGps() {
   navigator.geolocation.watchPosition(async (pos) => {
     const first = !here.at, before = here.at;
     here.at = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    recordTrail(here.at);
     if (first || meters(before, here.at) > 20000) arriveAt(here.at, refreshScan); // landed somewhere new: work out the city, research its scams
     if (first || !saved() || meters(saved().center, here.at) > 1500) here.places = await placesAround(here.at);
     if ($(".sheet") && first) home(); // redraw Home once with your real position; later moves don't reset the screen
@@ -307,9 +322,12 @@ function refreshScan() { if (app.querySelector("h1")?.textContent === "Is this l
 if (new URLSearchParams(location.search).has("reset")) store.reset();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 const devAt = ["localhost", "127.0.0.1"].includes(location.hostname) && new URLSearchParams(location.search).get("at");
-if (devAt) { const [lat, lng] = devAt.split(",").map(Number); here.at = { lat, lng }; arriveAt(here.at, refreshScan); placesAround(here.at).then((p) => { here.places = p; if ($(".sheet")) home(); }); }
+if (devAt) { const [lat, lng] = devAt.split(",").map(Number); here.at = { lat, lng }; recordTrail(here.at); arriveAt(here.at, refreshScan); placesAround(here.at).then((p) => { here.places = p; if ($(".sheet")) home(); }); }
 else watchGps();
 research(refreshScan); // the city from your last visit, if there was one; a new position starts it again
 // Until the phone says where you are, show places around the last saved spot (if any). Never a made-up city.
 if (!here.places.length && saved()?.center) placesAround(saved().center).then((p) => { if (here.places.length) return; here.places = p; if ($(".sheet")) home(); });
+// Answers "how is she?" while Beacon is open, once her people have their link.
+function answer() { if (store.trip) startAnswering(() => ({ city: city.name, areas: areasNow(city.name), wayBack: (at) => wayBack(at) })); }
+answer();
 store.setupDone && store.contacts.length ? home() : setup();

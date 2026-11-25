@@ -86,6 +86,22 @@ service cloud.firestore {
         }
       }
 
+      // "How is she?" A contact who opened a live family link asks, with their public key (askerKey);
+      // her phone answers, locked so only that contact's browser can read it. The server never sees the text.
+      match /checkins/{checkinId} {
+        allow get: if signedIn() && (resource.data.viewerUid == uid() || ownsTrip(tripId));
+        allow list: if ownsTrip(tripId);
+        allow create: if canView(tripId)
+          && request.resource.data.keys().hasOnly(['viewerUid', 'askerName', 'askerKey', 'askedAtMillis', 'answer', 'answeredAtMillis', 'expireAt'])
+          && request.resource.data.viewerUid == uid() && text(request.resource.data.askerName, 40)
+          && text(request.resource.data.askerKey, 600) && request.resource.data.askedAtMillis is number
+          && request.resource.data.answer == null && request.resource.data.answeredAtMillis == null;
+        allow update: if ownsTrip(tripId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer', 'answeredAtMillis'])
+          && request.resource.data.answer is map && request.resource.data.answeredAtMillis is number;
+        allow delete: if ownsTrip(tripId) || (signedIn() && resource.data.viewerUid == uid());
+      }
+
       // "I opened a family link for this trip." Each visitor writes only their own, and only with a
       // share id that points at this trip and is still on. It is the one thing a contact may write.
       match /viewers/{viewerUid} {

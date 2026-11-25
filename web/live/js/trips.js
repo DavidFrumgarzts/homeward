@@ -1,7 +1,7 @@
 // Trips saved for no signal. While she's online, "Tonight I'm going to X" saves the streets around her
 // hotel and X, the areas to avoid, and both routes. With no signal, the way back is worked out from the saved
 // streets only (no network). Streets and places: © OpenStreetMap contributors (ODbL).
-import { buildGraph, markDanger, route, pack, unpack, directionTo } from "../../js/router.js";
+import { buildGraph, markDanger, route, pack, unpack, directionTo } from "../../js/walkroute.js";
 import { boxFor } from "../../js/trip.js";
 import { areasFor } from "../../js/areas.js";
 import { OVERPASS } from "./places.js";

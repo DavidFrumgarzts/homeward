@@ -338,7 +338,7 @@ if (new URLSearchParams(location.search).has("reset")) store.reset(); // add ?re
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {}); // lets the page open offline
 document.addEventListener("click", () => warmUp(showAiProgress), { once: true });
 const page = route(location);
-if (page.name === "family") familyScreen(app, (onState) => watchShare(page.param, onState));
+if (page.name === "family") familyScreen(app, (onState) => watchShare(page.param, onState), { shareId: page.param });
 else if (page.name === "demo") familyScreen(app, watchDemo, { demo: true });
 else {
   store.setupDone && store.contacts.length ? home() : story();

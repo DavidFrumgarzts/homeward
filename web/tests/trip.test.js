@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { boxFor, placeFromPlan, readPlace, placePrompt, nightRings, driveText, googleMapsLink } from "../js/trip.js";
-import { meters } from "../js/router.js";
+import { meters } from "../js/walkroute.js";
 
 describe("trip planning", () => {
   it("the street box holds both points with at least 700 m to spare", () => {
