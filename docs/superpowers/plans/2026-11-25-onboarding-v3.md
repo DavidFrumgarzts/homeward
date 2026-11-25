@@ -125,6 +125,14 @@
 - [ ] **Step 2:** Export pictures from Figma (`get_screenshot` of each map/photo node, 2×). Build screens. Add files to `web/live/sw.js`, bump cache to `beacon-live-v2`.
 - [ ] **Step 3:** Manual run through all 7 at 393×852 in the browser pane, compare with Figma, fix. Commit.
 
+### Task 6b: Trusted people can ask how she is
+
+**Files:** pure `web/js/checkin.js` (+ `web/tests/checkin.test.js`): `answerText({name, place, minutesAgo, plan, inDanger, steps}) -> string` (template), `answerPrompt(facts) -> string`, `waitingText(lastAnswerAt, now) -> string` ("Waiting for Julia's phone · checking every minute · last answer at 21:10"); `web/js/seal.js` (+ test): `makeKeys() -> {publicJwk, privateKey}`, `seal(publicJwk, text) -> {epk, iv, data}`, `open(privateKey, sealed) -> text` (ECDH P-256 + AES-GCM, round-trip test in Node's WebCrypto). I/O: `web/live/js/answering.js` (listens for requests while open, retries every 60 s and on `online`, writes sealed answers, keeps the "answers sent" log in localStorage, pause switch), `web/js/family.js` + `web/js/familydata.js` ("Ask how {name} is" button, key pair in IndexedDB, request doc, decrypted answer, waiting line refreshed every minute). Firestore: `requests` and `answers` under the share, rules + tests in `firebase/`, TTL 24 h.
+
+- [ ] Tests: `seal`/`open` round trip; `open` with another key throws; `answerText` includes place and "6 min from her hotel"-style plan text and "Not in a dangerous area"/"In a dangerous area"; `waitingText` formats the time. Rules tests: only the share's viewer can create a request; only the trip owner can write an answer; nobody else reads either.
+- [ ] Implement, deploy rules (ask first), commit.
+- [ ] Stretch (after Task 8 if time): FCM web push wakes the service worker to answer from the last saved location.
+
 ### Task 7b: Car route to the nearest hospital, saved for no signal
 
 **Files:** Create `web/live/js/drive.js`; pure `googleMapsLink(from, to) -> string` (`https://www.google.com/maps/dir/?api=1&origin=lat,lng&destination=lat,lng&travelmode=driving`) and `driveText({name, minutes}) -> string` ("{name}, 3 h 40 by car" / "12 min by car") in `web/js/trip.js`, tests in `web/tests/trip.test.js`; Modify `web/live/js/app.js` (Ask Beacon sick answer, Home "Hospital route" card), `web/live/js/bookingflow.js` (reuse).

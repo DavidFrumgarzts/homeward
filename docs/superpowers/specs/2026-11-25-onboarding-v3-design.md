@@ -17,7 +17,7 @@ A new traveler thinks "what's in it for me?" on every screen. Each screen shows 
 
 ## Non-goals (later, not in this build)
 
-- Figma screens 5's "they can ask how you are any time" and 6 (dangerous area, family told automatically). They need background location, a relay and the Android app.
+- Figma screen 6 (dangerous area, family told automatically). It needs background location (Android app).
 - Dangerous areas found by AI. Tested 2026-11-25: asked for areas official sources name, Gemini with Google Search returned none for Jaipur or Rio.
 - Google's Gmail verification. The Gmail part stays in testing mode.
 
@@ -73,6 +73,15 @@ Proven in a throwaway test on 2026-11-25 (Jaipur, hotel on MI Road to Bar Pallad
 - When a booking or a city pack is saved, Beacon asks the free OpenStreetMap car router (FOSSGIS OSRM, `routing.openstreetmap.de/routed-car`) for the drive to the nearest hospitals, and saves the time and the road line on the phone.
 - With no signal, "I feel very sick" answers with the ambulance number and the saved drive ("AIIMS Jodhpur, 3 h 40 by car, route saved") and shows the line on Beacon's map.
 - While online, "Open in Google Maps" hands the drive to Google Maps for live turn-by-turn directions with traffic. Not Google's Routes API: its terms forbid drawing its routes on a non-Google map and keeping them for offline use.
+
+### Trusted people can ask how she is, any time (screen 5)
+
+- At setup each trusted person gets a check-in link by text (the existing family page, `/f/{shareId}`).
+- Mom taps "Ask how Julia is". Julia's phone answers by itself (decided 2026-11-25): where she is, her route over the last hour, her saved plans, and whether she's in a dangerous area; the AI writes one short message, a template without AI.
+- The answer is encrypted in Julia's browser for that person's browser only (WebCrypto ECDH P-256 + AES-GCM; Mom's key pair is made and kept in her browser). Firestore only relays the locked message and deletes it after 24 hours.
+- Julia sees every answer that went out ("Mom asked at 23:52 · Beacon answered") and can pause answering.
+- When it answers: within seconds while Beacon is open on her phone (even in the background). Beacon closed: a Firebase push wakes it to answer from the last saved location (Android Chrome; iPhone only from the home screen), built after the rest if time allows.
+- No signal: Julia's phone keeps the question and tries again every minute, then answers as soon as it has signal, with the time of the last saved location before the gap. Mom's page shows "Waiting for Julia's phone · checking every minute · last answer at 21:10" and updates by itself.
 
 ### Dangerous areas: a team list plus her own marks
 
