@@ -1,44 +1,744 @@
-// The New York pack: emergency numbers and the scams travelers report most, with fair prices.
-// Hand-made from public sources (NYC TLC, NPS, r/AskNYC threads). Prices are approximate: check before relying on them.
-// Places to get help are not in here: they come live from OpenStreetMap around you (places.js) and are saved for offline.
+// The New York pack: emergency numbers and 32 scams reported in New York, each with what it looks like
+// (so a photo can be matched to it), what happens, what reports say, what to do, and sources.
+// Researched Nov 2026 from city investigations (NYC Council "Taken for a Ride", June 2026), NYC DCWP/TLC/NPS pages and news.
+// Reddit couldn't be read by the research tool, so nothing here is sourced from Reddit. Prices are approximate.
+// Places to get help are not in here: they come from OpenStreetMap around you (places.js).
 
 export const ny = {
   city: "New York",
   police: "911",
   nonEmergency: "311",
-  embassyNote: "Abroad? Your country's consulate in New York can help with lost passports.",
   scams: [
-    { title: "Costumed characters who demand money after a photo", kind: "Tour", where: "Times Square", level: "Careful",
-      signs: ["costume", "cartoon character", "photo", "tip", "superhero"],
-      whatToDo: "Photos with them are optional, and so is a tip. If you take one, a dollar or two is plenty; say no and walk on.",
-      fairPrices: [{ item: "photo with a costumed character", currency: "USD", low: 0, high: 5 }], reports: 5,
-      sources: ["https://www.reddit.com/r/AskNYC/search/?q=times+square+characters"] },
-    { title: "\"Free\" CD, then a demand for money", kind: "Other", where: "Times Square and around Penn Station", level: "Avoid",
-      signs: ["free cd", "mixtape", "signs your name", "free music"],
-      whatToDo: "Don't take anything handed to you. Keep your hands in your pockets and keep walking.", reports: 4,
-      sources: ["https://www.reddit.com/r/AskNYC/search/?q=cd+scam"] },
-    { title: "Statue of Liberty tickets sold on the street", kind: "Ticket", where: "Battery Park and around South Ferry", level: "Avoid",
-      signs: ["statue of liberty tickets", "statue tour", "boat tour", "skip the line"],
-      whatToDo: "Only Statue City Cruises sells real tickets (at Castle Clinton or online). Or ride the Staten Island Ferry: it's free and passes the Statue.",
-      saferOption: "Staten Island Ferry (free) or Statue City Cruises at Castle Clinton",
-      fairPrices: [{ item: "Statue of Liberty ferry ticket", currency: "USD", low: 24, high: 32 }], reports: 4,
-      sources: ["https://www.nps.gov/stli/planyourvisit/fees.htm", "https://www.reddit.com/r/AskNYC/search/?q=statue+of+liberty+scam"] },
-    { title: "Unlicensed \"car service\" at the airport", kind: "Taxi", where: "JFK and LaGuardia arrivals halls", level: "Avoid",
-      signs: ["need a ride", "car service", "taxi", "limo", "approaches you inside the terminal"],
-      whatToDo: "Ignore anyone offering rides inside the terminal. Use the official yellow taxi line outside, or a ride app.",
-      fairPrices: [{ item: "taxi JFK to Manhattan", currency: "USD", low: 70, high: 100 }], reports: 4,
-      sources: ["https://www.nyc.gov/site/tlc/passengers/taxi-fare.page", "https://www.reddit.com/r/AskNYC/search/?q=jfk+scam"] },
-    { title: "Pedicab prices per minute, per person", kind: "Taxi", where: "Central Park South and Midtown", level: "Careful",
-      signs: ["pedicab", "per minute", "bike taxi", "central park tour"],
-      whatToDo: "Ask for the total price for everyone, for the whole ride, before you get in.", reports: 3,
-      sources: ["https://www.reddit.com/r/AskNYC/search/?q=pedicab"] },
-    { title: "Monks asking for donations or selling beads", kind: "Other", where: "Times Square, Fifth Avenue, High Line", level: "Careful",
-      signs: ["monk", "bracelet", "beads", "donation", "blessing"],
-      whatToDo: "Real monks don't sell blessings on the street. Say no thank you and walk on.", reports: 3,
-      sources: ["https://www.reddit.com/r/AskNYC/search/?q=fake+monks"] },
-    { title: "Currency exchange counters with poor rates", kind: "Money", where: "Airports and Times Square exchange shops", level: "Careful",
-      signs: ["currency exchange", "no commission", "0% commission", "we buy"],
-      whatToDo: "Take dollars out of a bank ATM and choose to be charged in dollars, not your home currency.", reports: 3,
-      sources: ["https://www.reddit.com/r/travel/search/?q=new+york+currency+exchange"] },
+ {
+  "id": "battery-park-statue-tickets",
+  "title": "Statue of Liberty ticket sellers in Battery Park",
+  "kind": "Ticket",
+  "looksLike": [
+   "seller in bright vest saying 'authorized ticket agent'",
+   "laminated boat photos or price boards",
+   "sellers at subway exits and park entrances",
+   "handheld card reader",
+   "no DCWP license badge shown"
   ],
+  "where": "The Battery / Battery Park, near Castle Clinton, Bowling Green and South Ferry subway exits",
+  "whatHappens": "Sellers say official tickets are sold out and sell a harbor cruise that only circles Liberty Island. Some charge more than quoted, or add a bus ride to a different pier.",
+  "travelersSay": "Council investigators counted 75+ sellers a day. Tourists found the boat never docked and the charge was higher than quoted.",
+  "level": "Avoid",
+  "whatToDo": "Walk past street sellers and buy only inside Castle Clinton or online from Statue City Cruises.",
+  "saferOption": "Statue City Cruises (official NPS ferry), adult about $26, ticket office inside Castle Clinton",
+  "sources": [
+   "https://council.nyc.gov/press/wp-content/uploads/sites/56/2026/06/taken-for-a-ride_june-2026.pdf",
+   "https://home.nps.gov/stli/planyourvisit/fees.htm",
+   "https://abc7ny.com/post/battery-park-scam-alert-statue-of-liberty-ticket-scammers-preying-on-tourists/14833441/"
+  ],
+  "reports": 7,
+  "fairPrices": [
+   {
+    "item": "Statue of Liberty ferry ticket",
+    "currency": "USD",
+    "low": 24,
+    "high": 32
+   }
+  ]
+ },
+ {
+  "id": "staten-island-ferry-tickets",
+  "title": "Tickets sold for the free Staten Island Ferry",
+  "kind": "Ticket",
+  "looksLike": [
+   "uniformed or vested seller near Whitehall Terminal",
+   "person flagging you down in Battery Park",
+   "printed 'ferry ticket' slips"
+  ],
+  "where": "Whitehall Terminal, Battery Park, near the National Museum of the American Indian",
+  "whatHappens": "A street seller charges you for tickets to the Staten Island Ferry, which is free.",
+  "travelersSay": "One couple paid $409 for two tickets to the free ferry, and others paid around $28.",
+  "level": "Avoid",
+  "whatToDo": "Never pay anyone for the Staten Island Ferry. Just walk into the terminal and board.",
+  "saferOption": "Walk into Whitehall Terminal and board for free",
+  "sources": [
+   "https://www.cbsnews.com/newyork/news/400-tickets-free-staten-island-ferry",
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page",
+   "https://fortune.com/2016/07/03/new-york-scams/"
+  ],
+  "reports": 5,
+  "fairPrices": [
+   {
+    "item": "Staten Island Ferry ticket",
+    "currency": "USD",
+    "low": 0,
+    "high": 0
+   }
+  ]
+ },
+ {
+  "id": "pedicab-overcharge",
+  "title": "Pedicab with hidden per-minute rate",
+  "kind": "Taxi",
+  "looksLike": [
+   "bike-powered cab with covered seat",
+   "loud music speaker",
+   "rate sign small, covered or missing",
+   "driver waving outside Broadway theaters or at Central Park South"
+  ],
+  "where": "Times Square (7th Ave and W 47th St), Central Park South, Broadway theater exits",
+  "whatHappens": "The driver doesn't give the per-minute rate, hides the sign, or charges per person. A short ride ends with a bill of hundreds of dollars.",
+  "travelersSay": "A family was billed over $440 for a 12-minute ride. Another rider was charged $968 for 15 minutes.",
+  "level": "Avoid",
+  "whatToDo": "Read the per-minute rate sign, confirm the total out loud before you sit down, and ask for a receipt.",
+  "saferOption": "Yellow taxi, subway, or walking",
+  "sources": [
+   "https://council.nyc.gov/press/wp-content/uploads/sites/56/2026/06/taken-for-a-ride_june-2026.pdf",
+   "https://www.nyc.gov/assets/dca/downloads/pdf/consumers/Consumers-Pedicab-Prices-Tips.pdf",
+   "https://www.cbsnews.com/newyork/news/pedicab-driver-charges-family-440-for-short-ride"
+  ],
+  "reports": 7
+ },
+ {
+  "id": "horse-carriage-price",
+  "title": "Horse carriage ride without agreed price",
+  "kind": "Tour",
+  "looksLike": [
+   "horse-drawn carriage lined up at Central Park South",
+   "driver in top hat calling to passersby",
+   "rate card on the carriage"
+  ],
+  "where": "Central Park South (59th St) between 5th and 6th Ave",
+  "whatHappens": "Riders who don't agree on the time and price first can end up paying far more than expected.",
+  "travelersSay": "Guides cite a $300 bill for a 20-minute park ride and say to settle the price before boarding.",
+  "level": "Careful",
+  "whatToDo": "Agree on the length and total price before you board, and check the posted rate.",
+  "saferOption": "Walk or rent a bike in Central Park",
+  "sources": [
+   "https://www.ganyc.org/tips-tourists-avoiding-scams",
+   "https://yourbrooklynguide.com/nyc-scams/",
+   "https://www.centralparknyc.org/activities/horse-carriages"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "costumed-characters",
+  "title": "Costumed characters demanding tips",
+  "kind": "Money",
+  "looksLike": [
+   "person in Elmo, Mickey, Spider-Man or similar costume",
+   "tip bag or bucket",
+   "group posing with tourists in a plaza"
+  ],
+  "where": "Times Square pedestrian plazas, Broadway 42nd-47th St",
+  "whatHappens": "A character poses for a photo, then demands money and may block you or pull at you until you pay.",
+  "travelersSay": "Characters reportedly demanded $5 to $20 per photo. NYPD fliers say photos are free.",
+  "level": "Careful",
+  "whatToDo": "Only pose if you want to tip. You don't have to pay, and you can call 911 if someone is aggressive.",
+  "saferOption": "",
+  "sources": [
+   "https://www.cbsnews.com/newyork/news/nypd-fliers-you-dont-have-to-pay-times-square-characters",
+   "https://fortune.com/2016/07/03/new-york-scams/",
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page"
+  ],
+  "reports": 6
+ },
+ {
+  "id": "body-paint-performers",
+  "title": "Body-painted performers asking for photo tips",
+  "kind": "Money",
+  "looksLike": [
+   "topless performer in body paint",
+   "standing in a Times Square plaza",
+   "posing with passersby"
+  ],
+  "where": "Times Square pedestrian plazas",
+  "whatHappens": "A performer poses with you, often uninvited, then asks for money for the photo.",
+  "travelersSay": "News reports describe $5 to $20 asked per photo, sometimes after pushy approaches.",
+  "level": "Careful",
+  "whatToDo": "Don't pose unless you want to tip. Walk on if approached.",
+  "saferOption": "",
+  "sources": [
+   "https://www.cbsnews.com/newyork/news/desnudas-arrested/",
+   "https://www.malaymail.com/news/life/2015/08/16/the-painted-ladies-of-new-yorks-times-square/952667"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "cd-hustler",
+  "title": "'Free' CD handed to you on the street",
+  "kind": "Money",
+  "looksLike": [
+   "person holding a stack of CDs",
+   "headphones offered to passersby",
+   "marker to sign the CD with your name",
+   "small group nearby"
+  ],
+  "where": "Times Square, 42nd St, Penn Station area, also seen in Brooklyn",
+  "whatHappens": "Someone pushes a CD into your hand, writes your name on it, then demands money. Friends may surround you until you pay.",
+  "travelersSay": "Visitors describe a 'free' CD turning into a $10 to $20 demand, with pressure from the seller's friends.",
+  "level": "Avoid",
+  "whatToDo": "Keep your hands to yourself, don't take the CD, and keep walking.",
+  "saferOption": "",
+  "sources": [
+   "https://www.ganyc.org/tips-tourists-avoiding-scams",
+   "https://fortune.com/2016/07/03/new-york-scams/",
+   "https://cityhall.viewing.nyc/nyc-scams-101-dont-get-fooled-by-the-cd-hustlers-in-popular-nyc-tourist-areas/"
+  ],
+  "reports": 5
+ },
+ {
+  "id": "fake-monk",
+  "title": "Robed 'monk' with gold card and bracelet",
+  "kind": "Money",
+  "looksLike": [
+   "person in monk-style robes",
+   "shiny gold card or medallion held out",
+   "beaded bracelet",
+   "small notebook of 'donors' and amounts"
+  ],
+  "where": "High Line, Central Park, Financial District, Times Square",
+  "whatHappens": "They hand you a gold card or bracelet, then ask for a 'donation' for a temple and follow you if you refuse.",
+  "travelersSay": "Asks of $5, $10 or $20 were reported, and the Buddhist Council of New York calls it a scam.",
+  "level": "Avoid",
+  "whatToDo": "Don't take the card or bracelet, keep your hands at your sides, and walk on.",
+  "saferOption": "Give to a recognized temple or charity directly",
+  "sources": [
+   "https://www.cbsnews.com/amp/newyork/news/high-line-monks-scammers",
+   "https://www.ganyc.org/tips-tourists-avoiding-scams",
+   "https://tricycle.org/article/monk-scam/"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "broken-glasses-bump",
+  "title": "'You broke my glasses' bump",
+  "kind": "Money",
+  "looksLike": [
+   "broken eyeglasses or wine bottle on the sidewalk",
+   "person blocking your way and pointing at you",
+   "often near subway exits"
+  ],
+  "where": "Midtown, Chinatown, subway exits",
+  "whatHappens": "Someone bumps into you, drops cheap glasses or a bottle, and demands you pay for 'expensive' replacements.",
+  "travelersSay": "One victim was walked to an ATM and paid $40. Reports say the items are worthless.",
+  "level": "Avoid",
+  "whatToDo": "Don't pay. Offer to call the police or go to a precinct, and walk away.",
+  "saferOption": "",
+  "sources": [
+   "https://fortune.com/2016/07/03/new-york-scams/",
+   "https://www.amny.com/news/nyc-scams-broken-bottles-fake-tickets-and-more-cons-to-know-1.11602618",
+   "https://viewing.nyc/nyc-scams-101-dont-get-fooled-by-the-broken-bottle-scam/"
+  ],
+  "reports": 5
+ },
+ {
+  "id": "airport-ride-hustler",
+  "title": "Ride offer inside airport arrivals",
+  "kind": "Taxi",
+  "looksLike": [
+   "person approaching at baggage claim asking 'taxi?' or 'Uber?'",
+   "walkie-talkie or lanyard but no uniform",
+   "leads you away from the taxi stand",
+   "black car with no TLC plate"
+  ],
+  "where": "JFK arrivals (Terminals 1, 4, 8), LaGuardia, Newark",
+  "whatHappens": "A friendly 'helper' steers you to an unlicensed car that charges a huge fare, sometimes on its own card reader.",
+  "travelersSay": "One visitor paid about $800 for a JFK ride. Others were quoted $65 to $78 versus about $40 legit.",
+  "level": "Avoid",
+  "whatToDo": "Ignore anyone who offers you a ride. Follow signs to the official taxi line or your app's pickup zone.",
+  "saferOption": "Official yellow taxi line (JFK to Manhattan flat fare $70 plus surcharges), AirTrain, or app booking",
+  "sources": [
+   "https://www.wnycstudios.org/podcasts/nyc-now/articles/nyc-taxi-scam-exposed-how-travelers-get-hustled-by-illegal-cabbies",
+   "https://www.cbsnews.com/newyork/news/cbs2-investigates-fake-uber-drivers-charge-false-sales-taxes-while-gouging-customers/",
+   "https://www.jfkairport.com/transportation/taxi-service"
+  ],
+  "reports": 6,
+  "fairPrices": [
+   {
+    "item": "taxi JFK to Manhattan",
+    "currency": "USD",
+    "low": 70,
+    "high": 100
+   }
+  ]
+ },
+ {
+  "id": "fake-rideshare-car",
+  "title": "Car with Uber/Lyft sign but no TLC plate",
+  "kind": "Taxi",
+  "looksLike": [
+   "Uber or Lyft logo sign in windshield",
+   "regular or out-of-state plate, not a T&LC plate",
+   "parked in bus stop or behind taxi line",
+   "car painted to look like a green taxi"
+  ],
+  "where": "Penn Station / Moynihan Train Hall, Madison Square Garden, Javits Center, Coney Island-Stillwell Ave",
+  "whatHappens": "The driver offers a ride without an app booking, unlicensed and often uninsured, and sets the price as they like.",
+  "travelersSay": "Investigators found fake rideshare decals, out-of-state plates and a fake green taxi. Some drivers sped off.",
+  "level": "Avoid",
+  "whatToDo": "Only get in a car you booked in the app and whose plate matches, or a marked yellow or green taxi.",
+  "saferOption": "Book in the Uber/Lyft app and check the plate, or use the taxi stand",
+  "sources": [
+   "https://council.nyc.gov/press/wp-content/uploads/sites/56/2026/06/taken-for-a-ride_june-2026.pdf",
+   "https://www.cbsnews.com/newyork/news/police-fake-car-service-drivers-airports"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "taxi-line-helper",
+  "title": "Stranger 'helping' you skip the taxi line",
+  "kind": "Taxi",
+  "looksLike": [
+   "person without uniform near the taxi queue",
+   "waving you away from the official line",
+   "taking cash before you get in"
+  ],
+  "where": "Penn Station, Port Authority Bus Terminal, Grand Central",
+  "whatHappens": "A 'helper' takes a cash 'fixed fare' and puts you in a cab whose meter runs anyway, so you pay twice.",
+  "travelersSay": "A traveler paid a helper $12 and was still charged the meter. The TLC says to just walk away.",
+  "level": "Avoid",
+  "whatToDo": "Join the official taxi line and pay only the driver.",
+  "saferOption": "Official taxi stand (real dispatchers wear uniforms)",
+  "sources": [
+   "https://www.cbsnews.com/newyork/news/scam-artists-taxis-penn-station"
+  ],
+  "reports": 2
+ },
+ {
+  "id": "taxi-no-meter",
+  "title": "Taxi with no meter running or a phone card reader",
+  "kind": "Taxi",
+  "looksLike": [
+   "taxi with meter off or covered",
+   "driver offering a flat cash price",
+   "phone or Square-style card reader instead of the back-seat screen",
+   "no 4-digit medallion number shown"
+  ],
+  "where": "Airports, train stations, hotels, tourist attractions",
+  "whatHappens": "The driver skips the meter and charges a made-up price, sometimes through a private card reader.",
+  "travelersSay": "Reports say payments taken off-meter can't be traced, and a missing meter is the main red flag.",
+  "level": "Careful",
+  "whatToDo": "Make sure the meter is on (or the JFK flat fare applies) and pay on the cab's own screen.",
+  "saferOption": "Licensed yellow or green taxi with medallion number and running meter",
+  "sources": [
+   "https://www.wnycstudios.org/podcasts/nyc-now/articles/nyc-taxi-scam-exposed-how-travelers-get-hustled-by-illegal-cabbies",
+   "https://www.nyc.gov/site/tlc/passengers/taxi-fare.page"
+  ],
+  "reports": 2,
+  "fairPrices": [
+   {
+    "item": "taxi JFK to Manhattan",
+    "currency": "USD",
+    "low": 70,
+    "high": 100
+   }
+  ]
+ },
+ {
+  "id": "subway-swipe-seller",
+  "title": "Person selling subway swipes or cards",
+  "kind": "Money",
+  "looksLike": [
+   "person at turnstiles offering 'swipe' for cash",
+   "holding a MetroCard",
+   "jammed or blocked fare machines nearby"
+  ],
+  "where": "Busy subway stations (Times Square, Penn Station, Bronx and Brooklyn stations)",
+  "whatHappens": "Someone sells you a swipe or a nearly empty card. Selling swipes is illegal, and one buyer was robbed.",
+  "travelersSay": "Reports describe cards with fewer rides than paid for, and one swipe sale that ended in a robbery.",
+  "level": "Careful",
+  "whatToDo": "Tap your own contactless card or phone on the OMNY reader instead.",
+  "saferOption": "OMNY tap-to-pay at the turnstile, or station machines",
+  "sources": [
+   "https://newjersey.news12.com/what-is-and-isnt-legal-with-metrocard-swipes",
+   "https://abc7ny.com/post/metrocard-robbery-subway-crime-nyc-bronx/9527029/",
+   "https://amny.com/transit/metrocard-scammers-cost-mta-roughly-40-million-a-year-officials"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "fare-machine-helper",
+  "title": "Stranger 'helping' at a subway fare machine",
+  "kind": "Money",
+  "looksLike": [
+   "person hovering at a ticket machine",
+   "machine with out-of-order sign or jammed slot",
+   "offers to buy the ticket for you"
+  ],
+  "where": "Subway stations",
+  "whatHappens": "A helper at a 'broken' machine sells you a used card or watches your PIN. Skimmers have also been found on machines.",
+  "travelersSay": "The MTA warns about strangers offering help at machines that look broken, and a skimmer was found at Columbus Circle.",
+  "level": "Careful",
+  "whatToDo": "Decline help and ask a station agent or a worker in an orange vest.",
+  "saferOption": "Tap a contactless card at the turnstile",
+  "sources": [
+   "https://new2.mta.info/safety-and-security/subway-and-bus-security",
+   "https://www.cbsnews.com/newyork/news/skimming-device-found-on-metrocard-machine-at-59th-columbus-circle-subway-station"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "sports-team-donation",
+  "title": "Teens asking donations for a 'basketball team'",
+  "kind": "Money",
+  "looksLike": [
+   "group of teens approaching people in a park",
+   "asking to use your phone for Venmo, Zelle or Cash App",
+   "sometimes a clipboard or candy for sale"
+  ],
+  "where": "Central Park (Sheep Meadow, West Drive), parks near subway lines, Lower Manhattan",
+  "whatHappens": "You agree to give $5 to $10 and hand over your phone. They send themselves thousands.",
+  "travelersSay": "NYPD counted 87 victims in one year. Typical losses were $928 to $2,000+, and no team exists.",
+  "level": "Avoid",
+  "whatToDo": "Never hand your phone to a stranger. Give cash only if you want to give at all.",
+  "saferOption": "",
+  "sources": [
+   "https://www.westsiderag.com/2024/05/22/sports-team-scammers-swindle-thousands-of-dollars-from-people-in-central-park-this-weekend-police",
+   "https://www.fox5ny.com/video/1560478"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "ground-zero-booklet-sellers",
+  "title": "9/11 photo-book sellers near the memorial",
+  "kind": "Shop",
+  "looksLike": [
+   "street seller holding 9/11 photo books",
+   "stack of booklets or souvenirs",
+   "standing near WTC on Church St"
+  ],
+  "where": "Church St between Fulton and Vesey, around the 9/11 Memorial",
+  "whatHappens": "Unofficial sellers push 9/11 books and souvenirs, sometimes implying the money helps victims' families.",
+  "travelersSay": "Guides call it predatory selling. One case involved $20 shirts falsely sold as helping victims' families.",
+  "level": "Careful",
+  "whatToDo": "Don't buy from street sellers here.",
+  "saferOption": "9/11 Memorial & Museum official shop",
+  "sources": [
+   "https://www.ganyc.org/tips-tourists-avoiding-scams",
+   "https://www.nbcnews.com/id/wbna21610361",
+   "https://scamicide.com/2013/05/14/scam-of-the-day-may-14-2013-911-charity-scam/"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "comedy-club-promoter",
+  "title": "Comedy show ticket promoter",
+  "kind": "Ticket",
+  "looksLike": [
+   "person with flyers or tickets telling jokes to a crowd",
+   "'free' or 'cheap' comedy tickets",
+   "claims a famous comic will drop in"
+  ],
+  "where": "Times Square and nearby blocks",
+  "whatHappens": "Promoters promise famous comics and cheap tickets. You get unknown acts plus a two-drink minimum.",
+  "travelersSay": "The city warned clubs about false 'famous comedian' claims. Drinks add about $20 to $30 each.",
+  "level": "Careful",
+  "whatToDo": "Check the lineup on the club's own website and expect a two-drink minimum.",
+  "saferOption": "Buy directly from the club's website or box office",
+  "sources": [
+   "https://www.broadwayworld.com/article/Do-You-Like-Comedy-Do-You-Hate-Scammers-City-Warns-Comedy-Clubs-About-Street-Teams-20160302",
+   "https://yourbrooklynguide.com/nyc-scams/"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "hop-on-bus-seller",
+  "title": "Hop-on hop-off bus ticket seller",
+  "kind": "Tour",
+  "looksLike": [
+   "seller in branded jacket with handheld ticket machine",
+   "double-decker bus brochures",
+   "standing at Times Square or at bus stops"
+  ],
+  "where": "Times Square, Empire State Building area, Battery Park",
+  "whatHappens": "Pushy sellers can be unclear about what the ticket covers (routes, hours, validity).",
+  "travelersSay": "Reviewers call street sellers sales-aggressive. One paid $255 and didn't get the promised 24-hour pass.",
+  "level": "Careful",
+  "whatToDo": "Check for a DCWP license, get terms and price in writing, and ask for a receipt with the license number.",
+  "saferOption": "Buy on the operator's official website or app",
+  "sources": [
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page",
+   "https://www.trustpilot.com/review/topviewnyc.com?page=9",
+   "https://www.dnainfo.com/new-york/20120125/midtown/skyride-ticket-hawkers-banned-again-from-empire-state-building-sidewalks"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "empire-state-express-tickets",
+  "title": "'Express' tickets sold outside Empire State Building",
+  "kind": "Ticket",
+  "looksLike": [
+   "uniformed seller on 34th St or 5th Ave sidewalk",
+   "flyers or card reader",
+   "'skip the line' pitch"
+  ],
+  "where": "W 34th St and 5th Ave around the Empire State Building",
+  "whatHappens": "Sidewalk sellers sell 'express' or add-on tickets that don't actually skip the line.",
+  "travelersSay": "A visitor was promised a line bypass for lines that didn't exist and felt scammed.",
+  "level": "Careful",
+  "whatToDo": "Buy inside the building or on its official website.",
+  "saferOption": "Empire State Building official website or lobby ticket office",
+  "sources": [
+   "https://yourbrooklynguide.com/nyc-scams/",
+   "https://www.dnainfo.com/new-york/20110627/midtown/locals-want-renewed-police-crackdown-on-empire-state-building-ticket-hawkers"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "street-resale-tickets",
+  "title": "Street resellers outside theaters and arenas",
+  "kind": "Ticket",
+  "looksLike": [
+   "person near theater or arena saying they 'can't use' tickets",
+   "paper tickets shown in hand",
+   "cash only"
+  ],
+  "where": "Broadway theaters, Times Square, Barclays Center, Madison Square Garden",
+  "whatHappens": "Tickets look real but are fake or already used, and the seller is gone before you reach the door.",
+  "travelersSay": "One buyer paid $175 each for 'Hamilton' tickets that turned out fake.",
+  "level": "Avoid",
+  "whatToDo": "Don't buy tickets from people on the street.",
+  "saferOption": "Theater box office, TKTS booth, or the official ticket seller",
+  "sources": [
+   "https://blog.ticketmaster.com/avoid-buying-counterfeit-broadway-theater-tickets/",
+   "https://www.cbsnews.com/newyork/news/fake-hamilton-tickets",
+   "https://patch.com/new-york/midtown-nyc/scammers-sold-fake-tickets-broadway-shows-concerts-da"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "times-square-electronics",
+  "title": "Tourist-area electronics store",
+  "kind": "Shop",
+  "looksLike": [
+   "small store packed with cameras, phones and headphones",
+   "'SALE' or 'Going out of business' signs",
+   "no posted prices",
+   "staff pulling you inside"
+  ],
+  "where": "Times Square, Broadway, 5th Ave, 34th St",
+  "whatHappens": "Staff switch you to a different product, sell refurbished goods as new, remove accessories, or push warranties.",
+  "travelersSay": "A shopper was steered to a lesser camera and later found it $170 cheaper.",
+  "level": "Careful",
+  "whatToDo": "Know the exact model and price, check the refund policy, and get an itemized receipt.",
+  "saferOption": "Large established retailers (e.g. B&H, Apple Store, Best Buy)",
+  "sources": [
+   "https://www.nyc.gov/site/dca/consumers/10-worst-everyday-scams.page",
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page",
+   "https://insidejourneys.com/sucked-times-square-electronic-stores"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "street-fake-airpods",
+  "title": "Cheap 'AirPods' sold on the sidewalk",
+  "kind": "Shop",
+  "looksLike": [
+   "person holding white earbud boxes",
+   "box looks unsealed or small",
+   "folding table of Apple-style items",
+   "price far below store"
+  ],
+  "where": "5th Ave, Times Square, Canal St, Mulberry St",
+  "whatHappens": "Sidewalk sellers sell counterfeit (or possibly stolen) Apple-style headphones.",
+  "travelersSay": "Sellers quoted about $50 for AirPods and $100 for AirPods Max, and buyers found them fake.",
+  "level": "Avoid",
+  "whatToDo": "Don't buy electronics on the street.",
+  "saferOption": "Apple Store (5th Ave) or authorized retailer",
+  "sources": [
+   "https://www.fox5ny.com/news/nyc-counterfeit-apple-electronics-sale-streets",
+   "https://www.aol.com/rotten-apples-sidewalk-peddlers-flood-152703447.html"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "canal-street-back-room",
+  "title": "Designer bag 'back room' on Canal Street",
+  "kind": "Shop",
+  "looksLike": [
+   "person whispering 'bags, watches' and showing a catalog",
+   "leading you into an alley or back door",
+   "cash only"
+  ],
+  "where": "Canal St, Chinatown",
+  "whatHappens": "Sellers lead you to a hidden room to buy counterfeit goods for cash, away from crowds.",
+  "travelersSay": "Reporters were offered cash-only sales in back rooms down alleys, and police raids found hidden stockrooms.",
+  "level": "Avoid",
+  "whatToDo": "Don't follow anyone into a back room or alley.",
+  "saferOption": "",
+  "sources": [
+   "https://www.cbsnews.com/newyork/news/nyc-unlicensed-illegal-street-vendors",
+   "https://abc7ny.com/archive/7159148",
+   "https://www.fox5ny.com/news/nyc-counterfeit-market-thrives-despite-police-crackdowns"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "three-card-monte",
+  "title": "Street card game or shell game",
+  "kind": "Money",
+  "looksLike": [
+   "cardboard box used as a table",
+   "three cards or cups shuffled fast",
+   "crowd cheering a 'winner'",
+   "lookout watching the street"
+  ],
+  "where": "Midtown (W 53rd-56th St), Times Square, Canal St",
+  "whatHappens": "A rigged game where the 'winners' in the crowd are accomplices. You can't win, and pickpockets may work the crowd.",
+  "travelersSay": "Reports say the games return around the holidays even after crackdowns.",
+  "level": "Avoid",
+  "whatToDo": "Don't bet or stop to watch. Keep your wallet secured.",
+  "saferOption": "",
+  "sources": [
+   "https://www.cnbc.com/amp/2014/12/26/three-card-monte-returns-to-new-york.html",
+   "https://www.amny.com/news/nyc-scams-broken-bottles-fake-tickets-and-more-cons-to-know-1.11602618"
+  ],
+  "reports": 2
+ },
+ {
+  "id": "gold-ring-gas-money",
+  "title": "'Gold ring' offered for gas money",
+  "kind": "Money",
+  "looksLike": [
+   "car pulled to the curb with driver calling you over",
+   "ring or chain held out the window",
+   "story about needing gas money"
+  ],
+  "where": "Streets across Manhattan and the outer boroughs",
+  "whatHappens": "A stranger offers an '18-karat' ring as collateral for cash. The ring is worthless.",
+  "travelersSay": "Filmed cases show a pitch of about $100 'for gas' in exchange for a fake gold ring.",
+  "level": "Avoid",
+  "whatToDo": "Don't hand over money and walk away from the car.",
+  "saferOption": "",
+  "sources": [
+   "https://thenerdstash.com/new-york-man-films-shady-scam-artist-pushing-fake-gold-rings-these-mfs-are-so-shameless",
+   "https://scambusters.org/travelscams2.html"
+  ],
+  "reports": 2
+ },
+ {
+  "id": "bike-rental-tout",
+  "title": "Bike rental touts at Central Park entrance",
+  "kind": "Tour",
+  "looksLike": [
+   "people with rental flyers at Columbus Circle",
+   "following tourists and pitching 'bike tour'",
+   "rows of rental bikes on sidewalk"
+  ],
+  "where": "Columbus Circle, Central Park South entrances",
+  "whatHappens": "Unlicensed touts working on commission follow you and steer you to off-site shops with unclear prices.",
+  "travelersSay": "Tourists said touts follow you around like scalpers. Up to 50 were reported on busy days.",
+  "level": "Careful",
+  "whatToDo": "Ignore street touts and check the full price and time limits before renting.",
+  "saferOption": "Licensed in-park vendor or Citi Bike (mind the time limits)",
+  "sources": [
+   "https://abc7ny.com/post/bike-hustlers-target-tourists-threaten-vendors-in-central-park/2584270/",
+   "https://www.cbsnews.com/newyork/news/bike-war-brewing-in-columbus-circle",
+   "https://www.huffingtonpost.com/2013/07/01/citi-bike-nyc-bike-rental-business_n_3529614.html"
+  ],
+  "reports": 4
+ },
+ {
+  "id": "food-cart-no-prices",
+  "title": "Street food cart with no posted prices",
+  "kind": "Shop",
+  "looksLike": [
+   "hot dog or pretzel cart with no price list",
+   "outside a museum or park",
+   "water and soda on ice"
+  ],
+  "where": "Outside the Met and AMNH museums, Bryant Park, Midtown, Times Square",
+  "whatHappens": "With no prices posted, the vendor charges a tourist price for basics.",
+  "travelersSay": "Reports mention $6 to $15 hot dogs near museums and parks, and one viral $30 case.",
+  "level": "Careful",
+  "whatToDo": "Ask the price before ordering, and walk to another cart if it's too high.",
+  "saferOption": "Carts or delis a block away from the attraction",
+  "sources": [
+   "https://www.westsiderag.com/2022/06/29/food-cart-sticker-shock-buyer-be-aware",
+   "https://hellgatenyc.com/hot-dog-investigation/",
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "restaurant-double-tip",
+  "title": "Restaurant bill with tip already added",
+  "kind": "Money",
+  "looksLike": [
+   "receipt showing 'gratuity' or 'service charge' line",
+   "plus an empty 'tip' line below",
+   "tourist-area restaurant or chain"
+  ],
+  "where": "Times Square chain restaurants, Little Italy (Mulberry St), Chinatown",
+  "whatHappens": "A tip is already added to the bill, and a blank tip line invites you to tip again.",
+  "travelersSay": "Visitors found an auto-gratuity plus a second tip line on Times Square bills and double-tipped.",
+  "level": "Careful",
+  "whatToDo": "Read the itemized bill for 'gratuity' or 'service charge' before adding a tip.",
+  "saferOption": "",
+  "sources": [
+   "https://fortune.com/2016/07/03/new-york-scams/",
+   "https://yourbrooklynguide.com/nyc-scams/",
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "deli-atm",
+  "title": "Standalone ATM in a deli or tourist area",
+  "kind": "Money",
+  "looksLike": [
+   "freestanding ATM in a deli, bodega or souvenir shop",
+   "card slot that looks loose or bulky",
+   "no bank name on the machine"
+  ],
+  "where": "Delis and bodegas, Times Square and other tourist areas",
+  "whatHappens": "Non-bank ATMs charge high fees, and tourist-area machines are targets for card skimmers.",
+  "travelersSay": "NYPD says tourist-area ATMs are a popular skimmer target, and fees often run $5 or more.",
+  "level": "Careful",
+  "whatToDo": "Use an ATM inside a bank lobby, tug the card slot, and cover the keypad.",
+  "saferOption": "Bank-branch ATM or pay by card",
+  "sources": [
+   "https://www.nyc.gov/site/dca/consumers/10-worst-everyday-scams.page",
+   "https://abc7ny.com/post/nypd-secret-service-cracking-down-skimmers-nyc-bodegas-scams-are-rise/16496350/"
+  ],
+  "reports": 3
+ },
+ {
+  "id": "club-bottle-service",
+  "title": "Club promoter or bottle-service deal",
+  "kind": "Money",
+  "looksLike": [
+   "promoter offering free entry or guest list",
+   "bottle menu with no fee details",
+   "club in Meatpacking, Chelsea or Lower East Side"
+  ],
+  "where": "Meatpacking District, Chelsea, Lower East Side, Midtown clubs",
+  "whatHappens": "Hidden fees, bottle minimums and automatic tips are added, so the bill is far above what you expected.",
+  "travelersSay": "One patron ordered a $350 bottle and was billed $1,050 under an undisclosed minimum.",
+  "level": "Careful",
+  "whatToDo": "Get the minimums, fees and tip in writing before ordering, and check the bill.",
+  "saferOption": "",
+  "sources": [
+   "https://businessinsider.in/nyc-nightclubs-accused-of-charging-patrons-hidden-fees/articleshow/21209883.cms",
+   "https://en.wikipedia.org/wiki/Clip_joint"
+  ],
+  "reports": 2
+ },
+ {
+  "id": "parking-garage-event-rate",
+  "title": "Parking garage with event-day rates",
+  "kind": "Other",
+  "looksLike": [
+   "garage entrance rate sign",
+   "small 'event' or 'special' rate panel",
+   "near arenas, theaters or Midtown"
+  ],
+  "where": "Midtown garages near Madison Square Garden, theaters and tourist sites",
+  "whatHappens": "A cheap rate on the main sign doesn't apply, and special event rates or extra hours raise the bill.",
+  "travelersSay": "City rules say special rates must be posted under the regular sign, so check before entering.",
+  "level": "Careful",
+  "whatToDo": "Read the full rate sign at the entrance, check the time on your ticket, and keep the receipt.",
+  "saferOption": "Reserve parking ahead or use transit",
+  "sources": [
+   "https://www.nyc.gov/site/dca/consumers/consumer-protection-guide-tourists.page"
+  ],
+  "reports": 1
+ }
+],
 };
