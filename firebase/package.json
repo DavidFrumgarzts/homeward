@@ -1,0 +1,15 @@
+{
+  "name": "beacon-firebase-rules-tests",
+  "private": true,
+  "type": "module",
+  "description": "Development only: tests for firestore.rules. Nothing here is deployed.",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-beacon \"npm run test:rules\"",
+    "test:rules": "vitest run"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "firebase": "^13.4.0",
+    "vitest": "^5.1.1"
+  }
+}

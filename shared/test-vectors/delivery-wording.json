@@ -1,0 +1,255 @@
+{
+  "logic": "DeliveryWording",
+  "about": "The honest words on the SOS sent screen. 'knows' only for messages the radio reported as delivered.",
+  "cases": [
+    {
+      "name": "nobody to send to",
+      "fn": "summarize",
+      "input": {
+        "deliveries": []
+      },
+      "expected": {
+        "headline": "No one to send to yet",
+        "lines": [
+          "Add a trusted contact, and call the police if you are in danger."
+        ],
+        "anyDelivered": false
+      }
+    },
+    {
+      "name": "all delivered",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Delivered",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Dad",
+            "channel": "Sms",
+            "status": "Delivered",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Alwis",
+            "channel": "Sms",
+            "status": "Delivered",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Mom, Dad and Alwis know",
+        "lines": [],
+        "anyDelivered": true
+      }
+    },
+    {
+      "name": "one delivered",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Delivered",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Mom knows",
+        "lines": [],
+        "anyDelivered": true
+      }
+    },
+    {
+      "name": "one delivered, one sent",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Delivered",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Dad",
+            "channel": "Sms",
+            "status": "Sent",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Mom knows",
+        "lines": [
+          "Sent to Dad, waiting for delivery."
+        ],
+        "anyDelivered": true
+      }
+    },
+    {
+      "name": "all sent, none delivered yet",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Sent",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Dad",
+            "channel": "Sms",
+            "status": "Sent",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Sent to Mom and Dad",
+        "lines": [
+          "Waiting for delivery."
+        ],
+        "anyDelivered": false
+      }
+    },
+    {
+      "name": "saved on the phone",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "SavedOnPhone",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Dad",
+            "channel": "Sms",
+            "status": "SavedOnPhone",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Saved on your phone",
+        "lines": [
+          "It sends when you have signal."
+        ],
+        "anyDelivered": false
+      }
+    },
+    {
+      "name": "waiting for signal",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "WaitingForSignal",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Saved on your phone",
+        "lines": [
+          "It sends when you have signal."
+        ],
+        "anyDelivered": false
+      }
+    },
+    {
+      "name": "one sent, one waiting",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Sent",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Dad",
+            "channel": "Sms",
+            "status": "WaitingForSignal",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Sent to Mom",
+        "lines": [
+          "Waiting for delivery.",
+          "Saved on your phone for Dad. It sends when you have signal."
+        ],
+        "anyDelivered": false
+      }
+    },
+    {
+      "name": "one delivered, one waiting, one failed",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Delivered",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Dad",
+            "channel": "Sms",
+            "status": "WaitingForSignal",
+            "updatedAtMillis": 0
+          },
+          {
+            "contactName": "Alwis",
+            "channel": "Sms",
+            "status": "Failed",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "Mom knows",
+        "lines": [
+          "Saved on your phone for Dad. It sends when you have signal.",
+          "Couldn't send to Alwis. Call them, or call the police."
+        ],
+        "anyDelivered": true
+      }
+    },
+    {
+      "name": "all failed",
+      "fn": "summarize",
+      "input": {
+        "deliveries": [
+          {
+            "contactName": "Mom",
+            "channel": "Sms",
+            "status": "Failed",
+            "updatedAtMillis": 0
+          }
+        ]
+      },
+      "expected": {
+        "headline": "SOS not sent",
+        "lines": [
+          "Couldn't send to Mom. Call them, or call the police."
+        ],
+        "anyDelivered": false
+      }
+    }
+  ]
+}

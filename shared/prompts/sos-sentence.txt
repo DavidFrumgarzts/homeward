@@ -1,0 +1,5 @@
+Rewrite this emergency note as one or two clear sentences for the person's family. At most 40 words.
+Write in the third person about {name}. {refer}
+Keep every fact from the note. Do NOT add facts, places, numbers, advice or greetings.
+Answer with the sentences only.
+Note from {name}: "{note}"

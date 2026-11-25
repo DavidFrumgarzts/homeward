@@ -5,5 +5,5 @@ First-launch flow, one file per step. Matches the Figma page "Beacon v2" (screen
 - `OnboardingStore.kt`: remembers it is done (shown only once).
 - `StepLayout.kt`: shared frame for the setup steps (progress bars, title, text, blue button).
 - `StoryStep.kt` (one night in Lapa, without and then with Beacon) + `StoryMap.kt` (the Home map with the walk drawing itself on top)
-  -> `WelcomeStep.kt` (the three features) -> `ContactsStep.kt` (+ location on "I'm OK") -> `PermissionsStep.kt` (location + SMS)
-  -> `GetReadyStep.kt` (red zones, safe places, safety pack, on-device AI, with live status).
+  -> `WelcomeStep.kt` (the three features) -> `ContactsStep.kt` (her name, contacts, + location on "I'm OK") -> `PermissionsStep.kt` (location, SMS, notifications)
+  -> `GetReadyStep.kt` (red zones, places to get help, safety pack, on-device AI, with live status).

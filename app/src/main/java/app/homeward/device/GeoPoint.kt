@@ -1,11 +1,14 @@
 package app.homeward.device
 
+import kotlinx.serialization.Serializable
+import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 // A latitude/longitude point, plus the one bit of math we need everywhere: distance in meters.
+@Serializable
 data class GeoPoint(val lat: Double, val lng: Double) {
     fun metersTo(other: GeoPoint): Double {
         val r = 6_371_000.0
@@ -16,6 +19,7 @@ data class GeoPoint(val lat: Double, val lng: Double) {
         return r * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
 
-    // Short form used inside SOS messages, e.g. "-22.9133, -43.1801".
-    fun short(): String = "%.4f, %.4f".format(lat, lng)
+    // Short form used inside SOS messages, e.g. "-22.9133, -43.1801". Always with a dot, whatever
+    // the phone's language, so family can paste it into a map.
+    fun short(): String = String.format(Locale.US, "%.4f, %.4f", lat, lng)
 }

@@ -1,11 +1,13 @@
 package app.homeward.features.onboarding
 
 import android.Manifest
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,19 +19,23 @@ import app.homeward.design.HomewardType
 import app.homeward.design.components.IconCircle
 import app.homeward.design.components.WhiteCard
 
-// Setup step 3: explain the two permissions in plain words, then ask Android for them in one go.
+// Setup step 3: explain the three permissions in plain words, then ask Android for them in one go.
 // Moving on works either way; the app falls back gracefully if one is denied.
 @Composable
 fun PermissionsStep(onNext: () -> Unit) {
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { onNext() }
     StepLayout(
         step = OnboardingStep.Permissions,
-        title = "Two things Beacon needs",
+        title = "Three things Beacon needs",
         button = "Allow",
-        onButton = { ask.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.SEND_SMS)) },
+        onButton = {
+            val notifications = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) arrayOf(Manifest.permission.POST_NOTIFICATIONS) else emptyArray()
+            ask.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.SEND_SMS) + notifications)
+        },
     ) {
-        Reason(Icons.Outlined.Place, "Location", "To warn you before red zones and add your spot to an SOS. GPS works with no signal.")
+        Reason(Icons.Outlined.Place, "Location", "To warn you before red zones, and to tell your contacts where you are during an SOS. GPS works with no signal.")
         Reason(Icons.AutoMirrored.Outlined.Chat, "Send text messages", "So your SOS reaches family even with no mobile data.")
+        Reason(Icons.Outlined.Notifications, "Notifications", "So Beacon can show it is on during an SOS. It says nothing private on your lock screen.")
     }
 }
 

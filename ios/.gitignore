@@ -1,0 +1,16 @@
+# Build output
+build/
+DerivedData/
+*.xcresult
+# Xcode per-user files
+xcuserdata/
+*.xcuserstate
+# Swift Package Manager working files (Package.resolved inside the project IS committed)
+.swiftpm/
+.build/
+# Firebase config: download from the console, never commit
+Beacon/GoogleService-Info.plist
+# Local signing and keys
+*.xcconfig.local
+Local.xcconfig
+.DS_Store

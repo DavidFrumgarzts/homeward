@@ -2,11 +2,13 @@ package app.homeward.features.safeplace
 
 import app.homeward.device.GeoPoint
 import app.homeward.features.safetypack.SafePlace
+import kotlinx.serialization.Serializable
 
 // PURE LOGIC: picks the best place to go right now from the saved pack, and says why.
 // "Best" = open now, then closest. A closed police post loses to an open gas station.
 object SafePlacePicker {
 
+    @Serializable
     data class Pick(val place: SafePlace, val meters: Int, val reason: String)
 
     fun isOpen(place: SafePlace, hour: Int): Boolean =

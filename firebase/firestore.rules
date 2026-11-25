@@ -1,0 +1,121 @@
+rules_version = '2';
+
+// Who may read and write what in Beacon's database. The layout is described in shared/schema/README.md.
+// Everyone signs in anonymously. "Owner" is the traveler's phone or browser.
+// A trusted contact gets in with a family link: knowing the share id is the permission.
+// Tested in firebase/tests/rules.test.js. Anything not allowed below is refused.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function oneOf(value, allowed) { return value is string && value in allowed; }
+    function text(value, max) { return value is string && value.size() <= max; }
+    function numberOrNull(data, key) { return data.get(key, null) == null || data[key] is number; }
+
+    function tripPath(tripId) { return /databases/$(database)/documents/trips/$(tripId); }
+    function sharePath(shareId) { return /databases/$(database)/documents/shares/$(shareId); }
+    function viewerPath(tripId) { return /databases/$(database)/documents/trips/$(tripId)/viewers/$(uid()); }
+
+    // The trip exists and is hers.
+    function ownsTrip(tripId) {
+      return signedIn() && exists(tripPath(tripId)) && get(tripPath(tripId)).data.ownerUid == uid();
+    }
+    // Same, but also true when the trip is created in the same write. A phone that was offline
+    // sends the trip, the share and the incident together.
+    function ownsTripAfter(tripId) {
+      return signedIn() && existsAfter(tripPath(tripId)) && getAfter(tripPath(tripId)).data.ownerUid == uid();
+    }
+    // The share exists, points at this trip and has not been turned off.
+    function liveShare(shareId, tripId) {
+      return shareId is string && shareId.matches('^[0-9a-f]{32}$')
+        && exists(sharePath(shareId))
+        && get(sharePath(shareId)).data.tripId == tripId
+        && get(sharePath(shareId)).data.revoked == false;
+    }
+    // This person opened a family link for this trip, and that link is still on.
+    function canView(tripId) {
+      return signedIn() && exists(viewerPath(tripId)) && liveShare(get(viewerPath(tripId)).data.shareId, tripId);
+    }
+
+    function validTrip(d) {
+      return d.ownerUid == uid() && text(d.travelerName, 80) && text(d.city, 120) && text(d.country, 120)
+        && oneOf(d.platform, ['android', 'ios', 'web']) && d.createdAtMillis is number;
+    }
+    function validIncident(d, tripId) {
+      return d.ownerUid == uid() && d.tripId == tripId
+        && text(d.travelerName, 80) && text(d.city, 120) && text(d.country, 120)
+        && oneOf(d.phase, ['SafetyCheckRequested', 'SosActive', 'Resolved'])
+        && text(d.method, 40) && d.userConfirmed is bool
+        && text(d.description, 2000) && text(d.situation, 20) && text(d.message, 4000)
+        && d.triggerReasons is list && d.triggerReasons.size() <= 20
+        && d.emergency is map
+        && oneOf(d.platform, ['android', 'ios', 'web'])
+        && d.startedAtMillis is number && d.updatedAtMillis is number
+        && numberOrNull(d, 'alertSentAtMillis') && numberOrNull(d, 'resolvedAtMillis');
+    }
+    function validUpdate(d) {
+      return d.ownerUid == uid()
+        && oneOf(d.kind, ['alert', 'update', 'batteryLow', 'ended'])
+        && d.createdAtMillis is number
+        && numberOrNull(d, 'lat') && numberOrNull(d, 'lng') && numberOrNull(d, 'takenAtMillis')
+        && numberOrNull(d, 'accuracyMeters') && numberOrNull(d, 'batteryPercent') && numberOrNull(d, 'pointsHeld');
+    }
+    function validShare(d) {
+      return d.ownerUid == uid() && d.tripId is string && text(d.contactLabel, 80)
+        && d.revoked is bool && d.createdAtMillis is number;
+    }
+
+    // A trip: only its owner. The family view never reads it.
+    match /trips/{tripId} {
+      allow get, list: if signedIn() && resource.data.ownerUid == uid();
+      allow create: if signedIn() && validTrip(request.resource.data);
+      allow update: if signedIn() && resource.data.ownerUid == uid() && validTrip(request.resource.data);
+      allow delete: if signedIn() && resource.data.ownerUid == uid();
+
+      // An incident and its location updates: the owner writes; the owner and live viewers read.
+      match /incidents/{incidentId} {
+        allow read: if ownsTrip(tripId) || canView(tripId);
+        allow create, update: if ownsTripAfter(tripId) && validIncident(request.resource.data, tripId);
+        allow delete: if ownsTrip(tripId);
+
+        match /updates/{updateId} {
+          allow read: if ownsTrip(tripId) || canView(tripId);
+          allow create, update: if ownsTripAfter(tripId) && validUpdate(request.resource.data);
+          allow delete: if ownsTrip(tripId);
+        }
+      }
+
+      // "I opened a family link for this trip." Each visitor writes only their own, and only with a
+      // share id that points at this trip and is still on. It is the one thing a contact may write.
+      match /viewers/{viewerUid} {
+        allow get: if signedIn() && (viewerUid == uid() || ownsTrip(tripId));
+        allow list, delete: if ownsTrip(tripId);
+        allow create, update: if signedIn() && viewerUid == uid()
+          && request.resource.data.keys().hasOnly(['shareId', 'createdAtMillis'])
+          && request.resource.data.createdAtMillis is number
+          && liveShare(request.resource.data.shareId, tripId);
+      }
+    }
+
+    // A family link. Anyone signed in may read ONE by its id (the id is 128 random bits, so it cannot
+    // be guessed); nobody may list them. Only the owner creates, turns off or deletes one.
+    match /shares/{shareId} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && shareId.matches('^[0-9a-f]{32}$')
+        && validShare(request.resource.data) && ownsTripAfter(request.resource.data.tripId);
+      allow update: if signedIn() && resource.data.ownerUid == uid()
+        && validShare(request.resource.data) && request.resource.data.tripId == resource.data.tripId;
+      allow delete: if signedIn() && resource.data.ownerUid == uid();
+    }
+
+    // A saved safety pack: only its owner. (Pairing a phone with a code arrives with the trip planner.)
+    match /packs/{packId} {
+      allow get, list: if signedIn() && resource.data.ownerUid == uid();
+      allow create: if signedIn() && request.resource.data.ownerUid == uid();
+      allow update: if signedIn() && resource.data.ownerUid == uid() && request.resource.data.ownerUid == uid();
+      allow delete: if signedIn() && resource.data.ownerUid == uid();
+    }
+  }
+}

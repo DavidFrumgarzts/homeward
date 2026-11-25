@@ -88,3 +88,59 @@ textarea.field { height: 120px; padding: 14px 16px; resize: none; line-height: 1
 .check { width: 132px; height: 132px; align-self: center; }
 .outline { border: 1.5px solid var(--line); border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
 .phrase { font: 700 22px/28px var(--body); }
+
+/* Where an AI answer ran: "On this computer" (green) or "Cloud" (blue), written like the "SAVED" stamp. */
+[hidden] { display: none !important; }
+.badge { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font: 600 10px/12px var(--display); letter-spacing: .7px; text-transform: uppercase; color: var(--green); }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.cloud { color: var(--blue); }
+.bubbles .badge { margin: -4px 0 0 6px; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card.col { flex-direction: column; align-items: stretch; gap: 8px; padding: 16px; }
+#ai-status { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; line-height: 18px; z-index: 10; white-space: nowrap; }
+
+/* After the SOS: "I'm safe now" is a quiet white button, like Home's "I'm OK". */
+.btn.quiet { background: var(--surface); color: var(--ink); display: flex; justify-content: center; align-items: center; gap: 8px; }
+.btn.quiet svg { width: 20px; height: 20px; }
+a.btn { display: grid; place-items: center; text-decoration: none; }
+
+/* Family view (/f/{shareId} and /demo): the same phone-width column as the app, built from its pieces:
+   a status header like "SOS sent", white cards, the red call button and outlined rows. */
+.fam-head { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.fam-head .check { width: 104px; height: 104px; margin-bottom: 4px; }
+.fam-head h1 { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.fam-head .stamp { color: var(--muted); }
+.state { font: 600 10px/12px var(--display); letter-spacing: .7px; text-transform: uppercase; }
+.state.live { color: var(--red); }
+.state.ok { color: var(--green); }
+.fam-demo { background: var(--blue-tint); border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; color: var(--ink); }
+.fam-demo .bar { height: 4px; border-radius: 2px; background: #C9D7FB; overflow: hidden; }
+.fam-demo .bar i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .5s linear; }
+.fam-where { flex-direction: column; align-items: stretch; padding: 0; gap: 0; overflow: hidden; }
+.fam-map { height: 280px; background: #E9EBEE; }
+.fam-nomap { padding: 24px; }
+#fam-last { display: flex; align-items: center; gap: 14px; padding: 14px; }
+#fam-last .tile { background: var(--green-tint); }
+#fam-last .tile i { width: 14px; height: 14px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px #fff; }
+.fam-text { white-space: pre-wrap; font-size: 15px; line-height: 22px; }
+.fam-section { display: flex; flex-direction: column; gap: 10px; }
+.fam-section > h2 { padding: 4px 4px 0; }
+a.tel { text-decoration: none; }
+.outline.tel { justify-content: flex-start; }
+.outline.tel .tile { width: 40px; height: 40px; border-radius: 12px; background: var(--amber-tint); }
+.outline.tel .tile svg { width: 20px; height: 20px; }
+.fam-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.fam-list li { display: grid; grid-template-columns: 14px 1fr; column-gap: 14px; position: relative; padding-bottom: 16px; }
+.fam-list li:last-child { padding-bottom: 0; }
+.fam-list li::before { content: ""; grid-row: 1; width: 10px; height: 10px; margin: 5px 2px 0; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint); }
+.fam-list li:not(:last-child)::after { content: ""; position: absolute; left: 6px; top: 22px; bottom: 2px; width: 2px; border-radius: 1px; background: var(--line); }
+.fam-list li.k-alert::before { background: var(--red); box-shadow: 0 0 0 3px var(--red-tint); }
+.fam-list li.k-ended::before { background: var(--green); box-shadow: 0 0 0 3px var(--green-tint); }
+.fam-list li.k-batteryLow::before { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-tint); }
+.fam-list time { display: block; font: 600 10px/12px var(--display); letter-spacing: .7px; color: var(--muted); margin-bottom: 2px; }
+/* Map dots, the same as on the drawn map: her green dot with a soft halo, and a small blue dot where it started. */
+.fam-dot { border-radius: 50%; box-sizing: border-box; }
+.fam-dot.latest { width: 19px; height: 19px; background: var(--green); border: 2.5px solid #fff; box-shadow: 0 0 0 9px rgba(34, 160, 107, .2); }
+.fam-dot.start { width: 14px; height: 14px; background: var(--blue); border: 2.5px solid #fff; }
+.fam-map .maplibregl-ctrl-group { border-radius: 14px; box-shadow: none; border: 1px solid var(--line); }
+.fam-map .maplibregl-ctrl-attrib { font: 400 11px/16px var(--body); color: var(--muted); }

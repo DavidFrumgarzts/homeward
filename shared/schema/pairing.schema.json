@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pairing",
+  "title": "Pairing (pairings/{code})",
+  "description": "Lets a phone fetch a pack built on the web planner. The document id is the six-digit code. It holds a copy of the pack, so the phone never reads packs/.",
+  "type": "object",
+  "required": [
+    "ownerUid",
+    "pack",
+    "createdAtMillis",
+    "expiresAtMillis"
+  ],
+  "properties": {
+    "ownerUid": {
+      "type": "string"
+    },
+    "pack": {
+      "$ref": "safety-pack"
+    },
+    "createdAtMillis": {
+      "type": "number"
+    },
+    "expiresAtMillis": {
+      "type": "number",
+      "description": "At most 15 minutes after createdAtMillis"
+    }
+  }
+}

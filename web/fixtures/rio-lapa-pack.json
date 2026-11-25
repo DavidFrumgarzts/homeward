@@ -1,0 +1,227 @@
+{
+  "city": "Rio de Janeiro",
+  "country": "Brazil",
+  "police": "190",
+  "ambulance": "192",
+  "embassyName": "U.S. Consulate General Rio de Janeiro",
+  "embassyPhone": "+55 21 3823-2000",
+  "localPhrases": [
+    {
+      "english": "Help!",
+      "local": "Socorro!"
+    },
+    {
+      "english": "Call the police",
+      "local": "Chame a polícia"
+    },
+    {
+      "english": "I am being followed",
+      "local": "Estou sendo seguida"
+    },
+    {
+      "english": "I need a hospital",
+      "local": "Preciso de um hospital"
+    }
+  ],
+  "safePlaces": [
+    {
+      "name": "5º DP police station",
+      "kind": "police",
+      "lat": -22.91255,
+      "lng": -43.1803,
+      "open24h": true,
+      "opensHour": 0,
+      "closesHour": 24,
+      "note": ""
+    },
+    {
+      "name": "Hospital Cruz Vermelha",
+      "kind": "hospital",
+      "lat": -22.91297,
+      "lng": -43.18456,
+      "open24h": true,
+      "opensHour": 0,
+      "closesHour": 24,
+      "note": ""
+    }
+  ],
+  "zones": [
+    {
+      "name": "Rua dos Inválidos",
+      "level": "Avoid",
+      "polygon": [
+        [
+          -22.90838,
+          -43.18348
+        ],
+        [
+          -22.90838,
+          -43.18149
+        ],
+        [
+          -22.91125,
+          -43.18149
+        ],
+        [
+          -22.91125,
+          -43.18348
+        ]
+      ],
+      "riskyFromHour": 23,
+      "riskyToHour": 5,
+      "reasons": [
+        "Bars close and the side streets go quiet",
+        "Robberies reported here in local news",
+        "Poor street lighting"
+      ]
+    },
+    {
+      "name": "Lapa nightlife area",
+      "level": "Careful",
+      "polygon": [
+        [
+          -22.9125,
+          -43.1815
+        ],
+        [
+          -22.912,
+          -43.1785
+        ],
+        [
+          -22.9145,
+          -43.178
+        ],
+        [
+          -22.915,
+          -43.181
+        ]
+      ],
+      "riskyFromHour": 22,
+      "riskyToHour": 5,
+      "reasons": [
+        "Crowded at night, watch for pickpockets"
+      ]
+    },
+    {
+      "name": "Av. Mem de Sá",
+      "level": "Safer",
+      "polygon": [
+        [
+          -22.91095,
+          -43.186
+        ],
+        [
+          -22.91213,
+          -43.177
+        ],
+        [
+          -22.91259,
+          -43.177
+        ],
+        [
+          -22.91141,
+          -43.186
+        ]
+      ],
+      "riskyFromHour": 0,
+      "riskyToHour": 24,
+      "reasons": [
+        "Main avenue, busy and lit late"
+      ]
+    }
+  ],
+  "builtAtMillis": 0,
+  "placesFromOsm": false,
+  "scams": [
+    {
+      "title": "Unofficial airport taxis",
+      "kind": "Taxi",
+      "where": "Galeão airport arrivals",
+      "signs": [
+        "driver approaches you inside the terminal",
+        "no meter",
+        "price given only after you get in"
+      ],
+      "whatToDo": "Use the official taxi desk or a ride app, and agree the price before you go.",
+      "saferOption": "",
+      "level": "Careful",
+      "fairRates": [],
+      "fairPrices": [
+        {
+          "item": "taxi airport to Lapa",
+          "currency": "BRL",
+          "low": 90.0,
+          "high": 130.0
+        }
+      ],
+      "sources": [
+        "https://www.reddit.com/r/rio/search/?q=airport+taxi"
+      ],
+      "reports": 3
+    },
+    {
+      "title": "Card machine overcharge at beach kiosks",
+      "kind": "Shop",
+      "where": "Copacabana and Ipanema beach kiosks",
+      "signs": [
+        "card machine turned away from you",
+        "screen covered",
+        "asked to type the PIN twice"
+      ],
+      "whatToDo": "Read the amount on the screen before you pay, or pay in cash.",
+      "saferOption": "",
+      "level": "Avoid",
+      "fairRates": [],
+      "fairPrices": [],
+      "sources": [
+        "https://www.reddit.com/r/rio/search/?q=card+machine"
+      ],
+      "reports": 4
+    },
+    {
+      "title": "Street money changers",
+      "kind": "Money",
+      "where": "Copacabana and Centro sidewalks",
+      "signs": [
+        "cambio offered on the street",
+        "better rate than the banks",
+        "counting notes fast"
+      ],
+      "whatToDo": "Change money at a bank or an official casa de câmbio, or use an ATM inside a bank.",
+      "saferOption": "",
+      "level": "Avoid",
+      "fairRates": [
+        {
+          "from": "USD",
+          "to": "BRL",
+          "rate": 5.4,
+          "walkAwayLossPercent": 8
+        }
+      ],
+      "fairPrices": [],
+      "sources": [
+        "https://www.reddit.com/r/travel/search/?q=rio+money+exchange"
+      ],
+      "reports": 3
+    },
+    {
+      "title": "\"Free\" bracelet or gift, then a demand for money",
+      "kind": "Other",
+      "where": "Lapa steps and beach promenades",
+      "signs": [
+        "ties a bracelet on your wrist",
+        "free gift",
+        "asks for money after"
+      ],
+      "whatToDo": "Keep your hands to yourself, say \"Não, obrigado\" and keep walking.",
+      "saferOption": "",
+      "level": "Careful",
+      "fairRates": [],
+      "fairPrices": [],
+      "sources": [
+        "https://www.reddit.com/r/solotravel/search/?q=rio+bracelet"
+      ],
+      "reports": 2
+    }
+  ]
+}

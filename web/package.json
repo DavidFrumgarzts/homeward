@@ -1,0 +1,18 @@
+{
+  "name": "beacon-web-tests",
+  "private": true,
+  "type": "module",
+  "description": "Development only: tests for Beacon web. The page has no build step and imports nothing from here.",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "cd ../firebase && firebase emulators:exec --only auth,firestore,hosting --project demo-beacon \"npm --prefix ../web run test:e2e:run\"",
+    "test:e2e:run": "playwright test"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@playwright/test": "^1.65.1",
+    "firebase": "^13.4.0",
+    "vitest": "^5.1.1"
+  }
+}

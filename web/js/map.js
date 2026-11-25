@@ -93,6 +93,11 @@ export function gpsToSpot(lat, lng) {
   return { x: ((lng - WEST) / (EAST - WEST)) * 393, y: ((NORTH - lat) / (NORTH - SOUTH)) * 520 };
 }
 
+// A spot on the drawn map -> the GPS point it stands for (the reverse of gpsToSpot).
+export function spotToGps(spot) {
+  return { lat: NORTH - (spot.y / 520) * (NORTH - SOUTH), lng: WEST + (spot.x / 393) * (EAST - WEST) };
+}
+
 // Which way you moved between two spots: degrees clockwise from up, or null if you barely moved.
 export function headingBetween(from, to) {
   const dx = to.x - from.x, dy = to.y - from.y;

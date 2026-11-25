@@ -26,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
+import app.homeward.design.components.InferenceBadge
 import app.homeward.app.AppServices
 import app.homeward.device.Speaker
 import app.homeward.features.scancheck.RecommendedPlace
@@ -34,8 +35,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // One line of the chat. `fromYou` = the traveler's question; otherwise Beacon's answer.
+// `badge` says where an answer was written: true = on device, false = cloud, null = no AI (saved facts).
 // `place` is the saved place Beacon recommended in this answer (picked in code), for "Show on map".
-private data class ChatLine(val fromYou: Boolean, val text: String, val place: String? = null)
+private data class ChatLine(val fromYou: Boolean, val text: String, val badge: Boolean? = null, val place: String? = null)
 
 // Chat with Beacon (Figma "08 Ask Beacon"): the cop at the top, your questions in blue on the right,
 // Beacon's answers in white on the left, and a box to type the next one. It keeps the last answers in mind
@@ -64,7 +66,7 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit, onShowPlace: (Str
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
             val place = RecommendedPlace.pick(q.trim(), AppServices.packStore.load(), AppServices.location.lastKnown(), hour)?.name
             thinking = false
-            lines += ChatLine(fromYou = false, text = answer.text, place = place)
+            lines += ChatLine(fromYou = false, text = answer.text, badge = answer.badge, place = place)
             shownChars = 0
             while (shownChars < answer.text.length) { delay(18); shownChars = (shownChars + 2).coerceAtMost(answer.text.length) }
         }
@@ -89,9 +91,13 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit, onShowPlace: (Str
                 val newest = i == lines.lastIndex && !line.fromYou
                 Bubble(line.fromYou, if (newest) line.text.take(shownChars) else line.text)
                 val doneTyping = !newest || shownChars >= line.text.length
-                if (line.place != null && doneTyping) {
-                    Text("Show ${line.place} on the map", style = HomewardType.Label, color = HomewardColors.Primary,
-                        modifier = Modifier.padding(top = 6.dp, start = 4.dp).clickable { onShowPlace(line.place) }.padding(vertical = 6.dp))
+                // Under an answer, on one quiet line: where it was written, and "Show … on the map" when it names a place.
+                if (!line.fromYou && doneTyping) Row(Modifier.padding(top = 6.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    InferenceBadge(line.badge)
+                    if (line.place != null) {
+                        Text("Show ${line.place} on the map", style = HomewardType.Label, color = HomewardColors.Primary,
+                            modifier = Modifier.clickable { onShowPlace(line.place) }.padding(vertical = 6.dp))
+                    }
                 }
             }
             if (thinking) item { Bubble(fromYou = false, text = "…") }

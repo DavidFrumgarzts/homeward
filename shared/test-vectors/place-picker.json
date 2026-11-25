@@ -1,0 +1,267 @@
+{
+  "logic": "SafePlacePicker",
+  "about": "Open now first, then closest; the reason says so when a closer place is closed.",
+  "cases": [
+    {
+      "name": "24h place is open at 3am",
+      "fn": "isOpen",
+      "input": {
+        "place": {
+          "name": "Gas station",
+          "kind": "gas station",
+          "lat": 0.003,
+          "lng": 0.0,
+          "open24h": true,
+          "opensHour": 0,
+          "closesHour": 24,
+          "note": "well lit"
+        },
+        "hour": 3
+      },
+      "expected": true
+    },
+    {
+      "name": "police post closed at 1am",
+      "fn": "isOpen",
+      "input": {
+        "place": {
+          "name": "Police post",
+          "kind": "police",
+          "lat": 0.001,
+          "lng": 0.0,
+          "open24h": false,
+          "opensHour": 8,
+          "closesHour": 22,
+          "note": ""
+        },
+        "hour": 1
+      },
+      "expected": false
+    },
+    {
+      "name": "police post open at 8am sharp",
+      "fn": "isOpen",
+      "input": {
+        "place": {
+          "name": "Police post",
+          "kind": "police",
+          "lat": 0.001,
+          "lng": 0.0,
+          "open24h": false,
+          "opensHour": 8,
+          "closesHour": 22,
+          "note": ""
+        },
+        "hour": 8
+      },
+      "expected": true
+    },
+    {
+      "name": "police post closed at 10pm sharp",
+      "fn": "isOpen",
+      "input": {
+        "place": {
+          "name": "Police post",
+          "kind": "police",
+          "lat": 0.001,
+          "lng": 0.0,
+          "open24h": false,
+          "opensHour": 8,
+          "closesHour": 22,
+          "note": ""
+        },
+        "hour": 22
+      },
+      "expected": false
+    },
+    {
+      "name": "open place wins at night, reason names the closed one",
+      "fn": "pick",
+      "input": {
+        "here": {
+          "lat": 0.0,
+          "lng": 0.0
+        },
+        "places": [
+          {
+            "name": "Police post",
+            "kind": "police",
+            "lat": 0.001,
+            "lng": 0.0,
+            "open24h": false,
+            "opensHour": 8,
+            "closesHour": 22,
+            "note": ""
+          },
+          {
+            "name": "Gas station",
+            "kind": "gas station",
+            "lat": 0.003,
+            "lng": 0.0,
+            "open24h": true,
+            "opensHour": 0,
+            "closesHour": 24,
+            "note": "well lit"
+          }
+        ],
+        "hour": 1
+      },
+      "expected": {
+        "name": "Gas station",
+        "meters": 333,
+        "reason": "Gas station, 333 m. Open 24h, well lit. Police post is closer but closed now."
+      }
+    },
+    {
+      "name": "closest wins in daytime",
+      "fn": "pick",
+      "input": {
+        "here": {
+          "lat": 0.0,
+          "lng": 0.0
+        },
+        "places": [
+          {
+            "name": "Police post",
+            "kind": "police",
+            "lat": 0.001,
+            "lng": 0.0,
+            "open24h": false,
+            "opensHour": 8,
+            "closesHour": 22,
+            "note": ""
+          },
+          {
+            "name": "Gas station",
+            "kind": "gas station",
+            "lat": 0.003,
+            "lng": 0.0,
+            "open24h": true,
+            "opensHour": 0,
+            "closesHour": 24,
+            "note": "well lit"
+          }
+        ],
+        "hour": 12
+      },
+      "expected": {
+        "name": "Police post",
+        "meters": 111,
+        "reason": "Police post, 111 m. Open now."
+      }
+    },
+    {
+      "name": "nothing open",
+      "fn": "pick",
+      "input": {
+        "here": {
+          "lat": 0.0,
+          "lng": 0.0
+        },
+        "places": [
+          {
+            "name": "Police post",
+            "kind": "police",
+            "lat": 0.001,
+            "lng": 0.0,
+            "open24h": false,
+            "opensHour": 8,
+            "closesHour": 22,
+            "note": ""
+          }
+        ],
+        "hour": 2
+      },
+      "expected": null
+    },
+    {
+      "name": "no places",
+      "fn": "pick",
+      "input": {
+        "here": {
+          "lat": 0.0,
+          "lng": 0.0
+        },
+        "places": [],
+        "hour": 2
+      },
+      "expected": null
+    },
+    {
+      "name": "Lapa: from the bar",
+      "fn": "pick",
+      "input": {
+        "here": {
+          "lat": -22.9095,
+          "lng": -43.18421
+        },
+        "places": [
+          {
+            "name": "5º DP police station",
+            "kind": "police",
+            "lat": -22.91255,
+            "lng": -43.1803,
+            "open24h": true,
+            "opensHour": 0,
+            "closesHour": 24,
+            "note": ""
+          },
+          {
+            "name": "Hospital Cruz Vermelha",
+            "kind": "hospital",
+            "lat": -22.91297,
+            "lng": -43.18456,
+            "open24h": true,
+            "opensHour": 0,
+            "closesHour": 24,
+            "note": ""
+          }
+        ],
+        "hour": 1
+      },
+      "expected": {
+        "name": "Hospital Cruz Vermelha",
+        "meters": 387,
+        "reason": "Hospital Cruz Vermelha, 387 m. Open 24h."
+      }
+    },
+    {
+      "name": "Lapa: from the avenue",
+      "fn": "pick",
+      "input": {
+        "here": {
+          "lat": -22.9117,
+          "lng": -43.183
+        },
+        "places": [
+          {
+            "name": "5º DP police station",
+            "kind": "police",
+            "lat": -22.91255,
+            "lng": -43.1803,
+            "open24h": true,
+            "opensHour": 0,
+            "closesHour": 24,
+            "note": ""
+          },
+          {
+            "name": "Hospital Cruz Vermelha",
+            "kind": "hospital",
+            "lat": -22.91297,
+            "lng": -43.18456,
+            "open24h": true,
+            "opensHour": 0,
+            "closesHour": 24,
+            "note": ""
+          }
+        ],
+        "hour": 1
+      },
+      "expected": {
+        "name": "Hospital Cruz Vermelha",
+        "meters": 213,
+        "reason": "Hospital Cruz Vermelha, 213 m. Open 24h."
+      }
+    }
+  ]
+}

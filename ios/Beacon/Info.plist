@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Only what the build settings cannot say. Everything else (name, usage strings, launch screen)
+     is in the target's INFOPLIST_KEY_ build settings and is merged with this file. -->
+<plist version="1.0">
+<dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>inter.ttf</string>
+		<string>sora.ttf</string>
+	</array>
+</dict>
+</plist>
