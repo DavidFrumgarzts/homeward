@@ -7,6 +7,10 @@
 import { firebase, signedIn, SDK } from "./firebase.js";
 
 const CLOUD_MODEL = "gemini-3.5-flash-lite"; // same cloud model as the Android app
+// The cloud goes through the Agent Platform (Vertex AI) Gemini API, billed to the Google Cloud account.
+// The Gemini Developer API stopped answering once the project moved to the Blaze plan (it wants
+// prepaid AI Studio credit). "global" is the only location that has this model.
+const LOCATION = "global";
 
 let modelPromise = null, searchPromise = null;
 
@@ -15,8 +19,8 @@ async function loadModel() {
     const fb = await firebase();
     if (!fb?.appCheck || !fb.config.appId) return null; // AI Logic refuses calls without App Check
     await signedIn(); // anonymous sign-in first, so calls belong to a user
-    const { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode } = await import(`${SDK}/firebase-ai.js`);
-    const ai = getAI(fb.app, { backend: new GoogleAIBackend() });
+    const { getAI, getGenerativeModel, AgentPlatformBackend, InferenceMode } = await import(`${SDK}/firebase-ai.js`);
+    const ai = getAI(fb.app, { backend: new AgentPlatformBackend(LOCATION) });
     return getGenerativeModel(ai, { mode: InferenceMode.PREFER_ON_DEVICE, inCloudParams: { model: CLOUD_MODEL } });
   } catch {
     return null; // no config, blocked network, or an old browser
@@ -83,8 +87,8 @@ async function loadSearchModel() {
     const fb = await firebase();
     if (!fb?.appCheck || !fb.config.appId) return null;
     await signedIn();
-    const { getAI, getGenerativeModel, GoogleAIBackend } = await import(`${SDK}/firebase-ai.js`);
-    return getGenerativeModel(getAI(fb.app, { backend: new GoogleAIBackend() }), { model: CLOUD_MODEL, tools: [{ googleSearch: {} }] });
+    const { getAI, getGenerativeModel, AgentPlatformBackend } = await import(`${SDK}/firebase-ai.js`);
+    return getGenerativeModel(getAI(fb.app, { backend: new AgentPlatformBackend(LOCATION) }), { model: CLOUD_MODEL, tools: [{ googleSearch: {} }] });
   } catch {
     return null;
   }
