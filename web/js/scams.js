@@ -80,11 +80,12 @@ export function judge(reading, scams) {
   if (text.trim()) {
     const seen = words(text);
     const scored = scams.map((w) => {
-      const phrase = w.signs.some((s) => text.includes(s.toLowerCase()));
-      const shared = [...words([w.title, ...w.signs].join(" "))].filter((x) => seen.has(x)).length;
+      const cues = w.signs || w.looksLike || []; // Reddit-researched items describe what they look like
+      const phrase = cues.some((s) => text.includes(s.toLowerCase()));
+      const shared = [...words([w.title, ...cues].join(" "))].filter((x) => seen.has(x)).length;
       return { w, ok: phrase || shared >= 2, score: (phrase ? 10 : 0) + shared };
     }).filter((s) => s.ok).sort((a, b) => b.score - a.score);
-    if (scored[0]) { const w = scored[0].w; return result(w.level === "Avoid" ? "walk" : "careful", `${w.title}, reported in ${w.where}.`, w); }
+    if (scored[0]) { const w = scored[0].w; return result(w.level === "Avoid" ? "walk" : "careful", w.whatHappens || `${w.title}, reported in ${w.where}.`, w); }
   }
   return { verdict: "unknown", why: LABEL.unknown, whatToDo: TIP[reading.kind] || TIP.Other, saferOption: "", warning: null };
 }
