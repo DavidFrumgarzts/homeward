@@ -1,4 +1,4 @@
-// The scan check: "Is this legit?" A photo of what's in front of you (a pedicab, a ticket seller, a sign) ->
+// The scan check: "Is this legit?" A photo of what's in front of you (a taxi offer, a ticket seller, a money changer, a sign) ->
 // the AI picks which saved scam it shows, or none -> Walk away / Be careful / Nothing saved about this.
 // No price is asked: scammers rarely say it until it's too late. "They told me a price" is there if you have one.
 // The verdict is the saved scam's level, never the AI's opinion.
@@ -18,7 +18,8 @@ export function scanScreen(app, { back, backIcon, city, scams, status }) {
   const body = () => {
     const v = s.verdict, w = v?.warning;
     return {
-      start: () => `<p>Take a photo of what's in front of you: a pedicab, a ticket seller, a costumed character, a sign. Beacon checks it against ${scams.length} scams reported in ${esc(city)}.</p>
+      start: () => `<p>Take a photo of what's in front of you: a taxi offer, a ticket seller, a money changer, a sign. ${
+          !city ? "Beacon needs to know which city you're in first, so turn on location." : scams.length ? `Beacon checks it against ${scams.length} scams reported in ${esc(city)}.` : `Beacon is still looking up scams reported in ${esc(city)}.`}</p>
         <p class="small">${esc(status)}</p>
         <label class="btn file">Take a photo<input id="photo" type="file" accept="image/*" capture="environment" hidden></label>
         <button class="link left" id="type">Describe it instead</button>`,
@@ -68,7 +69,7 @@ export function scanScreen(app, { back, backIcon, city, scams, status }) {
   async function takePhoto(file) {
     if (!file) return;
     s.photo = URL.createObjectURL(file);
-    if (!scams.length) { s.step = "describe"; s.note = `Nothing saved for ${city} yet. Go online once so Beacon can look it up.`; return draw(); }
+    if (!scams.length) { s.step = "describe"; s.note = city ? `Nothing saved for ${city} yet. Go online once so Beacon can look it up.` : "Beacon doesn't know which city you're in yet. Turn on location, or say what you see."; return draw(); }
     if (!(await aiReady())) { s.step = "describe"; s.note = "Photo checking isn't set up on this page, so say what you see."; return draw(); }
     s.step = "reading"; draw();
     const m = readMatch(await askAiAboutImage(matchPrompt(city, scams), file), scams);

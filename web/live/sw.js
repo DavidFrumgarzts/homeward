@@ -1,8 +1,9 @@
-// Keeps a copy of Beacon New York on the phone, so it opens with no signal.
+// Keeps a copy of Beacon (any city) on the phone, so it opens with no signal.
 // Map tiles are NOT saved here (the tile providers don't allow bulk saving). Places to get help are saved by places.js.
-const CACHE = "beacon-ny-v3";
-const FILES = ["./", "index.html", "ny.css", "manifest.webmanifest", "js/app.js", "js/nypack.js", "js/places.js", "js/city.js", "js/scan.js",
-  "../styles.css", "../js/store.js", "../js/ai.js", "../js/scan.js", "../js/scams.js", "../js/cityscams.js", "../js/sos.js", "../js/pack.js",
+const CACHE = "beacon-live-v1";
+const FILES = ["./", "index.html", "live.css", "manifest.webmanifest", "js/app.js", "js/nypack.js", "js/places.js", "js/city.js", "js/scan.js",
+  "../styles.css", "../js/store.js", "../js/ai.js", "../js/scan.js", "../js/scams.js", "../js/cityscams.js", "../js/emergency.js", "../js/sos.js", "../js/pack.js",
+  "../js/firebase.js", "../js/messages.js", "../js/timeline.js", "../js/prompts.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"];
 
 self.addEventListener("install", (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())));

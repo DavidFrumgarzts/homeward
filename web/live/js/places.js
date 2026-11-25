@@ -2,12 +2,13 @@
 // Fetched once while online (one Overpass query), then saved in this browser so they still show with no signal.
 // Data © OpenStreetMap contributors (ODbL).
 
-const KEY = "beacon.ny.places";
+const KEY = "beacon.live.places";
 // Public Overpass servers are often busy; try them in turn.
 const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
 
-// Used when no server answers and nothing is saved yet: Manhattan police precincts and big emergency hospitals.
+// Used only in Manhattan, when no server answers and nothing is saved yet: police precincts and big emergency hospitals.
 // Hand-made from public addresses; positions are approximate (within about a block).
+const MANHATTAN = { lat: 40.758, lng: -73.9855 };
 export const STARTER = [
   ["NYPD Times Square Substation", "police", 40.7569, -73.9861], ["Midtown South Precinct", "police", 40.7540, -73.9952], ["Midtown North Precinct", "police", 40.7655, -73.9862],
   ["1st Precinct", "police", 40.7202, -74.0074], ["5th Precinct", "police", 40.7163, -73.9975], ["6th Precinct", "police", 40.7343, -74.0055],
@@ -54,7 +55,8 @@ export async function placesAround(at) {
     try { localStorage.setItem(KEY, JSON.stringify({ center: at, savedAt: Date.now(), places })); } catch { /* storage full: keep going */ }
     return places;
   } catch {
-    return cached?.places?.length ? cached.places : STARTER; // offline or servers busy: last saved list, else the starter list
+    if (cached?.places?.length) return cached.places; // offline or servers busy: the last saved list
+    return meters(at, MANHATTAN) < 15000 ? STARTER : []; // the hand-made list only covers Manhattan
   }
 }
 
