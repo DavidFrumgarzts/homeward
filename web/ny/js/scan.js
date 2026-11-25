@@ -3,7 +3,7 @@
 // No price is asked: scammers rarely say it until it's too late. "They told me a price" is there if you have one.
 // The verdict is the saved scam's level, never the AI's opinion.
 import { judge, parseNumber, LABEL } from "../../js/scams.js";
-import { matchPrompt, readMatch, verdictFor } from "../../js/cityscams.js";
+import { matchPrompt, readMatch, verdictFor, origin } from "../../js/cityscams.js";
 import { aiReady, askAiAboutImage } from "../../js/ai.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -37,7 +37,7 @@ export function scanScreen(app, { back, backIcon, city, scams, status }) {
         ${w?.fairPrices?.length ? (s.showPrice
           ? `<div class="row"><span>They asked</span><input class="mini" id="num" style="width:90px" inputmode="decimal" aria-label="price"><span>USD</span><button class="chip" id="cmp">Compare</button></div>`
           : '<button class="link left" id="addprice">They told me a price</button>') : ""}
-        ${w ? `<p class="small">From reports saved for ${esc(city)}${w.reports ? ` · ${w.reports} reports` : ""}</p>
+        ${w ? `<p class="small">${esc(origin(w, city))}</p>
           <div class="small">${w.sources.map((u) => `<a href="${/^https:\/\//.test(u) ? esc(u) : "#"}" target="_blank" rel="noopener">${esc(host(u))}</a>`).join("<br>")}</div>` : ""}
         </div><button class="link left" id="again">Scan something else</button>`,
     }[s.step]();

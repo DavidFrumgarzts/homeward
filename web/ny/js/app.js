@@ -9,7 +9,7 @@ import { recommends, judge } from "../../js/scams.js";
 import { smsLink } from "../../js/sos.js";
 import { ny } from "./nypack.js";
 import { placesAround, nearest, saved, meters } from "./places.js";
-import { city, scamsHere, savedAt, arriveAt, research } from "./city.js";
+import { city, scamsHere, savedAt, fromMemory, arriveAt, research } from "./city.js";
 
 const app = document.getElementById("app");
 const $ = (s) => app.querySelector(s);
@@ -91,7 +91,9 @@ function home(highlight = null) {
 function scanStatus() {
   if (city.researching) return `Looking up the latest reports for ${city.name}…`;
   const at = savedAt();
-  return at ? `Updated from the web ${new Date(at).toLocaleDateString([], { month: "short", day: "numeric" })}. Works with no signal.` : "Saved on this phone. Works with no signal.";
+  const day = new Date(at).toLocaleDateString([], { month: "short", day: "numeric" });
+  if (!at) return "Saved on this phone. Works with no signal.";
+  return fromMemory() ? `Some added ${day} from what AI knows, not checked. Works with no signal.` : `Updated from the web ${day}. Works with no signal.`;
 }
 function openScan() {
   scanScreen(app, { back: () => home(), backIcon: icon.back, city: city.name, scams: scamsHere(), status: scanStatus() });

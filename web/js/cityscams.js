@@ -3,6 +3,8 @@
 // A price is never needed: scammers rarely say it until it's too late.
 // Research: when you're online in a city, Beacon asks Gemini (with Google Search) once a day for scams
 // travelers report there, and saves them on the phone so the check works with no signal.
+// When search isn't available (the project's free plan has no search quota), it asks the model what it
+// already knows instead. Those scams have no sources and are labeled "Not checked against reports".
 import { LABEL, TIP, KINDS } from "./scams.js";
 
 const DAY = 24 * 3600_000, HOUR = 3600_000;
@@ -48,8 +50,22 @@ Return ONLY a JSON list of up to 25 items, most reported first. Each item:
 Only include scams with at least one source page. Don't invent prices or places.`;
 }
 
-// The research answer -> a clean list. Items without what-it-looks-like, what-to-do or an https source are dropped.
-export function readResearch(text) {
+// Same list, from what the model already knows. No searching and no links: a model writing links from
+// memory can make them up.
+export function memoryPrompt(city, country) {
+  return `A traveler just arrived in ${city}, ${country}. From what you know, list the scams and rip-offs travelers most often report in ${city}.
+Cover each kind: money exchange and ATMs, taxis and ride apps, airport arrivals, tours and tickets, shops and restaurants, street hustles and fake officials, pickpocketing spots.
+Only include scams you are confident are commonly reported there. Don't invent prices or places.
+Return ONLY a JSON list of up to 20 items, most reported first. Each item:
+{"id":"short-kebab-id","title":"short name","kind":"Money|Taxi|Tour|Shop|Ticket|Other","level":"Avoid|Careful",
+ "looksLike":["what you would SEE in a photo, 2-5 short phrases"],"where":"streets or places","whatHappens":"one or two sentences",
+ "whatToDo":"one plain instruction","saferOption":"a safer choice, or empty"}`;
+}
+
+// The research answer -> a clean list. Items without what-it-looks-like or what-to-do are dropped, and so are
+// searched items without an https source. fromMemory: no source needed, any links are dropped, and each
+// item is marked so the screen says it wasn't checked.
+export function readResearch(text, { fromMemory = false } = {}) {
   const list = jsonIn(text, "[", "]");
   if (!Array.isArray(list)) return [];
   const seen = new Set();
@@ -58,10 +74,11 @@ export function readResearch(text) {
     const sources = (Array.isArray(x.sources) ? x.sources : []).filter((u) => typeof u === "string" && /^https:\/\/[^\s"<>]+$/.test(u)).slice(0, 5);
     const looksLike = (Array.isArray(x.looksLike) ? x.looksLike : []).map((s) => str(s, 80)).filter(Boolean).slice(0, 6);
     const title = str(x.title, 80), whatToDo = str(x.whatToDo, 300), id = slug(x.id || title);
-    if (!title || !whatToDo || !id || !looksLike.length || !sources.length || seen.has(id)) return [];
+    if (!title || !whatToDo || !id || !looksLike.length || (!fromMemory && !sources.length) || seen.has(id)) return [];
     seen.add(id);
-    return [{ id, title, kind: KINDS.includes(x.kind) ? x.kind : "Other", level: LEVELS[String(x.level).toLowerCase()] || "Careful", looksLike,
-      where: str(x.where, 200), whatHappens: str(x.whatHappens), travelersSay: str(x.travelersSay), whatToDo, saferOption: str(x.saferOption, 200), sources }];
+    return [{ ...(fromMemory ? { fromMemory: true } : {}), id, title, kind: KINDS.includes(x.kind) ? x.kind : "Other", level: LEVELS[String(x.level).toLowerCase()] || "Careful", looksLike,
+      where: str(x.where, 200), whatHappens: str(x.whatHappens), travelersSay: fromMemory ? "" : str(x.travelersSay), // a model can't quote real reports from memory
+      whatToDo, saferOption: str(x.saferOption, 200), sources: fromMemory ? [] : sources }];
   });
 }
 
@@ -75,4 +92,10 @@ export function needsResearch(saved, now, online) {
 export function mergeScams(builtIn, researched) {
   const ids = new Set(builtIn.map((s) => s.id)), titles = new Set(builtIn.map((s) => s.title.toLowerCase()));
   return [...builtIn, ...researched.filter((s) => !ids.has(s.id) && !titles.has(s.title.toLowerCase()))];
+}
+
+// The line under a verdict saying where the warning comes from.
+export function origin(w, city) {
+  if (w.fromMemory) return `From what AI knows about ${city}. Not checked against reports.`;
+  return `From reports saved for ${city}${w.reports ? ` · ${w.reports} reports` : ""}`;
 }
