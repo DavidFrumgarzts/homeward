@@ -30,7 +30,7 @@ const AI_GAP_MILLIS = 20_000; // the summary is rewritten on new events only, an
 
 export function familyScreen(app, watch, { demo = false } = {}) {
   app.innerHTML = `<div class="screen">
-    <header class="fam-head"><span class="stamp">BEACON${demo ? " · DEMO" : ""}</span><div id="fam-title" class="fam-head"></div></header>
+    <header class="fam-head"><span class="small">Beacon${demo ? " demo" : ""}</span><div id="fam-title" class="fam-head"></div></header>
     ${demo ? '<div class="fam-demo"><div class="row-between"><span class="small" style="color:var(--ink)">A made-up incident in Lapa, Rio, replayed about 12 times faster. Nothing here is real.</span><button class="link small" id="fam-replay" style="flex:none">Play again</button></div><div class="bar"><i id="fam-bar"></i></div></div>' : ""}
     <div id="fam-note" class="card col"></div>
     <div class="stack" id="fam-grid" hidden style="gap:20px">
