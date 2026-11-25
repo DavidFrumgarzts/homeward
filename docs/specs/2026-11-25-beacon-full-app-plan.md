@@ -99,3 +99,33 @@ As in section 11 of the prompt: session service with microphone, tile, widget, S
 **Cut or moved.** The on-device model picking the situation (key words only for now) and the online "machine translated" custom sentence move to Phase 5 with the other new model instances. The session service has no microphone type or notification buttons yet (Phase 4).
 
 **Mockup changes made (section 9).** SOS sent: green tick and "knows" only for delivered messages, otherwise "Saved on your phone" / "Sent to Mom" with the same layout; the screen now continues below the mockup's cards with the checklist, the phrase, the location line and "I'm safe now, end SOS". Contacts: "Only when you tap it. Beacon shares where you are only in an SOS or a Safe Walk you start." Get ready: "places to get help". New screens with no mockup, built in the same style: SOS compose, and the name / "refer to me as" block on the contacts step.
+
+### Phase 2: backend and family view (Nov 24)
+
+**Built.**
+- Backend: `firebase/firestore.rules` and its tests; `firebase.json` and `.firebaserc` at the repo root (the Firebase CLI refuses to deploy a hosting folder outside the folder that holds `firebase.json`, so they could not live in `firebase/`). The data layout is `shared/schema/README.md`. A family link works through a "viewer" document: the page signs in anonymously, reads the share by its id, and claims a viewer document that the rules only accept with a live share for that trip.
+- Android: `features/sync/` (anonymous sign-in, trip, share, incident and update documents for every message sent to contacts, the family link in the alert, an honest "Live link" line on the SOS screen). Nothing is written before she presses Send.
+- Web: Firebase JS SDK 13.4.0, App Check and anonymous sign-in before the first AI call, "On this computer" / "Cloud" badges, the same message template as Android, the SOS written to Firestore with the family link, the family view at `/f/{shareId}`, `/demo`, a small router, the service-worker list with a test, `web/package.json` for tests only. Still no build step.
+- `shared/prompts/` with the three prompt texts; Android and web both test that they send exactly these.
+- Android's Ask Beacon now answers from saved facts by plain rules when no model can (the web already did).
+
+**Verified, and how.**
+- Tests: Android 101 unit tests (debug and release); rules 18; web 79 unit and 5 browser tests on the Auth, Firestore and Hosting emulators. I ran all three suites myself after the web agent finished.
+- Rules reviewed by hand against what Android and web write, then deployed. The database was created the same day with the default locked rules, so nothing was overwritten.
+- Emulator to real project: an SOS on the `Pixel_9` emulator wrote its trip, share, incident and updates with no refusals; the message carried the family link; the screen said "Live link: up to date."
+- **Hosted, live:** `https://homeward-6999c.web.app` is deployed (26 files: the page, styles, `sw.js`, `js/`, `fixtures/`). `/__/firebase/init.json` has an `appId`. The Android emulator's SOS opened at `/f/{its share id}` in a browser and showed the alert, the location update, the trail on the map and "Ended". `/demo` replays the made-up incident. `firebase-config.js`, the tests and `package.json` are not served.
+- Web against the real project on localhost (by the web agent): a web SOS wrote through the deployed rules and its family view switched to "Ended".
+
+**Not verified.**
+- **Any AI answer or badge on the web.** App Check rejects the localhost debug token until it is registered (403, then 401), so Ask Beacon, the SOS sentence and the family summary all took their no-AI fallbacks. The hosted site has no AI at all until a reCAPTCHA Enterprise site key is put in `web/appcheck-config.js`; it logs one harmless console error for that missing file.
+- Gemini Nano in Chrome: needs a real Chrome profile with the flags on. Chrome 158 on this Mac has `prompt-api-for-gemini-nano`, `prompt-api-for-gemini-nano-multimodal-input` and `gemma4-for-built-in-ai` in its binary; nobody has opened `chrome://flags` to turn them on.
+- The "Cloud" badge on Android, for the same App Check reason.
+
+**Decisions made along the way.**
+- A web SOS writes the alert and the end, not continuing location updates (a browser tab is not a tracker).
+- The family view always uses the traveler's name, never "she" or "he".
+- `web/serve.py` was added as the local server: plain `python3 -m http.server` dropped files when the Mac was busy and cannot serve `/f/...`.
+- The hosted page takes its Firebase config from Hosting's own `/__/firebase/init.json`, so no config file is uploaded.
+- App Check on Android still uses the debug provider in every build. A release APK that judges sideload cannot pass Play Integrity, so how judges' installs get past App Check has to be decided before Phase 7.
+
+**Left over.** One test trip named "Web test" and two anonymous users may remain in the real project from the web agent's first run (its cleanup output was cut off). The incidents I made from the emulator (traveler "Noa") are also there.
