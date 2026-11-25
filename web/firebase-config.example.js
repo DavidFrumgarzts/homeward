@@ -6,4 +6,5 @@ export const firebaseConfig = {
   authDomain: "",
   projectId: "",
   appId: "",
+  recaptchaSiteKey: "", // App Check (reCAPTCHA v3) site key: public, made for this site's domain
 };

@@ -15,7 +15,14 @@ function firebaseApp() {
     const { firebaseConfig } = await import("../firebase-config.js");
     if (!firebaseConfig?.apiKey) return null;
     const { initializeApp } = await import(`${FIREBASE}/firebase-app.js`);
-    return initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
+    // App Check proves requests come from this site, so nobody else can spend the project's Gemini allowance.
+    // The project enforces it for AI Logic: without a reCAPTCHA site key the AI answers nothing.
+    if (firebaseConfig.recaptchaSiteKey) {
+      const { initializeAppCheck, ReCaptchaV3Provider } = await import(`${FIREBASE}/firebase-app-check.js`);
+      initializeAppCheck(app, { provider: new ReCaptchaV3Provider(firebaseConfig.recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
+    }
+    return app;
   })().catch(() => null);
   return appPromise;
 }
