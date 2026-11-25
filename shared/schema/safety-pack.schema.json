@@ -161,6 +161,130 @@
     "placesFromOsm": {
       "type": "boolean",
       "default": false
+    },
+    "radiusMeters": {
+      "type": "number",
+      "default": 0,
+      "description": "How far from the centre the places were collected (0 = not recorded)"
+    },
+    "centerLat": {
+      "type": "number",
+      "default": 0
+    },
+    "centerLng": {
+      "type": "number",
+      "default": 0
+    },
+    "placeCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "homeBase": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "default": null,
+      "description": "Where she is staying, as she saved it",
+      "required": [
+        "name",
+        "lat",
+        "lng"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "default": ""
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "default": [],
+      "description": "Walking routes saved while online, from an OpenStreetMap router or checked by hand",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "toName",
+          "points",
+          "distanceMeters",
+          "durationSeconds",
+          "fetchedAtMillis",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "home",
+              "police",
+              "hospital"
+            ]
+          },
+          "fromName": {
+            "type": "string",
+            "default": ""
+          },
+          "toName": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "description": "[[lat, lng], ...]",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "steps": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": [
+                "text",
+                "meters"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "meters": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "distanceMeters": {
+            "type": "number"
+          },
+          "durationSeconds": {
+            "type": "number"
+          },
+          "fetchedAtMillis": {
+            "type": "number"
+          },
+          "source": {
+            "enum": [
+              "osrm-fossgis",
+              "hand-checked"
+            ]
+          }
+        }
+      }
     }
   }
 }
