@@ -38,3 +38,11 @@ export function driveText({ name, minutes }) {
 export function googleMapsLink(from, to) {
   return `https://www.google.com/maps/dir/?api=1&origin=${from[0]},${from[1]}&destination=${to[0]},${to[1]}&travelmode=driving`;
 }
+
+// "Jaipur Municipal Corporation" -> "Jaipur": OpenStreetMap often names the council, not the city.
+export function cleanCity(name) {
+  return String(name || "")
+    .replace(/\s+(Municipal Corporation|Municipal Council|Municipality|Metropolitan (Municipality|Area|City)|City Council|Nagar Nigam)$/i, "")
+    .replace(/^(Município de|Município do|Municipio de|Municipality of|City of)\s+/i, "")
+    .trim();
+}

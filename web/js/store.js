@@ -21,6 +21,9 @@ export const store = {
   // An SOS that could not be written to Firestore yet (first visit with no connection).
   get pending() { return read().pending || null; },
   set pending(value) { write({ ...read(), pending: value }); },
+  // The "Add my location to I'm OK" switch on the contacts screen. On unless she turns it off.
+  get shareLocation() { return read().shareLocation !== false; },
+  set shareLocation(value) { write({ ...read(), shareLocation: !!value }); },
   get setupDone() { return !!read().setupDone; },
   set setupDone(value) { write({ ...read(), setupDone: value }); },
   reset() { try { localStorage.removeItem(KEY); } catch { /* nothing to clear */ } },
@@ -36,4 +39,9 @@ export function cleanPhone(text) {
 export function joinNames(names) {
   if (names.length < 2) return names[0] || "";
   return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+}
+
+// "+972541233021" -> "+97254 ··· 3021": enough to recognize the number on a contact card.
+export function shortPhone(phone) {
+  return phone.length < 11 ? phone : `${phone.slice(0, -7)} ··· ${phone.slice(-4)}`;
 }

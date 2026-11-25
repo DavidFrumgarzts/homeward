@@ -48,3 +48,13 @@ describe("trip planning", () => {
     expect(url).toContain("destination=26.2,73");
   });
 });
+
+import { cleanCity } from "../js/trip.js";
+describe("city names", () => {
+  it("drops the council part of official names", () => {
+    expect(cleanCity("Jaipur Municipal Corporation")).toBe("Jaipur");
+    expect(cleanCity("Greater Mumbai Municipal Corporation")).toBe("Greater Mumbai");
+    expect(cleanCity("Município do Rio de Janeiro")).toBe("Rio de Janeiro");
+    expect(cleanCity("Lisbon")).toBe("Lisbon");
+  });
+});
