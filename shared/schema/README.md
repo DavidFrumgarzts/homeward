@@ -17,6 +17,7 @@ Everyone signs in anonymously. "Owner" is the traveler's phone or browser.
 | `trips/{tripId}` | owner | owner | `ownerUid`, `travelerName`, `city`, `country`, `packId` (or null), `platform`, `createdAtMillis` |
 | `trips/{tripId}/incidents/{incidentId}` | owner | owner, and a viewer holding a live share | see `incident.schema.json` |
 | `trips/{tripId}/incidents/{incidentId}/updates/{updateId}` | owner | owner, and a viewer holding a live share | see `location-update.schema.json` |
+| `trips/{tripId}/checkins/{id}` | the asker creates (viewer with a live share), the owner adds the locked answer | the asker; the owner | `viewerUid`, `askerName`, `askerKey` (public JWK), `askedAtMillis`, `answer` ({epk, iv, data} or null), `answeredAtMillis` |
 | `trips/{tripId}/viewers/{viewerUid}` | the viewer, once, and only with a share id that points at this trip and is not revoked | that viewer; the owner | `shareId`, `createdAtMillis` |
 | `shares/{shareId}` | owner (create, revoke, delete) | anyone signed in may `get` one by id; **nobody may list** | `tripId`, `ownerUid`, `contactLabel`, `createdAtMillis`, `revoked` |
 | `packs/{packId}` | owner | owner | `ownerUid`, `city`, `country`, `pack` (a safety pack), `createdAtMillis` |

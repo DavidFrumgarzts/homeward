@@ -86,9 +86,33 @@ npm test           # unit tests, then browser tests on the Firebase emulators
 ## Beacon live, any city (`live/`)
 
 The traveler app on a real street map, for wherever you are: https://homeward-6999c.web.app/live/ (locally http://localhost:4173/live/). The old `/ny/` address forwards here.
-- Your city comes from your GPS position (OpenStreetMap's Nominatim names it; the last one is saved for offline). Until then the city is unknown: nothing is assumed.
-- Emergency numbers by country (`js/emergency.js`; 112 where the country isn't listed, and the AI is told it wasn't checked).
-- Police stations, hospitals and 24-hour pharmacies near you, from OpenStreetMap, saved for offline. A hand-made list of Manhattan precincts is used only in Manhattan when no server answers.
-- Scan ("Is this legit?"): a photo is matched to one of the scams saved for your city (`js/cityscams.js`). New York has 32 researched scams built in (`live/js/nypack.js`), used only in New York. Every city, New York included, gets more once a day while online: Gemini with Google Search when the project's plan allows it, otherwise from what the model knows, labeled "Not checked against reports".
-- `live/js/city.js`: city, numbers, scams. `live/js/places.js`: nearby places. `live/js/scan.js`: the scan. `live/js/app.js`: the screens.
-- Location only works on https or localhost. The map tiles need a connection; everything else works offline once the page has been opened.
+
+### First launch: the onboarding (Figma "Onboarding v3")
+Eight screens, each showing Beacon solve a problem and then asking for one thing (`live/js/onboard.js`, order in `js/onboarding.js`):
+the night in Rajasthan → **booking** (Gmail, a sample, or paste) → **location** → no signal (the saved hospital drive) → **trusted people** (+ their check-in link) → late-night safe places → **camera** (scam check) → "Getting {city} ready" with real counts.
+
+### What it does
+- **City, numbers, places, scams:** your city from GPS (Nominatim), emergency numbers by country (`js/emergency.js`; India 112 / ambulance 108), police, hospitals and 24-hour pharmacies from OpenStreetMap saved for offline, scams reported in your city (`js/cityscams.js`, Gemini with Google Search).
+- **Booking check** (`live/js/bookingflow.js`, `js/booking.js`): the AI reads the booking, the hotel goes on the map, hospitals within 60 km, the drive to the nearest (FOSSGIS OSRM car router), and "No hospital within a 30-min drive" when that's true. Saved in the browser only.
+- **Beacon's own walking router** (`js/walkroute.js`): street data from OpenStreetMap, main and lit streets cost less, alleys and unlit streets more, areas to avoid 25×; shortest path on the phone, so it works with no signal. Say "Tonight I'm going to Bar Palladio, then back to my hotel" in Ask Beacon: it saves the streets, the areas and both routes (`live/js/trips.js`). "Way back to my hotel" then works offline; off the saved streets it gives direction and distance.
+- **Areas to avoid** (`js/areas.js`): Beacon's list for the demo cities (each with hours, why and a source; shown only once reviewed) plus areas you mark yourself on the map ("Avoid an area").
+- **At night** (9 p.m.–6 a.m.) nearby 24-hour places blink yellow on the map.
+- **Hospital drive** (`live/js/drive.js`): saved when places load; "I feel very sick" answers with the ambulance number and the saved drive, with "Drive there in Google Maps" when online (a link, not Google's Routes API, whose terms forbid our map and offline storage).
+- **Trusted people can ask how you are** (`live/js/answering.js`, `js/familyask.js`, `js/seal.js`): their link opens the family page; "Ask how Julia is" sends a question with their public key; her phone answers by itself (where she is, the last hour, her plans, whether she's in an area to avoid), locked with WebCrypto (ECDH P-256 + AES-GCM) so only the asker's browser can read it. She sees every answer and can pause. With no signal her phone keeps the question and answers when signal is back; the asker's page says "checking every minute". Firestore: `trips/{tripId}/checkins` (rules + tests in `firebase/`).
+- **Scan** ("Is this legit?"): a photo matched to the scams saved for your city.
+
+### Gmail (testing mode)
+Copy `google-config.example.js` to `google-config.js` (git-ignored) with the OAuth Web client ID. Google keeps Gmail reading to the test users listed in the Cloud console until the app is verified, so the button only works for them. Everyone can use **Try a sample booking** and **Paste a booking**, which run the same AI step.
+
+### Testing instructions (judges)
+1. Open https://homeward-6999c.web.app/live/ on a phone or in Chrome's phone view. The onboarding starts.
+2. Booking: tap **Try a sample booking** (a made-up desert camp near Jaisalmer): it shows the hotel, the hospitals and "No hospital within a 30-min drive". Gmail works with the judges' test account (address below; password in the Devpost form).
+3. Allow location, add a trusted person (your own number is fine), finish.
+4. In Ask Beacon: "Tonight I'm going to <a place near you>, then back to my hotel". Turn on airplane mode, then tap "Way back…".
+5. Open the check-in link on another device and tap "Ask how … is" while the app is open.
+
+Judges' Gmail test account: _to be added_.
+
+### Run and test locally
+- `?at=lat,lng` on localhost fakes a position (e.g. `?at=26.9157,75.8069` for Jaipur). `?reset` starts over.
+- Location only works on https or localhost. Map tiles need a connection; everything else works offline once saved.
