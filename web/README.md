@@ -83,11 +83,12 @@ npm test           # unit tests, then browser tests on the Firebase emulators
 - A family link made on localhost points at localhost (`?f=...`). Links for real contacts come from the hosted site.
 - Outside Lapa the map is a demo: tap it to walk. Your real position is only used inside Lapa, and in the SOS message.
 
-## Beacon New York (`ny/`)
+## Beacon live, any city (`live/`)
 
-A version you can use today, anywhere in New York: open `ny/` (for example http://localhost:4173/ny/).
-- A real street map (OpenStreetMap through Leaflet, tinted grey) with your live position.
-- Police stations, hospitals and 24-hour pharmacies near you, from OpenStreetMap, saved for offline. If no server answers, a starter list of Manhattan precincts and hospitals is used.
-- Ask Beacon (911, nearby places, reported scams), Scan (New York scams with fair prices), SOS and "I'm OK" through your messages app, and a 911 button.
-- `ny/js/nypack.js`: numbers and scams. `ny/js/places.js`: nearby places. `ny/js/app.js`: the screens. Shared with the Lapa demo: `js/scan.js`, `js/scams.js`, `js/store.js`, `js/ai.js`, `js/sos.js`, `styles.css`.
+The traveler app on a real street map, for wherever you are: https://homeward-6999c.web.app/live/ (locally http://localhost:4173/live/). The old `/ny/` address forwards here.
+- Your city comes from your GPS position (OpenStreetMap's Nominatim names it; the last one is saved for offline). Until then the city is unknown: nothing is assumed.
+- Emergency numbers by country (`js/emergency.js`; 112 where the country isn't listed, and the AI is told it wasn't checked).
+- Police stations, hospitals and 24-hour pharmacies near you, from OpenStreetMap, saved for offline. A hand-made list of Manhattan precincts is used only in Manhattan when no server answers.
+- Scan ("Is this legit?"): a photo is matched to one of the scams saved for your city (`js/cityscams.js`). New York has 32 researched scams built in (`live/js/nypack.js`), used only in New York. Every city, New York included, gets more once a day while online: Gemini with Google Search when the project's plan allows it, otherwise from what the model knows, labeled "Not checked against reports".
+- `live/js/city.js`: city, numbers, scams. `live/js/places.js`: nearby places. `live/js/scan.js`: the scan. `live/js/app.js`: the screens.
 - Location only works on https or localhost. The map tiles need a connection; everything else works offline once the page has been opened.
