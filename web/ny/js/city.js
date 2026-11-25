@@ -1,10 +1,10 @@
 // Which city you're in, and the scams saved for it.
 // New York comes with 32 researched scams built in. In any city, while you're online, Beacon asks Gemini
-// (with Google Search) once a day for more, and saves them in this browser so the scan works with no signal.
+// (with Google Search, or from what it knows when search isn't available) once a day for more, and saves them in this browser so the scan works with no signal.
 // City names come from OpenStreetMap's Nominatim (only when you've moved far, and saved after that).
 import { ny } from "./nypack.js";
-import { askAiWithSearch } from "../../js/ai.js";
-import { researchPrompt, readResearch, needsResearch, mergeScams } from "../../js/cityscams.js";
+import { askAi, askAiWithSearch } from "../../js/ai.js";
+import { researchPrompt, memoryPrompt, readResearch, needsResearch, mergeScams } from "../../js/cityscams.js";
 import { meters } from "./places.js";
 
 const NYC = { lat: 40.758, lng: -73.9855 };
@@ -19,6 +19,7 @@ export function scamsHere() {
   return city.name === "New York" ? mergeScams(ny.scams, researched) : researched;
 }
 export const savedAt = () => read(scamKey(city.name))?.savedAt || 0;
+export const fromMemory = () => (read(scamKey(city.name))?.scams || []).some((s) => s.fromMemory);
 
 // Works out the city at `at` ({lat, lng}); calls onChange when it or its scams change.
 export async function arriveAt(at, onChange) {
@@ -43,8 +44,9 @@ export async function research(onChange) {
   if (city.researching || !needsResearch(saved, Date.now(), navigator.onLine)) return;
   city.researching = true; onChange();
   write(key, { ...(saved || { savedAt: 0, scams: [] }), triedAt: Date.now() });
-  const text = await askAiWithSearch(researchPrompt(city.name, city.country, new Date().toISOString().slice(0, 10)));
-  const found = readResearch(text);
+  let found = readResearch(await askAiWithSearch(researchPrompt(city.name, city.country, new Date().toISOString().slice(0, 10))));
+  // No search (the free plan has no quota for it): ask what the model knows. Marked "not checked".
+  if (!found.length) found = readResearch((await askAi(memoryPrompt(city.name, city.country)))?.text, { fromMemory: true });
   if (found.length) write(key, { savedAt: Date.now(), scams: mergeScams(found, saved?.scams || []) });
   city.researching = false; onChange();
 }

@@ -1,7 +1,7 @@
 // Run: cd web && npx vitest run tests/cityscams.test.js
 import { test } from "vitest";
 import assert from "node:assert/strict";
-import { matchPrompt, readMatch, verdictFor, researchPrompt, readResearch, needsResearch, mergeScams } from "../js/cityscams.js";
+import { matchPrompt, readMatch, verdictFor, researchPrompt, memoryPrompt, readResearch, needsResearch, mergeScams, origin } from "../js/cityscams.js";
 
 const pedicab = { id: "pedicab", title: "Pedicab per-minute pricing", kind: "Taxi", level: "Avoid", looksLike: ["bike rickshaw", "price per minute sign"],
   where: "Central Park South", whatHappens: "You get billed $440 for 12 minutes.", whatToDo: "Take a yellow taxi.", saferOption: "", sources: ["https://example.org/a"] };
@@ -86,4 +86,32 @@ test("research runs when online and nothing is saved, then waits a day; a failed
 test("researched scams are added to the built-in ones, without repeating an id or a title", () => {
   const fresh = [{ ...pedicab, title: "Pedicabs again" }, { ...monk, id: "monks-2", title: "fake monks" }, { ...monk, id: "new-one", title: "Card games" }];
   assert.deepEqual(mergeScams([pedicab, monk], fresh).map((s) => s.id), ["pedicab", "fake-monk", "new-one"]);
+});
+test("the memory prompt asks for scams from what the model knows, with no searching and no links", () => {
+  const p = memoryPrompt("Lisbon", "Portugal");
+  assert.match(p, /Lisbon, Portugal/);
+  assert.match(p, /looksLike/);
+  assert.doesNotMatch(p, /sources/);
+  assert.doesNotMatch(p, /https/);
+});
+
+test("answers from AI memory are kept without sources, marked as not checked, and any links are dropped", () => {
+  const text = `[{"id":"tram","title":"Pickpockets on tram 28","kind":"Other","level":"Avoid","looksLike":["crowded yellow tram"],"whatToDo":"Keep your bag in front.","sources":["https://made-up.example/x"]},
+    {"id":"no-look","title":"No looks","kind":"Other","level":"Careful","whatToDo":"y"}]`;
+  const out = readResearch(text, { fromMemory: true });
+  assert.deepEqual(out.map((s) => s.id), ["tram"]);
+  assert.equal(out[0].fromMemory, true);
+  assert.deepEqual(out[0].sources, []);
+});
+
+test("answers from AI memory never carry a 'what travelers say' quote, since the model can't quote real reports", () => {
+  const out = readResearch(`[{"id":"t","title":"T","looksLike":["x"],"whatToDo":"y","travelersSay":"I didn't feel my wallet go"}]`, { fromMemory: true });
+  assert.equal(out[0].travelersSay, "");
+  assert.doesNotMatch(memoryPrompt("Lisbon", "Portugal"), /travelersSay/);
+});
+
+test("a scam from AI memory shows a 'not checked' line and no source links", () => {
+  assert.equal(origin({ fromMemory: true }, "Lisbon"), "From what AI knows about Lisbon. Not checked against reports.");
+  assert.equal(origin({ reports: 3 }, "New York"), "From reports saved for New York · 3 reports");
+  assert.equal(origin({}, "New York"), "From reports saved for New York");
 });
