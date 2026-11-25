@@ -34,7 +34,11 @@ The layers talk only through the contracts in `features/incident/contracts/`. Th
 | Read a safety photo (taxi plate) | **On device** | `features/safetyphoto/SafetyPhotoReader.kt` |
 | Explain a red zone | **On device** | `features/safetymap/ZoneWarningWriter.kt` |
 | The incident state machine, when to send updates, which checklist, which phrase, delivery wording | **No AI**, plain logic, offline | `features/incident/` |
-| Red zone ahead? Buzz now? Nearest open place? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `ApproachDetector.kt`, `SafePlacePicker.kt` |
+| Research travel scams and fair prices for the pack (Reddit threads, forums, advisories) | **Cloud** (Gemini + Google Search) | `features/scancheck/ScamResearcher.kt`, `ScamResearchPrompt.kt` |
+| Scan check: read a photo of a board, meter, ticket or price | **On device**, cloud only after she agrees | `features/scancheck/ScanReader.kt` |
+| Scan check: Looks fair / Be careful / Walk away | **No AI**, numbers compared with the pack | `features/scancheck/ScanJudge.kt` |
+| Red zone ahead? Buzz now? Nearest open safe place? Push or SMS? | **No AI**, plain logic, offline | `ZoneChecker.kt`, `ApproachDetector.kt`, `SafePlacePicker.kt`, `ChannelChooser.kt` |
+| Map of the city | Downloaded once on wifi, then offline | `features/offlinemap/` |
 | Real places to get help (police, hospitals, pharmacies, gas stations) | OpenStreetMap, downloaded on wifi | `features/osmplaces/` |
 
 AI models are created in one place: `ai/AiModels.kt`. Every AI-written text carries an "On device", "Cloud" or "No AI" badge taken from the SDK's `inferenceSource` (`design/components/InferenceBadge.kt`).
@@ -82,4 +86,10 @@ Everything sent to contacts is also mirrored to Firestore by `features/sync/Inci
 | Ask Beacon answer is wrong or vague | `features/ask/AskBeaconPrompt.kt` (+ `AskBeaconPromptTest`): the AI only knows the facts listed there |
 | Illustrated Lapa map: dot in the wrong place | `features/lapamap/LapaMapProjection.kt` (+ test). The demo pack's places and zones are placed with the same projection (`DemoRioPack.kt`) |
 | Demo pack differs between Android, iOS and web | `shared/fixtures/rio-lapa-pack.json` is exported from `DemoRioPack.kt`; `DemoPackFixtureTest` fails on drift |
+| Illustrated Lapa map: landmark misplaced | `LapaIllustratedMap.kt` |
 | Colors / spacing / fonts | `design/Colors.kt`, `design/Type.kt`, `design/components/` |
+| Scan verdict wrong (rate, price, "Nothing saved") | `features/scancheck/ScanJudge.kt` (+ `ScanJudgeTest`), the pack's `scams` |
+| Scan reads nothing from a photo | `features/scancheck/ScanReader.kt` prompt, `ScanReadingParser.kt` (+ test) |
+| Yellow ring missing or in the wrong place | `features/scancheck/RecommendedPlace.kt`, `lapamap/LapaBadges.kt`, `features/home/HomeScreen.kt` |
+| Opening story (map route, text) | `features/onboarding/StoryStep.kt`, `StoryMap.kt` |
+| Fonts (Sora / Inter not showing) | `design/Type.kt`: `HomewardFonts` still uses the system font until the .ttf files are added to `res/font` |

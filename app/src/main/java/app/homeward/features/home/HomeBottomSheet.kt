@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.Place
@@ -29,7 +30,7 @@ import app.homeward.design.components.WhiteCard
 import app.homeward.features.safeplace.SafePlacePicker
 
 // The sheet at the bottom of Home (Figma "07 Home"), top to bottom:
-// Ask Beacon box, two ready-made questions, the nearest open place to get help, I'm OK + Police, and Hold for SOS.
+// Ask Beacon box, two ready-made questions, the nearest open safe place, I'm OK + Scan + Police, and Hold for SOS.
 @Composable
 fun HomeBottomSheet(
     police: String,
@@ -37,6 +38,7 @@ fun HomeBottomSheet(
     safePlace: SafePlacePicker.Pick?,
     sosActive: Boolean,            // an SOS is already running: the button opens it instead of starting one
     onAsk: (String) -> Unit,       // "" opens Ask Beacon empty; a ready-made question asks it right away
+    onScan: () -> Unit,            // the scan check: is this board, meter or price legit?
     onSafePlace: () -> Unit,
     onImOk: () -> Unit,
     onPolice: () -> Unit,
@@ -89,6 +91,7 @@ fun HomeBottomSheet(
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             QuickAction("I'm OK", Icons.Outlined.Check, HomewardColors.Green, Modifier.weight(1f), onImOk)
+            QuickAction("Scan", Icons.Outlined.CameraAlt, HomewardColors.Primary, Modifier.weight(1f), onScan)
             QuickAction("Police $police", Icons.Outlined.Phone, HomewardColors.Red, Modifier.weight(1f), onPolice)
         }
 

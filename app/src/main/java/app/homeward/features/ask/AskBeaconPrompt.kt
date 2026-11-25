@@ -6,6 +6,7 @@ import app.homeward.features.safeplace.SafePlacePicker
 import app.homeward.features.safetymap.ZoneChecker
 import app.homeward.features.safetypack.SafetyPack
 import app.homeward.features.safetypack.ZoneLevel
+import app.homeward.features.scancheck.RecommendedPlace
 
 // PURE LOGIC: builds the prompt for Ask Beacon. Tested in AskBeaconPromptTest.
 // The on-device model is small and can't search, so we hand it every fact it may use:
@@ -28,9 +29,12 @@ object AskBeaconPrompt {
             .take(5)
             .joinToString("\n") { (p, m) -> "- ${p.name} (${p.kind})${m?.let { d -> ", $d m away" }.orEmpty()}, ${if (p.open24h) "open 24h" else "open now"}" }
         val phrases = pack.localPhrases.take(6).joinToString("\n") { "- ${it.english} = ${it.local}" }
+        // The place to recommend is picked in code (RecommendedPlace) so the map can make the same one blink.
+        val recommend = RecommendedPlace.pick(question, pack, here, hour)?.let { "\nRecommend ${it.name} first." }.orEmpty()
         val chat = earlier.takeLast(2).joinToString("\n") { (q, a) -> "Traveler: $q\nBeacon: $a" }.ifBlank { "(nothing yet)" }
 
-        return TEMPLATE
+        // The shared template has no slot for the recommendation, so it goes right after the rules line.
+        return TEMPLATE.replace("no headings.", "no headings.$recommend")
             .replace("{city}", pack.city).replace("{country}", pack.country).replace("{clock}", NearbyFeed.clock(hour))
             .replace("{police}", pack.police).replace("{ambulance}", pack.ambulance)
             .replace("{embassyName}", pack.embassyName).replace("{embassyPhone}", pack.embassyPhone)

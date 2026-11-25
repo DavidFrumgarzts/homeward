@@ -4,9 +4,10 @@ package app.homeward.navigation
 // Home IS the map (map-first, like Find My / Waze), so there is no separate map screen.
 enum class Screen(val route: String) {
     Onboarding("onboarding"),
-    Home("home"),
+    Home("home"), // home?place=… makes a recommended place blink yellow
     SosCompose("sos"),
     SosSent("sos_sent"),
     Contacts("contacts"),
     Ask("ask"), // Ask Beacon; the question travels as ask?q=…
+    Scan("scan"), // the scan check: is this exchange board, meter or price legit?
 }

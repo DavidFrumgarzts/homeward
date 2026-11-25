@@ -5,3 +5,5 @@ One UI piece per file.
 - `WhiteCard.kt`: the flat white rounded card. `IconCircle.kt`: an icon on a soft colored tile.
 - `ProgressDots.kt`: the segmented bar at the top of onboarding.
 - `InferenceBadge.kt`: "On device" / "Cloud" / "No AI" tag on AI-written text.
+- `RoundAction.kt`, `StatusDot.kt`: small round action and status pieces.
+- `BlinkingRing.kt`: the yellow "go here" ring for a recommended place; its timing `Blink` is tested in `BlinkTest`.

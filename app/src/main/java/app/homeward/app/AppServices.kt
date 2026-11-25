@@ -32,6 +32,9 @@ import app.homeward.testmode.TestMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.io.File
 
 // One place that creates the app's shared objects. Screens ask AppServices for what they need,
@@ -45,6 +48,7 @@ object AppServices {
 
     val contacts by lazy { TrustedContactsStore(appContext) }
     val profile by lazy { UserProfileStore(appContext) }
+    val sosLog by lazy { app.homeward.features.sos.SosLog(appContext) }
     val location by lazy { LocationReader(appContext) }
     val locationUpdates by lazy { LocationUpdates(appContext) }
     val haptics by lazy { Haptics(appContext) }
@@ -76,7 +80,12 @@ object AppServices {
     val incidentSync by lazy { IncidentSync(FirestoreCloud(), { trip.tripId }, { trip.shareId }, { trip.createdAtMillis }) }
 
     // The incident engine: the state machine behind every SOS.
-    val incident by lazy { IncidentEngine(appScope, AndroidIncidentDeps(appContext)) }
+    val incident by lazy {
+        IncidentEngine(appScope, AndroidIncidentDeps(appContext)).also { engine ->
+            // Remember when an alert went out, so background work (scam research) stays quiet for a while.
+            appScope.launch { engine.view.map { it.alertSent }.distinctUntilChanged().collect { sent -> if (sent) sosLog.markSent() } }
+        }
+    }
 
     val outboxSender by lazy { OutboxSender(photoOutbox, { contacts.all() }, { phone, text -> sms.handOff(phone, text) }) }
 }

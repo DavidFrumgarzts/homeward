@@ -17,3 +17,4 @@ One folder per feature. Each file says at the top what it does and whether it us
 | `contacts/` | Edit who gets the SOS (type or pick from phone contacts) | UI, saved on phone |
 | `checkin/` | "I'm OK" text to family, location optional | SMS |
 | `policecall/` | One-tap call to local police | phone dialer |
+| `scancheck/` | Is this legit? Photo of a board, meter or price -> Looks fair / Be careful / Walk away; the recommended place | cloud research online, on-device reading, offline logic |
