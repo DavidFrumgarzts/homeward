@@ -4,7 +4,7 @@
 
 const KEY = "beacon.live.places";
 // Public Overpass servers are often busy; try them in turn.
-const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
+export const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.private.coffee/api/interpreter"];
 
 // Used only in Manhattan, when no server answers and nothing is saved yet: police precincts and big emergency hospitals.
 // Hand-made from public addresses; positions are approximate (within about a block).
