@@ -27,3 +27,4 @@ web/firebase-config.json
 
 # Firebase emulator logs
 *-debug.log
+.firebase/
