@@ -22,15 +22,20 @@ object AiModels {
     // Cloud model name. Check the Firebase console's model list if this name is rejected.
     const val CLOUD_MODEL = "gemini-3.5-flash-lite"
 
+    // The cloud goes through the Agent Platform (Vertex AI) Gemini API, billed to the Google Cloud
+    // account. The Gemini Developer API (googleAI) stopped answering on the Blaze plan (429: it wants
+    // prepaid AI Studio credit). "global" is the only location that has this model.
+    private val backend = GenerativeBackend.agentPlatform("global")
+
     val hybrid: GenerativeModel by lazy {
-        Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
+        Firebase.ai(backend = backend).generativeModel(
             modelName = CLOUD_MODEL,
             onDeviceConfig = OnDeviceConfig(mode = InferenceMode.PREFER_ON_DEVICE, maxOutputTokens = 300),
         )
     }
 
     val cloudResearch: GenerativeModel by lazy {
-        Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
+        Firebase.ai(backend = backend).generativeModel(
             modelName = CLOUD_MODEL,
             tools = listOf(Tool.googleSearch()),
         )

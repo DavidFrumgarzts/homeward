@@ -17,7 +17,10 @@ enum AiModels {
     // What `rawResponse.modelVersion` says when Apple's on-device model answered.
     static let onDeviceModelVersion = "apple-foundation-models-system-language-model"
 
-    private static var ai: FirebaseAI { FirebaseAI.firebaseAI(backend: .googleAI()) }
+    // The cloud goes through the Agent Platform (Vertex AI) Gemini API, billed to the Google Cloud
+    // account. The Gemini Developer API (googleAI) stopped answering on the Blaze plan (429: it wants
+    // prepaid AI Studio credit). "global" is the only location that has this model.
+    private static var ai: FirebaseAI { FirebaseAI.firebaseAI(backend: .agentPlatform(location: "global")) }
 
     // Asks the hybrid model one question. A new session per request: each question is single-turn,
     // and a session would otherwise keep (and resend) the chat history.
