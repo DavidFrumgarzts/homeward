@@ -26,8 +26,8 @@ fun SosStatusHeader(summary: DeliveryWording.Summary, ended: Boolean, testMode: 
     val good = summary.anyDelivered || ended
     val tint = if (good) HomewardColors.Green else HomewardColors.Primary
     val tile = if (good) HomewardColors.GreenTint else HomewardColors.PrimaryTint
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(Modifier.size(132.dp), contentAlignment = Alignment.Center) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.padding(bottom = 10.dp).size(132.dp), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {
                 drawCircle(tint.copy(alpha = 0.18f), style = Stroke(3.dp.toPx()))
                 drawCircle(tile, radius = 46.dp.toPx())
@@ -35,9 +35,10 @@ fun SosStatusHeader(summary: DeliveryWording.Summary, ended: Boolean, testMode: 
             Icon(if (good) Icons.Outlined.Check else Icons.Outlined.Schedule, null, tint = tint, modifier = Modifier.size(52.dp))
         }
         Text(if (ended) "SOS ended" else summary.headline, style = HomewardType.Title, textAlign = TextAlign.Center)
-        if (ended) Text("Your contacts are being told it is over. Location sharing has stopped.", style = HomewardType.Body, color = HomewardColors.TextMuted, textAlign = TextAlign.Center)
+        // Where the message is, said quietly under the headline (Figma 9 has the headline alone when all is delivered).
+        if (ended) Text("Your contacts are being told it is over. Location sharing has stopped.", style = HomewardType.Small, textAlign = TextAlign.Center)
         else summary.lines.forEach { line ->
-            Text(line, style = HomewardType.Body, color = if (line.startsWith("Couldn't")) HomewardColors.Red else HomewardColors.TextMuted, textAlign = TextAlign.Center)
+            Text(line, style = HomewardType.Small, color = if (line.startsWith("Couldn't")) HomewardColors.Red else HomewardColors.TextMuted, textAlign = TextAlign.Center)
         }
         if (testMode) TestModeTag()
     }

@@ -6,8 +6,8 @@ struct WelcomeStep: View {
 
     var body: some View {
         StepLayout(step: .welcome, title: "Go anywhere.\nBeacon has your back, even with no signal.", button: "Set up in 1 minute",
-                   header: AnyView(BeaconRings().frame(height: 170).clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))), onButton: onNext) {
-            VStack(spacing: 10) {
+                   header: AnyView(BeaconRings().frame(height: 190).clipShape(RoundedRectangle(cornerRadius: BeaconRadius.picture, style: .continuous))), onButton: onNext) {
+            VStack(spacing: BeaconSpacing.cards) {
                 FeatureRow(icon: "exclamationmark.triangle", tint: BeaconColors.red, tile: BeaconColors.redTint, title: "Warns you before a red zone", detail: "The phone buzzes before you turn into an unsafe street.")
                 FeatureRow(icon: "text.bubble", title: "Ask Beacon, offline", detail: "The police number, a place to get help, what to do. No data needed.")
                 FeatureRow(icon: "dot.circle", tint: BeaconColors.amber, tile: BeaconColors.amberTint, title: "SOS in a few words", detail: "Beacon writes the text for your family. You press send.")

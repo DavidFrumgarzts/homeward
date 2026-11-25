@@ -6,7 +6,7 @@ struct PrimaryButton: View {
     var label: String
     var color: Color = BeaconColors.primary
     var enabled: Bool = true
-    var height: CGFloat = 56
+    var height: CGFloat = BeaconSize.button
     var action: () -> Void
 
     var body: some View {
@@ -14,7 +14,7 @@ struct PrimaryButton: View {
             Text(label).style(.label, color: .white)
                 .frame(maxWidth: .infinity).frame(height: height)
                 .background(enabled ? color : BeaconColors.border)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

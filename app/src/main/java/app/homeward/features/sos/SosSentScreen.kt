@@ -4,6 +4,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -15,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
+import app.homeward.design.components.IconCircle
 import app.homeward.design.components.PrimaryButton
 import app.homeward.design.components.WhiteCard
 import app.homeward.features.incident.contracts.IncidentPhase
@@ -24,9 +28,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// After Send (Figma "09 SOS sent"), and for as long as the SOS is active: who really has the message,
-// the message itself, what to do now, a phrase to show someone nearby, what is happening with her
-// location, and a quiet way to end it. It only draws IncidentViewState and calls the engine's intents.
+// After Send (Figma "09 SOS sent"), and for as long as the SOS is active. Top to bottom as in the Figma:
+// the ring and who really has the message, the message itself, "Call police", the nearest place to walk to.
+// Below that, quieter: what to do now, a phrase to show someone nearby, location status, and a way to end it.
+// It only draws IncidentViewState and calls the engine's intents.
 @Composable
 fun SosSentScreen(onLeave: () -> Unit) {
     val engine = AppServices.incident
@@ -52,18 +57,18 @@ fun SosSentScreen(onLeave: () -> Unit) {
         if (ended) {
             PrimaryButton("Back to the map", onClick = leave)
         } else {
+            // Figma 9 order: call, walk to the nearest open place; then the steps, a phrase, and location status.
             ForMeCard(view, onCall = engine::callEmergency)
             LocalPhrasesCard(listOfNotNull(view.showNearby))
-            Text(
+            LocationStatusCard(
                 SessionWording.locationLine(
                     hasFix = view.lastFix != null,
                     fixAgeMinutes = view.lastFix?.let { (System.currentTimeMillis() - it.takenAtMillis) / 60_000 },
                     lastUpdateTime = view.lastUpdateSentAtMillis?.let(::clock),
                     pointsWaiting = view.pointsWaiting,
                 ),
-                style = HomewardType.Small, modifier = Modifier.fillMaxWidth(),
+                SessionWording.linkLine(hasLink = view.contactMessage.contains(FamilyLink.HOST), sync.pending, sync.refused),
             )
-            SessionWording.linkLine(hasLink = view.contactMessage.contains(FamilyLink.HOST), sync.pending, sync.refused)?.let { Text(it, style = HomewardType.Small, modifier = Modifier.fillMaxWidth()) }
             TextButton({ confirmEnd = true }, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("I'm safe now, end SOS", style = HomewardType.Label, color = HomewardColors.TextMuted) }
         }
 
@@ -76,9 +81,25 @@ fun SosSentScreen(onLeave: () -> Unit) {
 
     if (confirmEnd) AlertDialog(
         onDismissRequest = { confirmEnd = false },
-        title = { Text("End the SOS?") },
-        text = { Text("Your contacts are told you are safe, and Beacon stops sharing your location.") },
-        confirmButton = { TextButton({ confirmEnd = false; engine.imOk() }) { Text("Yes, I'm safe") } },
-        dismissButton = { TextButton({ confirmEnd = false }) { Text("Keep it on") } },
+        containerColor = HomewardColors.Surface, shape = RoundedCornerShape(22.dp),
+        title = { Text("End the SOS?", style = HomewardType.Heading) },
+        text = { Text("Your contacts are told you are safe, and Beacon stops sharing your location.", style = HomewardType.Body, color = HomewardColors.TextMuted) },
+        confirmButton = { TextButton({ confirmEnd = false; engine.imOk() }) { Text("Yes, I'm safe", style = HomewardType.Label, color = HomewardColors.Primary) } },
+        dismissButton = { TextButton({ confirmEnd = false }) { Text("Keep it on", style = HomewardType.Label, color = HomewardColors.TextMuted) } },
     )
+}
+
+// What is happening with her location and the live link: a flat white card with a soft blue tile,
+// small muted text, so it informs without competing with the call button.
+@Composable
+private fun LocationStatusCard(location: String, link: String?) {
+    WhiteCard(Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+            IconCircle(Icons.Outlined.MyLocation, size = 36)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(location, style = HomewardType.Small)
+                link?.let { Text(it, style = HomewardType.Small) }
+            }
+        }
+    }
 }

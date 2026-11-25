@@ -32,15 +32,12 @@ struct ContactsScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 4) {
-                    Button { dismiss() } label: { Image(systemName: "arrow.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(BeaconColors.text).frame(width: 44, height: 44, alignment: .leading) }
-                        .accessibilityLabel("Back")
-                    Text("Who gets your SOS").style(.title)
-                }
+                BackButton { dismiss() }
+                Text("Who gets your SOS").style(.title)
                 Text("Only these people see your exact location, and only in an SOS, or in an \"I'm OK\" if you turned that on.").style(.small)
-                ContactsEditor()
+                ContactsEditor(showsRemove: true)
             }
-            .padding(20)
+            .padding(.horizontal, BeaconSpacing.screen).padding(.vertical, 12)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(BeaconColors.background.ignoresSafeArea())

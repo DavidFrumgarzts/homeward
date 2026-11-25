@@ -15,8 +15,8 @@ struct SosActiveScreen: View {
         let summary = SosPathWording.summarize(names: store.contacts.map(\.name), messages: incident.messages, link: sync.link)
         ScrollView {
             VStack(spacing: 18) {
-                StatusMark(sent: summary.sent, ended: ended).padding(.top, 8)
-                Text(ended ? "SOS ended" : summary.headline).style(.title).multilineTextAlignment(.center)
+                StatusMark(sent: summary.sent, ended: ended).padding(.top, 16)
+                Text(ended ? "SOS ended" : summary.headline).style(.display).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                 VStack(spacing: 4) {
                     ForEach(ended ? ["Location sharing has stopped."] : summary.lines, id: \.self) {
                         Text($0).style(.small).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
@@ -37,8 +37,9 @@ struct SosActiveScreen: View {
                     }
                     PrimaryButton(label: "Back to the map") { incident.reset() }
                 } else {
+                    // Figma "09": the text her people got, on a white card, right under the headline.
                     if !view.contactMessage.isEmpty {
-                        WhiteCard { Text(view.contactMessage).style(.small, color: BeaconColors.text).textSelection(.enabled) }
+                        WhiteCard(padding: 18) { Text(view.contactMessage).font(BeaconFonts.inter(15, weight: 400)).foregroundStyle(BeaconColors.text).lineSpacing(3).textSelection(.enabled) }
                     }
                     ForMeCard(view: view) { incident.callEmergency() }
                     if let phrase = view.showNearby {
@@ -53,8 +54,9 @@ struct SosActiveScreen: View {
                         .font(TextLook.label.font).foregroundStyle(BeaconColors.textMuted).frame(minHeight: 48)
                 }
             }
-            .padding(.horizontal, 20).padding(.vertical, 16)
+            .padding(.horizontal, BeaconSpacing.sheet).padding(.vertical, 16)
         }
+        .scrollIndicators(.hidden)
         .confirmationDialog("End the SOS?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("Yes, I'm safe now") { incident.imOk() }
             Button("Keep the SOS on", role: .cancel) {}
@@ -73,18 +75,20 @@ struct SosActiveScreen: View {
     }
 }
 
-// The round mark at the top: a blue tick once she pressed send in Messages (never green: an iPhone
-// cannot confirm delivery), a clock while nothing has gone out, grey once the SOS has ended.
+// The round mark at the top (Figma "09"): a soft ring around a tinted circle. A green tick once she
+// pressed send in Messages, an amber clock while nothing has gone out, grey once the SOS has ended.
+// The headline under it says exactly what happened (an iPhone can't confirm delivery, so it says "Sent").
 private struct StatusMark: View {
     var sent: Bool
     var ended: Bool
 
     var body: some View {
-        let tint = ended ? BeaconColors.textMuted : sent ? BeaconColors.primary : BeaconColors.amber
+        let tint = ended ? BeaconColors.textMuted : sent ? BeaconColors.green : BeaconColors.amber
+        let fill = ended ? BeaconColors.surfaceAlt : sent ? BeaconColors.greenTint : BeaconColors.amberTint
         ZStack {
             Circle().stroke(tint.opacity(0.18), lineWidth: 3).frame(width: 132, height: 132)
-            Circle().fill(tint.opacity(0.12)).frame(width: 92, height: 92)
-            Image(systemName: ended ? "checkmark" : sent ? "paperplane.fill" : "clock").font(.system(size: 40, weight: .semibold)).foregroundStyle(tint)
+            Circle().fill(fill).frame(width: 92, height: 92)
+            Image(systemName: ended || sent ? "checkmark" : "clock").font(.system(size: 40, weight: .bold)).foregroundStyle(tint)
         }
         .accessibilityHidden(true)
     }

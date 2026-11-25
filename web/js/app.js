@@ -34,6 +34,7 @@ const icon = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="#22A06B" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>',
 };
+const CHECK = '<svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#22A06B" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#E4F4EC"/><path d="M48 67l12 12 24-26" stroke="#22A06B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const progress = (step) => `<div class="progress">${[1, 2, 3].map((i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
 
 // ---------- Story: one night in Lapa, without and then with Beacon ----------
@@ -272,7 +273,7 @@ function sent(message, note, ids) {
     off: "",
   };
   app.innerHTML = `<div class="screen center" style="text-align:center">
-    <svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#22A06B" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#E4F4EC"/><path d="M48 67l12 12 24-26" stroke="#22A06B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    ${CHECK}
     <h1>Press send in your messages app</h1>
     <p class="small" id="sync" aria-live="polite">${ids ? SYNC.saving : ""}</p>
     <div class="card" style="width:100%;text-align:left"><p class="small" style="color:var(--ink);white-space:pre-wrap">${esc(message)}</p></div>
@@ -281,7 +282,7 @@ function sent(message, note, ids) {
     <div class="card" style="width:100%;text-align:left;flex-direction:column;align-items:flex-start;gap:8px"><div class="label">Show to people nearby</div>${pack.phrases.slice(0, 2).map(([en, pt]) => `<div><div class="phrase">${pt}</div><p class="small">${en}</p></div>`).join("")}</div>
     <div class="grow"></div>
     <div id="end" class="stack center" style="width:100%"></div>
-    <button class="link small" id="back" style="color:var(--muted)">Back to the map</button></div>`;
+    <button class="link" id="back">Back to the map</button></div>`;
   $("#back").onclick = home;
   const say = (status) => { if ($("#sync")) $("#sync").textContent = SYNC[status] ?? ""; };
   if (ids) {
@@ -290,7 +291,7 @@ function sent(message, note, ids) {
   // Ending it: tell the family page, then open messages with a short "it's over" text for her to send.
   // She confirms on the page itself (a browser pop-up can be blocked without her seeing it).
   const offerEnd = () => {
-    $("#end").innerHTML = `<button class="link" id="safe">I'm safe now, end SOS</button>`;
+    $("#end").innerHTML = `<button class="btn quiet" id="safe">${icon.check}I'm safe now, end SOS</button>`;
     $("#safe").onclick = () => {
       $("#end").innerHTML = `<p class="label">End the SOS and tell your contacts it is over?</p>
         <div class="two" style="width:100%"><button id="yes">Yes, end it</button><button id="no">Not yet</button></div>`;
@@ -302,9 +303,9 @@ function sent(message, note, ids) {
   const end = () => {
     if (ids) endIncident(ids, here.real);
     const over = endedText(store.name);
-    app.innerHTML = `<div class="screen center" style="text-align:center"><div class="grow"></div><h1>SOS ended</h1>
+    app.innerHTML = `<div class="screen center" style="text-align:center">${CHECK}<h1>SOS ended</h1>
       <p class="small">Press send in your messages app so they know.</p>
-      <div class="card" style="width:100%;text-align:left"><p class="small" style="color:var(--ink)">${esc(over)}</p></div>
+      <div class="card" style="width:100%;text-align:left"><p class="small" style="color:var(--ink);white-space:pre-wrap">${esc(over)}</p></div>
       <a class="btn" style="display:grid;place-items:center;text-decoration:none" href="${esc(smsLink(people.map((c) => c.phone), over))}">Open messages to send</a>
       <div class="grow"></div><button class="link" id="back">Back to the map</button></div>`;
     $("#back").onclick = home;

@@ -22,7 +22,7 @@ fun LocalPhrasesCard(phrases: List<Phrase>) {
         Text("Show someone nearby", style = HomewardType.Label)
         phrases.take(3).forEach {
             Spacer(Modifier.height(10.dp))
-            Text(it.local, style = HomewardType.Display.copy(fontSize = 28.sp, lineHeight = 34.sp))
+            Text(it.local, style = HomewardType.Heading.copy(fontSize = 22.sp, lineHeight = 28.sp))
             Text(it.english, style = HomewardType.Small)
         }
     }

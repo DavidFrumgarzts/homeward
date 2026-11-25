@@ -14,14 +14,15 @@ struct HoldButton: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 20, style: .continuous).fill(color)
+            RoundedRectangle(cornerRadius: BeaconRadius.holdButton, style: .continuous).fill(color)
             GeometryReader { geo in
                 Rectangle().fill(Color.black.opacity(0.22)).frame(width: geo.size.width * progress)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            Text(label).style(.heading, color: .white)
+            .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.holdButton, style: .continuous))
+            Text(holding ? "Keep holding…" : label).style(.heading, color: .white)
+                .lineLimit(1).minimumScaleFactor(0.75).padding(.horizontal, 16)
         }
-        .frame(height: 64)
+        .frame(height: BeaconSize.holdButton)
         .contentShape(Rectangle())
         .onLongPressGesture(minimumDuration: seconds, maximumDistance: 60, perform: {
             holding = false

@@ -15,27 +15,24 @@ struct StepLayout<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
-                if let onBack {
-                    Button(action: onBack) { Image(systemName: "arrow.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(BeaconColors.text).frame(width: 44, height: 44, alignment: .leading) }
-                        .accessibilityLabel("Back")
-                }
-                ProgressBars(current: OnboardingSteps.progressIndex(step), total: OnboardingSteps.setupSteps)
+                if let onBack { BackButton(action: onBack) }
+                ProgressDots(current: OnboardingSteps.progressIndex(step), total: OnboardingSteps.setupSteps)
             }
             .frame(minHeight: 44)
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: BeaconSpacing.section) {
                     if let header { header }
                     Text(title).style(.title).fixedSize(horizontal: false, vertical: true)
                     content()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 20).padding(.bottom, 16)
+                .padding(.top, 24).padding(.bottom, 16)
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
             PrimaryButton(label: button, enabled: buttonEnabled, action: onButton)
         }
-        .padding(.horizontal, 24).padding(.top, 8).padding(.bottom, 16)
+        .padding(.horizontal, BeaconSpacing.screen).padding(.top, 12).padding(.bottom, 16)
         .background(BeaconColors.background.ignoresSafeArea())
     }
 }
@@ -53,14 +50,15 @@ struct FeatureRow: View {
     var body: some View {
         WhiteCard(padding: 14) {
             HStack(spacing: 14) {
-                IconTile(systemName: icon, tint: tint, background: tile)
-                VStack(alignment: .leading, spacing: 2) {
+                IconCircle(systemName: icon, tint: tint, background: tile)
+                VStack(alignment: .leading, spacing: 3) {
                     Text(title).style(.label)
                     Text(detail).style(.small).fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 0)
-                if let trailing { Text(trailing).style(.mapLabel, color: trailingColor) }
+                Spacer(minLength: 8)
+                if let trailing { Text(trailing).style(.status, color: trailingColor) }
             }
+            .frame(minHeight: 58)
         }
         .accessibilityElement(children: .combine)
     }

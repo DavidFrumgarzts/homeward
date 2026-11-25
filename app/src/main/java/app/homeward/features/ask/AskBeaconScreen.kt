@@ -91,10 +91,13 @@ fun AskBeaconScreen(firstQuestion: String, onBack: () -> Unit, onShowPlace: (Str
                 val newest = i == lines.lastIndex && !line.fromYou
                 Bubble(line.fromYou, if (newest) line.text.take(shownChars) else line.text)
                 val doneTyping = !newest || shownChars >= line.text.length
-                if (!line.fromYou && doneTyping) InferenceBadge(line.badge, Modifier.padding(top = 6.dp))
-                if (line.place != null && doneTyping) {
-                    Text("Show ${line.place} on the map", style = HomewardType.Label, color = HomewardColors.Primary,
-                        modifier = Modifier.padding(top = 6.dp, start = 4.dp).clickable { onShowPlace(line.place) }.padding(vertical = 6.dp))
+                // Under an answer, on one quiet line: where it was written, and "Show … on the map" when it names a place.
+                if (!line.fromYou && doneTyping) Row(Modifier.padding(top = 6.dp, start = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    InferenceBadge(line.badge)
+                    if (line.place != null) {
+                        Text("Show ${line.place} on the map", style = HomewardType.Label, color = HomewardColors.Primary,
+                            modifier = Modifier.clickable { onShowPlace(line.place) }.padding(vertical = 6.dp))
+                    }
                 }
             }
             if (thinking) item { Bubble(fromYou = false, text = "…") }

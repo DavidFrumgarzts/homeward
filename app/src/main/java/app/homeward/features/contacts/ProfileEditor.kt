@@ -1,13 +1,17 @@
 package app.homeward.features.contacts
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
 import app.homeward.design.HomewardColors
@@ -26,8 +30,15 @@ fun ProfileEditor() {
         Text("In messages, refer to me as", style = HomewardType.Small)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(Pronoun.UseName to "my name", Pronoun.She to "she", Pronoun.He to "he", Pronoun.They to "they").forEach { (pronoun, label) ->
-                FilterChip(profile.pronoun == pronoun, { save(profile.copy(pronoun = pronoun)) }, label = { Text(label) }, shape = RoundedCornerShape(50), modifier = Modifier.heightIn(min = 48.dp),
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = HomewardColors.PrimaryTint, selectedLabelColor = HomewardColors.Primary))
+                // Outlined pill like the Home chips; the chosen one turns soft blue.
+                val on = profile.pronoun == pronoun
+                val shape = RoundedCornerShape(50)
+                Box(
+                    Modifier.heightIn(min = 48.dp).clip(shape).background(if (on) HomewardColors.PrimaryTint else HomewardColors.Background)
+                        .border(1.dp, if (on) HomewardColors.Primary else HomewardColors.Border, shape)
+                        .selectable(selected = on, role = Role.RadioButton) { save(profile.copy(pronoun = pronoun)) }.padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) { Text(label, style = HomewardType.Label, color = if (on) HomewardColors.Primary else HomewardColors.Text) }
             }
         }
     }

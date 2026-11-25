@@ -6,6 +6,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import app.homeward.app.AppServices
@@ -72,7 +75,11 @@ fun SosComposeScreen(onCancelled: () -> Unit) {
 
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Being followed", "Feel unsafe", "Hurt", "Lost", "In a vehicle").forEach { pick ->
-                    AssistChip(onClick = { add(pick) }, label = { Text(pick) }, shape = RoundedCornerShape(50), modifier = Modifier.heightIn(min = 48.dp))
+                    // The same outlined pill as the ready-made questions on Home (Figma "07 Home").
+                    Box(
+                        Modifier.heightIn(min = 48.dp).clip(RoundedCornerShape(50)).border(1.dp, HomewardColors.Border, RoundedCornerShape(50)).clickable { add(pick) }.padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(pick, style = HomewardType.Label) }
                 }
             }
 

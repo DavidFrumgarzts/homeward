@@ -14,20 +14,12 @@ struct HomeSheet: View {
     var onEditContacts: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: BeaconSpacing.stack) {
             Capsule().fill(BeaconColors.border).frame(width: 40, height: 5)
 
-            Button { onAsk("") } label: {
-                HStack {
-                    Text("Ask Beacon anything").style(.body, color: BeaconColors.textMuted)
-                    Spacer()
-                    Image(systemName: "arrow.right").font(.system(size: 18, weight: .semibold)).foregroundStyle(.white)
-                        .frame(width: 48, height: 48).background(BeaconColors.primary).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .padding(.leading, 18).padding(.trailing, 6).padding(.vertical, 6)
-                .background(BeaconColors.surface).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            AskBox(icon: "arrow.right", iconLabel: "Ask Beacon", wholeBoxTaps: true, action: { onAsk("") }) {
+                Text("Ask Beacon anything").style(.body, color: BeaconColors.textMuted)
             }
-            .buttonStyle(.plain)
 
             QuickPickChips(options: ["Is this area OK now?", "Where can I get help?"], onPick: onAsk).frame(maxWidth: .infinity, alignment: .leading)
 
@@ -35,24 +27,27 @@ struct HomeSheet: View {
                 Button(action: onPlace) {
                     WhiteCard(padding: 14) {
                         HStack(spacing: 12) {
-                            PlaceBadge(kind: place.place.kind, size: 30).frame(width: 40, height: 40).background(BeaconColors.mapPaper).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            PlaceBadge(kind: place.place.kind, size: 30).frame(width: 44, height: 44).background(BeaconColors.surfaceAlt).clipShape(RoundedRectangle(cornerRadius: BeaconRadius.smallTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("\(place.place.name) · \(NearbyFeed.distance(place.meters))").style(.label).lineLimit(1)
                                 Text(place.place.open24h ? "Open 24 hours" : "Open now").style(.small)
                             }
+                            Spacer(minLength: 0)
                         }
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityHint("Shows why this place")
             }
 
-            HStack(spacing: 10) {
+            HStack(spacing: BeaconSpacing.cards) {
                 quick("I'm OK", "checkmark", BeaconColors.green, onImOk)
                 quick("Police \(pack.police)", "phone", BeaconColors.red, onPolice)
             }
 
             // SOS: the biggest thing on the sheet, and the only red one.
-            HoldButton(label: "Hold for SOS", action: onSos)
+            HoldButton(label: "Hold for SOS · works with no signal", action: onSos)
 
             // Who gets the SOS, with a way to change it.
             Button(action: onEditContacts) {
@@ -65,14 +60,20 @@ struct HomeSheet: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 8)
-        .background(BeaconColors.background.clipShape(UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30, style: .continuous)).ignoresSafeArea(edges: .bottom))
+        .padding(.horizontal, BeaconSpacing.sheet).padding(.top, 12).padding(.bottom, 8)
+        .background(BeaconColors.background.clipShape(UnevenRoundedRectangle(topLeadingRadius: BeaconRadius.sheet, topTrailingRadius: BeaconRadius.sheet, style: .continuous)).ignoresSafeArea(edges: .bottom))
     }
 
     private func quick(_ label: String, _ icon: String, _ tint: Color, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label { Text(label).style(.label) } icon: { Image(systemName: icon).foregroundStyle(tint) }
-                .frame(maxWidth: .infinity, minHeight: 52).background(BeaconColors.surface).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            HStack(spacing: 8) {
+                Image(systemName: icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(tint).accessibilityHidden(true)
+                Text(label).style(.label).lineLimit(1).minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity, minHeight: BeaconSize.quickAction)
+            .background(BeaconColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
         }
         .buttonStyle(.plain)
     }

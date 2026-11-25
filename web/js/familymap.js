@@ -1,4 +1,4 @@
-// The real-street map in the family view: her trail as a blue line, where the SOS started (small dot)
+// The real-street map in the family view: her trail as a blue line, where the SOS started (small blue dot)
 // and her latest position (green dot, like the "you" dot in the app).
 // Uses MapLibre GL JS from a CDN with standard OpenStreetMap tiles, viewed normally (nothing is saved or
 // downloaded in bulk), and the OpenStreetMap credit always showing, as their tile policy asks.
@@ -8,7 +8,8 @@ const STYLE = {
   version: 8,
   sources: { osm: { type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 19,
     attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' } },
-  layers: [{ id: "osm", type: "raster", source: "osm" }],
+  // Softened toward the drawn Lapa map: mostly grey, a little lighter, so the blue trail and green dot stand out.
+  layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.75, "raster-contrast": -0.15, "raster-brightness-min": 0.12 } }],
 };
 
 let library = null;

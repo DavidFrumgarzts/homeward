@@ -24,28 +24,12 @@ import app.homeward.design.components.WhiteCard
 import app.homeward.features.home.NearbyFeed
 import app.homeward.features.incident.contracts.IncidentViewState
 
-// The "For me" card on the active SOS screen: what to do now (reviewed steps for her situation),
-// one tap to call the local emergency number, and the nearest open place to get help.
+// The "for me" part of the active SOS screen, in the order of Figma "09 SOS sent": the red call
+// button, the nearest open place to walk to, then the reviewed steps for her situation.
 // The steps are fixed text; the number and the place come from the saved pack.
 @Composable
 fun ForMeCard(view: IncidentViewState, onCall: () -> Unit) {
-    var showAll by remember { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (view.forMe.isNotEmpty()) WhiteCard(Modifier.fillMaxWidth()) {
-            Text("What to do now", style = HomewardType.Label)
-            (if (showAll) view.forMe else view.forMe.take(3)).forEachIndexed { i, step ->
-                Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(Modifier.size(24.dp).background(HomewardColors.PrimaryTint, CircleShape), contentAlignment = Alignment.Center) {
-                        Text("${i + 1}", style = HomewardType.Small, color = HomewardColors.Primary)
-                    }
-                    Text(step, style = HomewardType.Body, modifier = Modifier.weight(1f))
-                }
-            }
-            if (view.forMe.size > 3 && !showAll) {
-                Text("Show all ${view.forMe.size} steps", style = HomewardType.Small, color = HomewardColors.Primary, modifier = Modifier.padding(top = 10.dp).clickable { showAll = true }.padding(vertical = 8.dp))
-            }
-        }
-
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         PrimaryButton(color = HomewardColors.Red, label = "Call ${view.emergencyLabel} ${view.emergencyNumber}", modifier = Modifier.height(64.dp), onClick = onCall)
 
         view.suggestedPlace?.let { pick ->
@@ -63,6 +47,28 @@ fun ForMeCard(view: IncidentViewState, onCall: () -> Unit) {
                     Text("${NearbyFeed.distance(pick.meters)}, ${if (pick.place.open24h) "open 24 hours" else "open now"}", style = HomewardType.Small)
                 }
             }
+        }
+
+        if (view.forMe.isNotEmpty()) WhatToDoCard(view.forMe)
+    }
+}
+
+// The reviewed steps: a flat white card, numbered on soft blue dots, three shown until she asks for more.
+@Composable
+private fun WhatToDoCard(steps: List<String>) {
+    var showAll by remember { mutableStateOf(false) }
+    WhiteCard(Modifier.fillMaxWidth()) {
+        Text("What to do now", style = HomewardType.Label)
+        (if (showAll) steps else steps.take(3)).forEachIndexed { i, step ->
+            Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.size(26.dp).background(HomewardColors.PrimaryTint, CircleShape), contentAlignment = Alignment.Center) {
+                    Text("${i + 1}", style = HomewardType.Small, color = HomewardColors.Primary)
+                }
+                Text(step, style = HomewardType.Body, modifier = Modifier.weight(1f))
+            }
+        }
+        if (steps.size > 3 && !showAll) {
+            Text("Show all ${steps.size} steps", style = HomewardType.Small, color = HomewardColors.Primary, modifier = Modifier.padding(top = 8.dp).clickable { showAll = true }.padding(vertical = 8.dp))
         }
     }
 }

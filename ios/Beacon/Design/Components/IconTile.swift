@@ -6,7 +6,7 @@ struct IconTile: View {
     var systemName: String
     var tint: Color = BeaconColors.primary
     var background: Color = BeaconColors.primaryTint
-    var size: CGFloat = 44
+    var size: CGFloat = BeaconSize.iconTile
 
     var body: some View {
         Image(systemName: systemName)
@@ -14,7 +14,7 @@ struct IconTile: View {
             .foregroundStyle(tint)
             .frame(width: size, height: size)
             .background(background)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.tile, style: .continuous))
             .accessibilityHidden(true)
     }
 }

@@ -14,12 +14,12 @@ struct StoryStep: View {
                 Spacer()
                 Button("Skip", action: onNext).font(TextLook.label.font).foregroundStyle(BeaconColors.textMuted).frame(minWidth: 44, minHeight: 44)
             }
-            .padding(.horizontal, 24)
-            Text(withBeacon ? "01:56 · 200 M BEFORE THE TURN" : "01:58 · LAPA, RIO DE JANEIRO").style(.mapLabel, color: BeaconColors.text).padding(.horizontal, 24).padding(.bottom, 10)
+            .padding(.horizontal, BeaconSpacing.screen)
+            Text(withBeacon ? "01:56 · 200 M BEFORE THE TURN" : "01:58 · LAPA, RIO DE JANEIRO").style(.mapLabel, color: BeaconColors.text).padding(.horizontal, BeaconSpacing.screen).padding(.bottom, 10)
 
             ZStack(alignment: .bottom) {
                 StoryMap(withBeacon: withBeacon).id(withBeacon)
-                if withBeacon { redZoneAlert.padding(.horizontal, 24).padding(.bottom, 20) }
+                if withBeacon { redZoneAlert.padding(.horizontal, BeaconSpacing.screen).padding(.bottom, 20 + BeaconRadius.sheet) }
             }
             .frame(maxHeight: .infinity)
 
@@ -31,8 +31,10 @@ struct StoryStep: View {
                 if withBeacon { PrimaryButton(label: "Start with Beacon", action: onNext) }
                 else { PrimaryButton(label: "See the same night with Beacon") { withBeacon = true } }
             }
-            .padding(.horizontal, 24).padding(.top, 24).padding(.bottom, 16)
-            .background(BeaconColors.background)
+            .padding(.horizontal, BeaconSpacing.screen).padding(.top, 28).padding(.bottom, 16)
+            // Figma "01"/"02": the text sits on a warm panel with round top corners, overlapping the map.
+            .background(BeaconColors.background.clipShape(UnevenRoundedRectangle(topLeadingRadius: BeaconRadius.sheet, topTrailingRadius: BeaconRadius.sheet, style: .continuous)).ignoresSafeArea(edges: .bottom))
+            .padding(.top, -BeaconRadius.sheet)
         }
         .background(BeaconColors.background.ignoresSafeArea())
     }
@@ -42,7 +44,7 @@ struct StoryStep: View {
         WhiteCard {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
-                    .frame(width: 24, height: 24).background(BeaconColors.red).clipShape(RoundedRectangle(cornerRadius: 8))
+                    .frame(width: 28, height: 28).background(BeaconColors.red).clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 Text("Red zone ahead").style(.label)
             }
             Text("Rua dos Inválidos empties out after 1 a.m. Turn left now and take Av. Mem de Sá, it stays busy.").style(.small).padding(.top, 6)

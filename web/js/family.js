@@ -20,17 +20,25 @@ const NOTES = {
   off: ["This link has been turned off", "The traveler stopped sharing with this link. If you are worried, call them."],
   offline: ["Can't reach Beacon right now", "Check this device's internet connection. The page keeps trying. The location in the text message still works."],
 };
+// The round status mark at the top, like the "SOS sent" screen: red while the SOS is on, a green check once it is over.
+const MARK = {
+  live: '<svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#E5484D" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#FDE4E4"/><circle cx="66" cy="66" r="20" fill="none" stroke="#E5484D" stroke-width="5"/><circle cx="66" cy="66" r="8" fill="#E5484D"/></svg>',
+  ok: '<svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#22A06B" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#E4F4EC"/><path d="M48 67l12 12 24-26" stroke="#22A06B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="#E07A2B" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>';
 const AI_GAP_MILLIS = 20_000; // the summary is rewritten on new events only, and never more often than this
 
 export function familyScreen(app, watch, { demo = false } = {}) {
-  app.classList.add("wide");
-  app.innerHTML = `<div class="family">
-    <header class="fam-head"><span class="stamp">BEACON${demo ? " · DEMO" : ""}</span><div id="fam-title"></div></header>
-    ${demo ? '<div class="fam-demo small"><span>A made-up incident in Lapa, Rio, replayed about 12 times faster. Nothing here is real.</span><button class="link" id="fam-replay">Play again</button><i id="fam-bar"></i></div>' : ""}
+  app.innerHTML = `<div class="screen">
+    <header class="fam-head"><span class="stamp">BEACON${demo ? " · DEMO" : ""}</span><div id="fam-title" class="fam-head"></div></header>
+    ${demo ? '<div class="fam-demo"><div class="row-between"><span class="small" style="color:var(--ink)">A made-up incident in Lapa, Rio, replayed about 12 times faster. Nothing here is real.</span><button class="link small" id="fam-replay" style="flex:none">Play again</button></div><div class="bar"><i id="fam-bar"></i></div></div>' : ""}
     <div id="fam-note" class="card col"></div>
-    <div class="fam-grid" id="fam-grid" hidden>
-      <section class="fam-left"><div id="fam-map" class="fam-map" role="img" aria-label="Map of the latest position and the trail"></div><div id="fam-last" class="card col"></div></section>
-      <section class="fam-right"><div id="fam-summary" class="card col"></div><div id="fam-numbers" class="card col"></div><div id="fam-message" class="card col"></div><div id="fam-timeline" class="card col"></div></section>
+    <div class="stack" id="fam-grid" hidden style="gap:20px">
+      <div class="card fam-where"><div id="fam-map" class="fam-map" role="img" aria-label="Map of the latest position and the trail"></div><div id="fam-last"></div></div>
+      <div id="fam-summary" class="card col"></div>
+      <section id="fam-numbers" class="fam-section"></section>
+      <div id="fam-message" class="card col"></div>
+      <div id="fam-timeline" class="card col"></div>
     </div></div>`;
   const $ = (id) => app.querySelector(`#${id}`);
   let state = { status: "loading" }, map = null, mapAsked = false;
@@ -38,7 +46,7 @@ export function familyScreen(app, watch, { demo = false } = {}) {
 
   function drawSummary() {
     $("fam-summary").innerHTML = `<h2>What's happening and what should I do?</h2><p class="fam-text">${esc(summary.text)}</p>
-      ${aiBadge(sourceLabel(summary.source))}<p class="small">Beacon only knows what the phone reported. It cannot tell what is really happening.</p>`;
+      ${aiBadge(sourceLabel(summary.source))}<p class="small" style="padding-top:4px;border-top:1px solid var(--line)">Beacon only knows what the phone reported. It cannot tell what is really happening.</p>`;
   }
   // The fixed wording shows at once. AI may replace it, on new events only (never on a timer).
   function refreshSummary() {
@@ -59,10 +67,10 @@ export function familyScreen(app, watch, { demo = false } = {}) {
   function drawLast() {
     const fix = latestFix(state.updates), now = Date.now();
     $("fam-last").innerHTML = fix
-      ? `<div class="fam-age">Last seen ${esc(ageText(fix.atMillis, now))}</div>
+      ? `<div class="tile"><i></i></div><div style="flex:1;min-width:0"><div class="label">Last seen ${esc(ageText(fix.atMillis, now))}</div>
          <p class="small">${esc(clockText(fix.atMillis))} your time${fix.accuracyMeters >= 1 ? ` · within about ${Math.round(fix.accuracyMeters)} m` : ""}${fix.batteryPercent != null ? ` · phone battery ${Math.round(fix.batteryPercent)}%` : ""}</p>
-         <a class="link" target="_blank" rel="noopener" href="https://maps.google.com/?q=${fix.lat.toFixed(5)},${fix.lng.toFixed(5)}">Open this spot in Google Maps</a>`
-      : `<div class="fam-age">No location yet</div><p class="small">The phone has not reported a GPS position.</p>`;
+         <a class="link small" target="_blank" rel="noopener" href="https://maps.google.com/?q=${fix.lat.toFixed(5)},${fix.lng.toFixed(5)}">Open this spot in Google Maps</a></div>`
+      : `<div class="tile" style="background:var(--line)"><i style="background:var(--muted)"></i></div><div><div class="label">No location yet</div><p class="small">The phone has not reported a GPS position.</p></div>`;
   }
 
   function draw() {
@@ -72,21 +80,23 @@ export function familyScreen(app, watch, { demo = false } = {}) {
     if (!ready) {
       const [title, detail] = demo && state.status === "no-incident" ? ["Waiting for the first alert…", "The replay is starting."] : NOTES[state.status] ?? NOTES.offline;
       $("fam-title").innerHTML = ""; summaryKey = "";
-      $("fam-note").innerHTML = `<h1>${esc(title)}</h1><p>${esc(detail)}</p>`;
+      $("fam-note").innerHTML = `<h2>${esc(title)}</h2>${detail ? `<p class="small">${esc(detail)}</p>` : ""}`;
       map?.show([]);
       return;
     }
     const { incident, updates } = state, name = travelerName(incident), e = incident.emergency || {}, ended = incident.phase === "Resolved";
-    $("fam-title").innerHTML = `<h1>${esc(name)}'s SOS <span class="pill ${ended ? "ok" : "live"}">${ended ? "Ended" : "Active"}</span></h1>
+    $("fam-title").innerHTML = `${MARK[ended ? "ok" : "live"]}<h1>${esc(name)}'s SOS <span class="state ${ended ? "ok" : "live"}">${ended ? "Ended" : "Active"}</span></h1>
       <p class="small">${esc(incident.city)}, ${esc(incident.country)} · started ${esc(clockText(incident.startedAtMillis))} your time${state.fromCache ? " · showing what this device saved; it is offline" : ""}</p>`;
     drawLast(); refreshSummary();
-    const tel = (label, number, cls = "") => (number ? `<a class="tel ${cls}" href="tel:${esc(number.replace(/[^\d+]/g, ""))}"><span>${esc(label)}</span><b>${esc(number)}</b></a>` : "");
-    $("fam-numbers").innerHTML = `<h2>Emergency numbers in ${esc(incident.city)}</h2>${tel("Police", e.police, "red")}${tel("Ambulance", e.ambulance)}${tel(e.embassyName, e.embassyPhone)}
-      <p class="small">Short local numbers usually only work from inside ${esc(incident.country)}. From another country, call the embassy line and give them the location above.</p>`;
+    const dial = (number) => `tel:${esc(number.replace(/[^\d+]/g, ""))}`;
+    const tel = (label, number) => (number ? `<a class="tel outline" href="${dial(number)}"><div class="tile">${PHONE}</div><div style="min-width:0"><div class="label">${esc(label)}</div><p class="small">${esc(number)}</p></div></a>` : "");
+    $("fam-numbers").innerHTML = `<h2>Emergency numbers in ${esc(incident.city)}</h2>
+      ${e.police ? `<a class="tel btn red" href="${dial(e.police)}">Call police ${esc(e.police)}</a>` : ""}${tel("Ambulance", e.ambulance)}${tel(e.embassyName, e.embassyPhone)}
+      <p class="small" style="padding:0 4px">Short local numbers usually only work from inside ${esc(incident.country)}. From another country, call the embassy line and give them the location above.</p>`;
     $("fam-message").hidden = !incident.message;
-    $("fam-message").innerHTML = `<h2>The message that was sent</h2><p class="fam-text small" style="color:var(--ink)">${esc(incident.message)}</p>`;
+    $("fam-message").innerHTML = `<h2>The message that was sent</h2><p class="fam-text">${esc(incident.message)}</p>`;
     $("fam-timeline").innerHTML = `<h2>What happened</h2><ol class="fam-list">${timelineItems(incident, updates).map((item) =>
-      `<li class="k-${item.kind}"><time>${esc(clockText(item.atMillis))}</time><div><div class="label">${esc(item.title)}</div>${item.detail ? `<p class="small">${esc(item.detail)}</p>` : ""}</div></li>`).join("")}</ol>`;
+      `<li class="k-${item.kind}"><div><time>${esc(clockText(item.atMillis))}</time><div class="label">${esc(item.title)}</div>${item.detail ? `<p class="small">${esc(item.detail)}</p>` : ""}</div></li>`).join("")}</ol>`;
     if (!mapAsked) {
       mapAsked = true;
       createFamilyMap($("fam-map")).then((made) => {

@@ -8,9 +8,9 @@ private struct ChatLine: Identifiable, Equatable {
     var ranOnDevice: Bool? = nil
 }
 
-// Chat with Beacon (Figma "08 Ask Beacon"): the cop at the top, your questions in blue on the right,
-// Beacon's answers in white on the left with an "On device" / "Cloud" badge, and a box to type the
-// next one. It keeps the last answers in mind for follow-ups.
+// Chat with Beacon (Figma "08 Ask Beacon"): the cop at the top, your question in a blue bubble,
+// Beacon's answer on a full-width white card (numbered steps when it gives steps) with an
+// "On device" / "Cloud" badge, and a box at the bottom to type the next one. It keeps the last answers in mind for follow-ups.
 // `firstQuestion` is what was tapped on Home ("" opens an empty chat).
 struct AskBeaconScreen: View {
     var firstQuestion: String
@@ -25,41 +25,38 @@ struct AskBeaconScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                HStack {
-                    Button { dismiss() } label: { Image(systemName: "arrow.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(BeaconColors.text).frame(width: 44, height: 44, alignment: .leading) }
-                        .accessibilityLabel("Back")
-                    Spacer()
-                }
+                HStack { BackButton { dismiss() }; Spacer() }
                 BeaconCop(lively: thinking)
             }
+            .padding(.bottom, -12) // the cop picture has empty room under his feet
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(spacing: 12) {
-                        ForEach(lines) { Bubble(line: $0).id($0.id) }
-                        if thinking { Bubble(line: ChatLine(fromYou: false, text: "…")).id("thinking") }
+                    VStack(alignment: .leading, spacing: 16) {
+                        ForEach(lines) { line in
+                            Group {
+                                if line.fromYou { QuestionBubble(text: line.text) }
+                                else { AnswerCard(text: line.text, ranOnDevice: line.ranOnDevice, city: packs.pack.city) }
+                            }
+                            .id(line.id)
+                        }
+                        if thinking { ThinkingCard().id("thinking") }
                         if lines.isEmpty && !thinking {
                             QuickPickChips(options: ["What's the police number?", "Is this area OK now?", "Where can I get help?"]) { ask($0) }.padding(.top, 8)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 16)
                 }
                 .scrollIndicators(.hidden)
+                .scrollDismissesKeyboard(.interactively)
                 .onChange(of: lines) { withAnimation { proxy.scrollTo(lines.last?.id, anchor: .bottom) } }
             }
-            Text("From your \(packs.pack.city) pack, saved on this phone.").style(.small).frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 8)
-            HStack {
+            AskBox(icon: "arrow.up", iconLabel: "Send", action: { ask(typed) }) {
                 TextField(lines.isEmpty ? "Ask Beacon anything" : "Ask a follow-up", text: $typed).font(TextLook.body.font).foregroundStyle(BeaconColors.text)
                     .submitLabel(.send).onSubmit { ask(typed) }
-                Button { ask(typed) } label: {
-                    Image(systemName: "arrow.up").font(.system(size: 18, weight: .semibold)).foregroundStyle(.white)
-                        .frame(width: 48, height: 48).background(BeaconColors.primary).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .accessibilityLabel("Send")
             }
-            .padding(.leading, 18).padding(.trailing, 6).padding(.vertical, 6)
-            .background(BeaconColors.surface).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
-        .padding(.horizontal, 20).padding(.vertical, 12)
+        .padding(.horizontal, BeaconSpacing.sheet).padding(.vertical, 12)
         .background(BeaconColors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .task { if !firstQuestion.isBlank && lines.isEmpty { ask(firstQuestion) } }
@@ -84,19 +81,90 @@ struct AskBeaconScreen: View {
     }
 }
 
-// Your questions: blue, on the right. Beacon's answers: white, on the left, with the badge underneath.
-private struct Bubble: View {
-    var line: ChatLine
+// Your question (Figma "08"): a blue bubble on the left, in quotes like the design.
+private struct QuestionBubble: View {
+    var text: String
 
     var body: some View {
-        VStack(alignment: line.fromYou ? .trailing : .leading, spacing: 6) {
-            Text(line.text).style(line.fromYou ? .label : .body, color: line.fromYou ? .white : BeaconColors.text)
-                .padding(.horizontal, 16).padding(.vertical, 12)
-                .background(line.fromYou ? BeaconColors.primary : BeaconColors.surface)
-                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, bottomLeadingRadius: line.fromYou ? 20 : 6, bottomTrailingRadius: line.fromYou ? 6 : 20, topTrailingRadius: 20, style: .continuous))
-            if !line.fromYou && line.text != "…" { InferenceBadge(ranOnDevice: line.ranOnDevice) }
+        Text("\u{201C}\(text)\u{201D}").style(.label, color: .white)
+            .padding(.horizontal, 16).padding(.vertical, 12)
+            .background(BeaconColors.primary)
+            .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
+            .frame(maxWidth: 320, alignment: .leading)
+            .accessibilityLabel("You asked: \(text)")
+    }
+}
+
+// Beacon's answer (Figma "08"): a full-width white card. When the answer is a list of numbered steps,
+// the line before them is the heading and each step gets a number on a light blue circle. Underneath:
+// where it was written (On device / Cloud / No AI) and that it came from the saved pack.
+private struct AnswerCard: View {
+    var text: String
+    var ranOnDevice: Bool?
+    var city: String
+
+    var body: some View {
+        let parts = AnswerParts(text)
+        WhiteCard(padding: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                if let heading = parts.heading {
+                    Text(heading).style(parts.steps.isEmpty ? .body : .heading).fixedSize(horizontal: false, vertical: true)
+                }
+                ForEach(Array(parts.steps.enumerated()), id: \.offset) { index, step in
+                    NumberedStep(number: index + 1, text: step)
+                }
+                if let after = parts.after {
+                    Text(after).style(.body).fixedSize(horizontal: false, vertical: true)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    InferenceBadge(ranOnDevice: ranOnDevice)
+                    Text("From your \(city) pack, saved on this phone.").style(.small)
+                }
+                .padding(.top, 2)
+            }
         }
-        .frame(maxWidth: 300, alignment: line.fromYou ? .trailing : .leading)
-        .frame(maxWidth: .infinity, alignment: line.fromYou ? .trailing : .leading)
+        .textSelection(.enabled)
+    }
+}
+
+// Splits an answer into the line before the steps, the numbered steps ("1. …" or "1) …"), and anything after.
+// Only for display: the answer text itself is unchanged. With no numbered lines, it is all `heading`.
+private struct AnswerParts {
+    var heading: String?
+    var steps: [String] = []
+    var after: String?
+
+    init(_ text: String) {
+        var before: [String] = [], after: [String] = []
+        for raw in text.split(separator: "\n", omittingEmptySubsequences: true) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.isEmpty { continue }
+            if let step = Self.step(line), after.isEmpty { steps.append(step) }
+            else if steps.isEmpty { before.append(line) }
+            else { after.append(line) }
+        }
+        heading = before.isEmpty ? nil : before.joined(separator: "\n")
+        self.after = after.isEmpty ? nil : after.joined(separator: "\n")
+    }
+
+    // "2. Pass the police station" -> "Pass the police station"; nil when the line is not a numbered step.
+    private static func step(_ line: String) -> String? {
+        let digits = line.prefix { $0.isASCII && $0.isNumber }
+        guard !digits.isEmpty, digits.count <= 2 else { return nil }
+        let rest = line.dropFirst(digits.count)
+        guard let mark = rest.first, mark == "." || mark == ")" else { return nil }
+        let body = rest.dropFirst().trimmingCharacters(in: .whitespaces)
+        return body.isEmpty ? nil : body
+    }
+}
+
+// While Beacon is working on an answer: a small white card with three dots.
+private struct ThinkingCard: View {
+    var body: some View {
+        Text("…").style(.heading, color: BeaconColors.textMuted)
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .background(BeaconColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.bubble, style: .continuous))
+            .accessibilityLabel("Beacon is answering")
     }
 }

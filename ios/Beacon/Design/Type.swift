@@ -9,10 +9,21 @@ enum BeaconFonts {
     static func inter(_ size: CGFloat, weight: CGFloat) -> Font { variable("Inter", size, weight) }
 
     private static func variable(_ family: String, _ size: CGFloat, _ weight: CGFloat) -> Font {
+        // If the font file is missing from the bundle, use the system font at the same size and weight.
+        guard UIFont.familyNames.contains(family) else { return .system(size: size, weight: systemWeight(weight)) }
         let weightAxis = 2003265652 // the four letters "wght" as a number, the name of the weight setting
         let variation = UIFontDescriptor.AttributeName(rawValue: kCTFontVariationAttribute as String)
         let descriptor = UIFontDescriptor(fontAttributes: [.family: family, variation: [weightAxis: weight]])
         return Font(UIFont(descriptor: descriptor, size: size))
+    }
+
+    private static func systemWeight(_ weight: CGFloat) -> Font.Weight {
+        switch weight {
+        case ..<450: .regular
+        case ..<550: .medium
+        case ..<650: .semibold
+        default: .bold
+        }
     }
 }
 

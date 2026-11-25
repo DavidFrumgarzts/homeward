@@ -11,6 +11,6 @@ struct WhiteCard<Content: View>: View {
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(BeaconColors.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.card, style: .continuous))
     }
 }

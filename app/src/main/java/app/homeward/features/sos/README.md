@@ -4,7 +4,7 @@ DISPLAY for an SOS. These screens only draw `IncidentViewState` and call the inc
 - `ContactMessageCard.kt`: the editable message with the "On device" / "Cloud" / "No AI" badge.
 - `SosSentScreen.kt`: after Send and while the SOS is active: who really has the message, the message, what to do, a phrase to show, location status, "I'm safe now, end SOS".
 - `SosStatusHeader.kt`: the ring, headline and delivery lines. Green tick only for delivered messages. Also the "Test mode" tag.
-- `ForMeCard.kt`: the reviewed steps, the call button, the nearest open place.
+- `ForMeCard.kt`: the call button, the nearest open place, then the reviewed steps (Figma 9 order).
 - `LocalPhrasesCard.kt`: "Show someone nearby", a reviewed phrase from the pack, shown large.
 - `DeliveryWording.kt`: PURE LOGIC. The honest words for saved / sent / delivered / failed. `SessionWording.kt`: PURE LOGIC. The location status line.
 - `SosMessageWriter.kt`: hybrid AI rewrites her words into one sentence (plain template if it fails). `SosPrompt.kt`: the instructions.
