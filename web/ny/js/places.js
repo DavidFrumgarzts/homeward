@@ -9,7 +9,7 @@ const OVERPASS = ["https://overpass-api.de/api/interpreter", "https://maps.mail.
 // Used when no server answers and nothing is saved yet: Manhattan police precincts and big emergency hospitals.
 // Hand-made from public addresses; positions are approximate (within about a block).
 export const STARTER = [
-  ["Midtown South Precinct", "police", 40.7540, -73.9952], ["Midtown North Precinct", "police", 40.7655, -73.9862],
+  ["NYPD Times Square Substation", "police", 40.7569, -73.9861], ["Midtown South Precinct", "police", 40.7540, -73.9952], ["Midtown North Precinct", "police", 40.7655, -73.9862],
   ["1st Precinct", "police", 40.7202, -74.0074], ["5th Precinct", "police", 40.7163, -73.9975], ["6th Precinct", "police", 40.7343, -74.0055],
   ["7th Precinct", "police", 40.7163, -73.9836], ["9th Precinct", "police", 40.7265, -73.9878], ["10th Precinct", "police", 40.7433, -73.9985],
   ["13th Precinct", "police", 40.7363, -73.9826], ["17th Precinct", "police", 40.7563, -73.9705], ["19th Precinct", "police", 40.7666, -73.9632],

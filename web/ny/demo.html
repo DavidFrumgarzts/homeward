@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beacon New York (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#F7F4EE; --surface:#fff; --line:#E3DED4; --ink:#101A33; --muted:#5E6880; --blue:#2F6BFF; --red:#E5484D; --green:#22A06B; --yellow:#E0A10F; --amber:#E07A2B;
+  --display:"Sora",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif; color-scheme: light; }
+* { box-sizing:border-box; }
+html,body { margin:0; background:#ECE8DF; color:var(--ink); font:16px/1.5 var(--body); }
+#app { max-width:430px; min-height:100vh; margin:0 auto; background:var(--bg); display:flex; flex-direction:column; }
+h1 { font:600 24px/30px var(--display); letter-spacing:-.4px; margin:0; }
+h2 { font:600 18px/24px var(--display); margin:0; }
+p { margin:0; }
+button { font:inherit; color:inherit; cursor:pointer; border:0; background:none; padding:0; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+.small { font-size:13px; line-height:18px; color:var(--muted); }
+.label { font-weight:500; font-size:15px; line-height:20px; }
+.screen { flex:1; display:flex; flex-direction:column; padding:20px 22px 24px; gap:16px; }
+.grow { flex:1; }
+.btn { width:100%; min-height:56px; border-radius:18px; background:var(--blue); color:#fff; font-weight:500; font-size:15px; display:grid; place-items:center; text-align:center; padding:0 16px; }
+.btn.red { background:var(--red); min-height:64px; border-radius:20px; font:600 18px var(--display); }
+.btn:disabled { opacity:.5; }
+.link { color:var(--blue); font-weight:500; align-self:flex-start; padding:6px 0; }
+.card { background:var(--surface); border-radius:22px; padding:14px; display:flex; align-items:center; gap:14px; width:100%; text-align:left; }
+.card.col { flex-direction:column; align-items:stretch; gap:12px; padding:18px; }
+.chips { display:flex; gap:8px; flex-wrap:wrap; }
+.chip { border:1px solid #DCD5C9; border-radius:999px; padding:8px 12px; font-size:13px; background:transparent; }
+.chip.on { background:var(--blue); border-color:var(--blue); color:#fff; }
+.row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.dot { width:12px; height:12px; border-radius:50%; flex:none; display:inline-block; }
+.field { width:100%; border-radius:14px; border:1.5px solid var(--line); background:var(--surface); padding:12px 14px; font:inherit; color:var(--ink); }
+textarea.field { height:110px; resize:none; }
+.mini { height:44px; border-radius:10px; border:0; background:#EFEAE0; padding:0 10px; font:500 15px var(--body); color:var(--ink); }
+.mapwrap { position:relative; height:46vh; min-height:300px; overflow:hidden; background:#DCE3E8; }
+.mapwrap svg { width:100%; height:100%; display:block; touch-action:manipulation; }
+.hint { position:absolute; left:14px; bottom:36px; background:var(--surface); border-radius:999px; padding:6px 12px; font-size:13px; }
+.zoom { position:absolute; right:12px; top:12px; display:flex; flex-direction:column; gap:6px; }
+.zoom button { width:38px; height:38px; border-radius:12px; background:var(--surface); font:600 20px var(--body); }
+.sheet { background:var(--bg); border-radius:28px 28px 0 0; margin-top:-26px; position:relative; padding:12px 18px 20px; display:flex; flex-direction:column; gap:12px; }
+.grab { width:40px; height:5px; border-radius:3px; background:var(--line); align-self:center; }
+.askbar { display:flex; align-items:center; gap:10px; background:var(--surface); border-radius:22px; padding:6px 6px 6px 18px; width:100%; text-align:left; color:var(--muted); }
+.askbar span, .askbar input { flex:1; }
+.askbar input { border:0; background:none; font:inherit; color:var(--ink); min-width:0; height:48px; }
+.askbar input:focus { outline:none; }
+.sq { width:48px; height:48px; border-radius:16px; background:var(--blue); display:grid; place-items:center; flex:none; color:#fff; font-size:20px; }
+.three { display:flex; gap:8px; }
+.three > * { flex:1; background:var(--surface); border-radius:18px; padding:14px 0; display:flex; justify-content:center; align-items:center; gap:6px; font-weight:500; font-size:15px; }
+.bubbles { flex:1; display:flex; flex-direction:column; gap:10px; padding:12px 0; overflow-y:auto; }
+.bubble { max-width:300px; padding:12px 16px; white-space:pre-wrap; }
+.bubble.you { align-self:flex-end; background:var(--blue); color:#fff; border-radius:20px 20px 6px 20px; font-weight:500; font-size:15px; }
+.bubble.beacon { align-self:flex-start; background:var(--surface); border-radius:20px 20px 20px 6px; }
+.photo { width:100%; max-height:180px; object-fit:cover; border-radius:16px; }
+.top { display:flex; align-items:center; gap:10px; }
+.go-here { fill:rgba(224,161,15,.25); stroke:var(--yellow); stroke-width:3; animation:go-here 1s steps(1) 8; }
+@keyframes go-here { 50% { opacity:0; } }
+.pulse { animation:pulse 1.8s linear infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes pulse { from { transform:scale(.85); opacity:.3; } to { transform:scale(1.6); opacity:.05; } }
+@media (prefers-reduced-motion: reduce) { .go-here, .pulse { animation:none; } }
+.toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--ink); color:#fff; padding:10px 16px; border-radius:14px; font-size:14px; }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script>
+// ----- from js/scams.js -----
+// The scan check's knowledge and logic: reported scams with fair rates and prices, and the verdict.
+// Same rules as the Android app (features/scancheck/ScanJudge.kt): the AI may only READ a photo;
+// she confirms the number, and plain math against these saved numbers decides. Demo data, approximate.
+
+const KINDS = ["Money", "Taxi", "Tour", "Shop", "Ticket", "Other"];
+
+
+const STOP = new Set(["the", "you", "your", "for", "and", "with", "only", "this", "that", "are", "from", "not", "after", "before", "please", "thank", "than", "get", "its", "our"]);
+const words = (s) => new Set(String(s).toLowerCase().split(/[^\p{L}\p{N}%]+/u).filter((w) => w.length >= 3 && !STOP.has(w)));
+const n2 = (x) => x.toFixed(2);
+
+// "4,20" -> 4.2 and "1,500" -> 1500: a comma is a decimal point only when 1-2 digits follow it.
+function parseNumber(text) {
+  const t = String(text).trim();
+  const n = Number(/,\d{1,2}$/.test(t) ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, ""));
+  return t && Number.isFinite(n) ? n : null;
+}
+
+const LABEL = { fair: "Looks fair", careful: "Be careful", walk: "Walk away", unknown: "Nothing saved about this" };
+const TIP = { Money: "Use a bank ATM and decline the conversion it offers.", Taxi: "Use the official taxi desk or a ride app, and agree the price first.",
+  Tour: "Agree the full price before you start.", Shop: "Check the amount on the card machine before you pay.",
+  Ticket: "Buy tickets only at the official counter.", Other: "If someone insists, say no and keep walking." };
+
+// reading: { kind, text, rate: {from, to, buy}?, price: {currency, amount}? } -> { verdict, why, whatToDo, saferOption, warning }
+function judge(reading, scams) {
+  const result = (verdict, why, w) => ({ verdict, why, whatToDo: w.whatToDo, saferOption: w.saferOption || "", warning: w });
+  const r = reading.rate;
+  if (r?.buy != null) for (const w of scams) {
+    const fair = (w.fairRates || []).find((f) => f.from.toLowerCase() === r.from.toLowerCase() && f.to.toLowerCase() === r.to.toLowerCase());
+    if (!fair) continue;
+    const loss = Math.round(((fair.rate - r.buy) / fair.rate) * 100);
+    const verdict = loss < 3 ? "fair" : loss <= fair.walkAwayLossPercent ? "careful" : "walk";
+    const lossText = loss > 0 ? ` You'd lose about ${loss}% (100 ${fair.from} → ${Math.round(r.buy * 100)} ${fair.to}, not ${Math.round(fair.rate * 100)}).` : "";
+    return result(verdict, `They buy 1 ${fair.from} for ${n2(r.buy)} ${fair.to}. A fair rate is about ${n2(fair.rate)}.${lossText}`, w);
+  }
+  const p = reading.price;
+  if (p?.amount != null) for (const w of scams) {
+    const fair = (w.fairPrices || []).find((f) => f.currency.toLowerCase() === p.currency.toLowerCase() && w.kind === reading.kind);
+    if (!fair) continue;
+    const verdict = p.amount <= fair.high ? "fair" : p.amount <= fair.high * 1.5 ? "careful" : "walk";
+    return result(verdict, `They ask ${Math.round(p.amount)} ${fair.currency} for ${fair.item}. A fair price is about ${fair.low}–${fair.high} ${fair.currency}.`, w);
+  }
+  // No numbers: match what the sign says against the saved signs. Never "Looks fair" from words alone.
+  const text = (reading.text || "").toLowerCase();
+  if (text.trim()) {
+    const seen = words(text);
+    const scored = scams.map((w) => {
+      const phrase = w.signs.some((s) => text.includes(s.toLowerCase()));
+      const shared = [...words([w.title, ...w.signs].join(" "))].filter((x) => seen.has(x)).length;
+      return { w, ok: phrase || shared >= 2, score: (phrase ? 10 : 0) + shared };
+    }).filter((s) => s.ok).sort((a, b) => b.score - a.score);
+    if (scored[0]) { const w = scored[0].w; return result(w.level === "Avoid" ? "walk" : "careful", `${w.title}, reported in ${w.where}.`, w); }
+  }
+  return { verdict: "unknown", why: LABEL.unknown, whatToDo: TIP[reading.kind] || TIP.Other, saferOption: "", warning: null };
+}
+
+// The saved place Beacon recommends for a question, picked in code so the map blinks the same one the answer names.
+function recommends(question) {
+  const q = question.toLowerCase();
+  return /\b(safe|where|go|help|hostel|hospital|walk)\b/.test(q) || q.includes("police station");
+}
+
+// ----- from ny/js/nypack.js -----
+// The New York pack: emergency numbers and the scams travelers report most, with fair prices.
+// Hand-made from public sources (NYC TLC, NPS, r/AskNYC threads). Prices are approximate: check before relying on them.
+// Places to get help are not in here: they come live from OpenStreetMap around you (places.js) and are saved for offline.
+
+const ny = {
+  city: "New York",
+  police: "911",
+  nonEmergency: "311",
+  embassyNote: "Abroad? Your country's consulate in New York can help with lost passports.",
+  scams: [
+    { title: "Costumed characters who demand money after a photo", kind: "Tour", where: "Times Square", level: "Careful",
+      signs: ["costume", "cartoon character", "photo", "tip", "superhero"],
+      whatToDo: "Photos with them are optional, and so is a tip. If you take one, a dollar or two is plenty; say no and walk on.",
+      fairPrices: [{ item: "photo with a costumed character", currency: "USD", low: 0, high: 5 }], reports: 5,
+      sources: ["https://www.reddit.com/r/AskNYC/search/?q=times+square+characters"] },
+    { title: "\"Free\" CD, then a demand for money", kind: "Other", where: "Times Square and around Penn Station", level: "Avoid",
+      signs: ["free cd", "mixtape", "signs your name", "free music"],
+      whatToDo: "Don't take anything handed to you. Keep your hands in your pockets and keep walking.", reports: 4,
+      sources: ["https://www.reddit.com/r/AskNYC/search/?q=cd+scam"] },
+    { title: "Statue of Liberty tickets sold on the street", kind: "Ticket", where: "Battery Park and around South Ferry", level: "Avoid",
+      signs: ["statue of liberty tickets", "statue tour", "boat tour", "skip the line"],
+      whatToDo: "Only Statue City Cruises sells real tickets (at Castle Clinton or online). Or ride the Staten Island Ferry: it's free and passes the Statue.",
+      saferOption: "Staten Island Ferry (free) or Statue City Cruises at Castle Clinton",
+      fairPrices: [{ item: "Statue of Liberty ferry ticket", currency: "USD", low: 24, high: 32 }], reports: 4,
+      sources: ["https://www.nps.gov/stli/planyourvisit/fees.htm", "https://www.reddit.com/r/AskNYC/search/?q=statue+of+liberty+scam"] },
+    { title: "Unlicensed \"car service\" at the airport", kind: "Taxi", where: "JFK and LaGuardia arrivals halls", level: "Avoid",
+      signs: ["need a ride", "car service", "taxi", "limo", "approaches you inside the terminal"],
+      whatToDo: "Ignore anyone offering rides inside the terminal. Use the official yellow taxi line outside, or a ride app.",
+      fairPrices: [{ item: "taxi JFK to Manhattan", currency: "USD", low: 70, high: 100 }], reports: 4,
+      sources: ["https://www.nyc.gov/site/tlc/passengers/taxi-fare.page", "https://www.reddit.com/r/AskNYC/search/?q=jfk+scam"] },
+    { title: "Pedicab prices per minute, per person", kind: "Taxi", where: "Central Park South and Midtown", level: "Careful",
+      signs: ["pedicab", "per minute", "bike taxi", "central park tour"],
+      whatToDo: "Ask for the total price for everyone, for the whole ride, before you get in.", reports: 3,
+      sources: ["https://www.reddit.com/r/AskNYC/search/?q=pedicab"] },
+    { title: "Monks asking for donations or selling beads", kind: "Other", where: "Times Square, Fifth Avenue, High Line", level: "Careful",
+      signs: ["monk", "bracelet", "beads", "donation", "blessing"],
+      whatToDo: "Real monks don't sell blessings on the street. Say no thank you and walk on.", reports: 3,
+      sources: ["https://www.reddit.com/r/AskNYC/search/?q=fake+monks"] },
+    { title: "Currency exchange counters with poor rates", kind: "Money", where: "Airports and Times Square exchange shops", level: "Careful",
+      signs: ["currency exchange", "no commission", "0% commission", "we buy"],
+      whatToDo: "Take dollars out of a bank ATM and choose to be charged in dollars, not your home currency.", reports: 3,
+      sources: ["https://www.reddit.com/r/travel/search/?q=new+york+currency+exchange"] },
+  ],
+};
+
+// ----- from ny/js/places.js -----
+const STARTER = [
+  ["NYPD Times Square Substation", "police", 40.7569, -73.9861], ["Midtown South Precinct", "police", 40.7540, -73.9952], ["Midtown North Precinct", "police", 40.7655, -73.9862],
+  ["1st Precinct", "police", 40.7202, -74.0074], ["5th Precinct", "police", 40.7163, -73.9975], ["6th Precinct", "police", 40.7343, -74.0055],
+  ["7th Precinct", "police", 40.7163, -73.9836], ["9th Precinct", "police", 40.7265, -73.9878], ["10th Precinct", "police", 40.7433, -73.9985],
+  ["13th Precinct", "police", 40.7363, -73.9826], ["17th Precinct", "police", 40.7563, -73.9705], ["19th Precinct", "police", 40.7666, -73.9632],
+  ["20th Precinct", "police", 40.7843, -73.9752], ["Central Park Precinct", "police", 40.7826, -73.9637], ["24th Precinct", "police", 40.7966, -73.9681],
+  ["Mount Sinai West", "hospital", 40.7699, -73.9866], ["Bellevue Hospital", "hospital", 40.7392, -73.9754], ["NYU Langone Hospital", "hospital", 40.7421, -73.9739],
+  ["Lenox Hill Hospital", "hospital", 40.7738, -73.9606], ["NewYork-Presbyterian / Weill Cornell", "hospital", 40.7648, -73.9540],
+  ["Mount Sinai Hospital", "hospital", 40.7900, -73.9526], ["NewYork-Presbyterian Lower Manhattan", "hospital", 40.7104, -74.0052],
+].map(([name, kind, lat, lng]) => ({ name, kind, lat, lng, hours: "", open24h: true, approximate: true }));
+
+</script>
+<script>
+// Beacon New York, demo page. Same scam data and verdict logic as the Beacon web app (js/scams.js, ny/js/nypack.js).
+// This page can't read your location or load a street map, so you tap the drawn map to say where you are.
+const app = document.getElementById("app");
+const $ = (s) => app.querySelector(s);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const places = STARTER;
+const COLOR = { police: "#2F6BFF", hospital: "#E5484D" };
+const KIND_LABEL = { police: "Police station", hospital: "Hospital" };
+const here = { lat: 40.758, lng: -73.9855 }; // Times Square until you tap the map
+let zoom = 1;
+let sample = null; // Claude, when this page may ask it
+let canReadPhotos = false;
+window.claude?.use?.("sample")?.then(async (s) => { sample = s; try { canReadPhotos = !!(await s?.limits?.())?.images; } catch {} }).catch(() => {});
+
+function meters(a, b) {
+  const R = 6371000, r = (d) => (d * Math.PI) / 180, dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(h)));
+}
+const dist = (m) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`);
+const nearestOf = (kinds = ["police", "hospital"]) => places.filter((p) => kinds.includes(p.kind)).map((p) => ({ ...p, meters: meters(here, p) })).sort((a, b) => a.meters - b.meters)[0];
+function toast(text) { const t = document.createElement("div"); t.className = "toast"; t.textContent = text; document.body.append(t); setTimeout(() => t.remove(), 2200); }
+async function copy(text) { try { await navigator.clipboard.writeText(text); toast("Copied. Paste it into your messages."); } catch { toast("Couldn't copy here. Select the text and copy it."); } }
+
+// ---------- The drawn Manhattan map (metres from a corner, like the Lapa drawing; not to scale in detail) ----------
+const X = (lng) => (lng + 74.03) * 84400 / 20, Y = (lat) => (40.83 - lat) * 111000 / 20;
+const LNG = (x) => x * 20 / 84400 - 74.03, LAT = (y) => 40.83 - y * 20 / 111000;
+const ISLAND = [[40.7005,-74.0160],[40.7090,-74.0190],[40.7300,-74.0110],[40.7520,-74.0090],[40.7700,-73.9960],[40.7900,-73.9810],[40.8100,-73.9690],[40.8300,-73.9530],
+  [40.8300,-73.9370],[40.8050,-73.9300],[40.7920,-73.9380],[40.7760,-73.9420],[40.7600,-73.9580],[40.7460,-73.9700],[40.7280,-73.9720],[40.7110,-73.9780],[40.7070,-73.9990]];
+const PARK = [[40.7681,-73.9819],[40.7968,-73.9493],[40.8003,-73.9582],[40.7644,-73.9730]];
+const pts = (list) => list.map(([la, ln]) => `${X(ln).toFixed(1)},${Y(la).toFixed(1)}`).join(" ");
+function mapSvg(highlight) {
+  const cx = X(here.lng), cy = Y(here.lat), w = 210 / zoom, h = 260 / zoom;
+  const grid = [];
+  for (let i = -40; i <= 40; i++) grid.push(`<line x1="${i * 13}" y1="-700" x2="${i * 13}" y2="700" stroke-width="${i % 2 ? 1.6 : 3}"/>`);
+  for (let j = -90; j <= 90; j++) grid.push(`<line x1="-700" y1="${j * 8}" x2="700" y2="${j * 8}" stroke-width="${j % 5 ? 1 : 2.4}"/>`);
+  const badge = (p) => `<g><rect x="${X(p.lng) - 6}" y="${Y(p.lat) - 6}" width="12" height="12" rx="4" fill="#fff"/><rect x="${X(p.lng) - 5}" y="${Y(p.lat) - 5}" width="10" height="10" rx="3" fill="${COLOR[p.kind]}"/>${p.kind === "hospital" ? `<path d="M${X(p.lng) - 3} ${Y(p.lat)}h6M${X(p.lng)} ${Y(p.lat) - 3}v6" stroke="#fff" stroke-width="1.6"/>` : `<circle cx="${X(p.lng)}" cy="${Y(p.lat)}" r="1.8" fill="#fff"/>`}</g>`;
+  const label = (p) => zoom >= 1.5 ? `<text x="${X(p.lng)}" y="${Y(p.lat) + 12}" font-size="${6 / Math.sqrt(zoom)}" text-anchor="middle" fill="#3C4658" stroke="#fff" stroke-width="1.6" paint-order="stroke" font-family="Inter,sans-serif" font-weight="600">${esc(p.name)}</text>` : "";
+  const ring = highlight ? `<circle class="go-here" cx="${X(highlight.lng)}" cy="${Y(highlight.lat)}" r="12"/>` : "";
+  return `<svg viewBox="${cx - w / 2} ${cy - h / 2} ${w} ${h}" preserveAspectRatio="xMidYMid slice" id="map" role="img" aria-label="Map of Manhattan. Tap to set where you are.">
+    <defs><clipPath id="isl"><polygon points="${pts(ISLAND)}"/></clipPath></defs>
+    <rect x="-200" y="-200" width="1000" height="1200" fill="#B9E0F7"/>
+    <polygon points="${pts(ISLAND)}" fill="#E9EBEE"/>
+    <g clip-path="url(#isl)"><g transform="rotate(29 ${X(-73.985)} ${Y(40.758)}) translate(${X(-73.985)} ${Y(40.758)})" stroke="#fff">${grid.join("")}</g></g>
+    <polygon points="${pts(PARK)}" fill="#CFE6CB"/>
+    <text x="${X(-73.966)}" y="${Y(40.782)}" font-size="7" text-anchor="middle" fill="#5E9B6B" font-family="Sora,sans-serif" font-weight="600" transform="rotate(-61 ${X(-73.966)} ${Y(40.782)})">CENTRAL PARK</text>
+    ${places.map(badge).join("")}${places.map(label).join("")}${ring}
+    <circle class="pulse" cx="${cx}" cy="${cy}" r="${9 / zoom}" fill="#22A06B" opacity=".2"/>
+    <circle cx="${cx}" cy="${cy}" r="${5.5 / zoom}" fill="#fff"/><circle cx="${cx}" cy="${cy}" r="${4 / zoom}" fill="#22A06B"/>
+  </svg>`;
+}
+
+// ---------- Home ----------
+function home(highlightName = null) {
+  const shown = places.find((p) => p.name === highlightName) || null;
+  const card = shown ? { ...shown, meters: meters(here, shown) } : nearestOf();
+  app.innerHTML = `
+    <div class="mapwrap">${mapSvg(shown)}
+      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
+      <div class="hint">Tap the map to say where you are</div></div>
+    <div class="sheet"><div class="grab"></div>
+      <button class="askbar" id="ask"><span>Ask Beacon anything</span><i class="sq">→</i></button>
+      <div class="chips">${["Where can I get help?", "I think I'm being followed"].map((q) => `<button class="chip" data-q="${q}">${q}</button>`).join("")}</div>
+      <button class="card" id="place"><i class="dot" style="background:${COLOR[card.kind]}"></i><div><div class="label">${esc(card.name)} · ${dist(card.meters)}</div><p class="small">${KIND_LABEL[card.kind]} · open 24 hours</p></div></button>
+      <div class="three"><button id="ok">✓ I'm OK</button><button id="scan">Scan</button><button id="call">911</button></div>
+      <button class="btn red" id="sos">SOS</button>
+      <p class="small">Demo page: no location, no sending. Places are approximate. In an emergency, call 911.</p>
+    </div>`;
+  const svg = $("#map");
+  svg.onclick = (e) => {
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    here.lat = LAT(p.y); here.lng = LNG(p.x); home();
+  };
+  $("#zin").onclick = (e) => { e.stopPropagation(); zoom = Math.min(4, zoom * 1.6); home(highlightName); };
+  $("#zout").onclick = (e) => { e.stopPropagation(); zoom = Math.max(0.5, zoom / 1.6); home(highlightName); };
+  $("#ask").onclick = () => ask("");
+  app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => ask(b.dataset.q)));
+  $("#place").onclick = () => home(card.name);
+  $("#ok").onclick = () => copy(`I'm OK · ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · near ${nearestOf().name}, New York`);
+  $("#call").onclick = () => toast("Call 911 from your phone's dialer.");
+  $("#scan").onclick = () => scan();
+  $("#sos").onclick = () => sos();
+}
+
+// ---------- Ask Beacon: Claude answers from the saved facts; plain rules when Claude isn't available ----------
+function facts() {
+  const p = nearestOf(["police"]), h = nearestOf(["hospital"]);
+  return `Emergency (police, fire, ambulance): 911. Non-emergency city help: 311.
+Closest police station: ${p.name}, ${dist(p.meters)} away, open 24 hours.
+Closest hospital: ${h.name}, ${dist(h.meters)} away, open 24 hours.
+Scams travelers report in New York:
+${ny.scams.map((s) => `- ${s.title} (${s.where}): ${s.whatToDo}`).join("\n")}`;
+}
+function plainAnswer(question) {
+  const q = question.toLowerCase(), place = nearestOf(), h = nearestOf(["hospital"]);
+  if (/follow|unsafe|scared|danger/.test(q)) return `Go into a busy shop, hotel lobby or restaurant now and stay where people are. ${place.name} is ${dist(place.meters)} away. If you're in danger, call 911.`;
+  if (/hurt|hospital|doctor|bleed|sick/.test(q)) return `If it's serious, call 911. The nearest hospital is ${h.name}, ${dist(h.meters)} away.`;
+  const scam = judge({ kind: "Other", text: q }, ny.scams);
+  if (scam.warning) return `${scam.warning.title} is a known scam (${scam.warning.where}). ${scam.whatToDo}`;
+  if (recommends(question)) return `${place.name} is ${dist(place.meters)} away and open 24 hours. Walk there on a busy, lit street. In an emergency, call 911.`;
+  if (/police|number|emergency|call/.test(q)) return "Emergency (police, fire, ambulance): 911. For non-emergencies, call 311.";
+  return "I don't have that saved. In an emergency, call 911.";
+}
+const chat = [];
+function ask(question) {
+  let thinking = false;
+  const draw = () => {
+    app.innerHTML = `<div class="screen" style="gap:0">
+      <div class="top"><button class="link" id="back">← Map</button><h2 style="margin-left:auto;margin-right:auto">Ask Beacon</h2></div>
+      <div class="bubbles" id="bubbles">
+        ${chat.map((l) => `<div class="bubble ${l.you ? "you" : "beacon"}">${esc(l.text)}</div>${l.place ? `<button class="link" data-place="${esc(l.place)}">Show ${esc(l.place)} on the map</button>` : ""}`).join("")}
+        ${thinking ? '<div class="bubble beacon">…</div>' : ""}
+        ${chat.length || thinking ? "" : `<div class="chips" style="justify-content:center">${["Where can I get help?", "Is a ticket seller in Battery Park legit?", "What's the emergency number?"].map((q) => `<button class="chip" data-q="${q}">${q}</button>`).join("")}</div>`}
+      </div>
+      <form class="askbar" id="form"><input id="box" placeholder="Ask Beacon anything" autocomplete="off" aria-label="Your question"><button class="sq" aria-label="Send">→</button></form>
+    </div>`;
+    $("#back").onclick = () => home();
+    $("#form").onsubmit = (e) => { e.preventDefault(); send($("#box").value); };
+    app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => send(b.dataset.q)));
+    app.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => home(b.dataset.place)));
+    const box = $("#bubbles"); box.scrollTop = box.scrollHeight;
+  };
+  const send = async (text) => {
+    text = text.trim();
+    if (!text || thinking) return;
+    const pick = recommends(text) ? nearestOf() : null;
+    chat.push({ you: true, text }); thinking = true; draw();
+    let reply = null;
+    if (sample) {
+      try {
+        const earlier = chat.slice(-5, -1).map((l) => `${l.you ? "Traveler" : "Beacon"}: ${l.text}`).join("\n") || "(nothing yet)";
+        const r = await sample(`You are Beacon, a calm safety helper for a traveler in New York. Answer using ONLY the facts below. Copy names and numbers exactly.
+If the facts don't cover it, say "I don't have that saved. In an emergency, call 911." At most 3 short steps, plain words, no headings, no markdown.${pick ? `\nRecommend ${pick.name} first.` : ""}
+FACTS
+${facts()}
+EARLIER
+${earlier}
+QUESTION: ${text}`, { modelTier: "quick", cache: false });
+        reply = r.text?.trim() || null;
+      } catch (e) { if (e?.code === "not_granted") sample = null; }
+    }
+    chat.push({ you: false, text: reply ?? plainAnswer(text), place: pick?.name || null }); thinking = false; draw();
+  };
+  draw();
+  if (question) send(question);
+}
+
+// ---------- Scan: is this legit? Claude reads the photo; you confirm the number; plain math decides ----------
+const DOT = { fair: "var(--green)", careful: "var(--yellow)", walk: "var(--amber)", unknown: "var(--muted)" };
+function scan() {
+  const s = { step: "start", photo: null, read: null, note: "", verdict: null, badge: "" };
+  const draw = () => {
+    const r = s.read || {}, kind = r.kind || "Ticket";
+    const field = (id, v, w) => `<input class="mini" id="${id}" value="${esc(v)}" style="width:${w}px" aria-label="${id}">`;
+    const body = {
+      start: () => `<p>Take or choose a photo of the price, ticket offer, meter or exchange board. Beacon checks it against scams travelers report in New York.</p>
+        <label class="btn">Choose a photo<input id="photo" type="file" accept="image/*" hidden></label>
+        <button class="link" id="type">Type it instead</button>`,
+      reading: () => `<p>Reading…</p>`,
+      confirm: () => `<div class="card col">${s.note ? `<p class="small">${esc(s.note)}</p>` : ""}
+        <h2>${r.text ? "We read" : "What are you looking at?"}</h2>${r.text ? `<p class="small">“${esc(r.text)}”</p>` : ""}
+        <div class="chips">${KINDS.map((k) => `<button class="chip ${k === kind ? "on" : ""}" data-kind="${k}">${k}</button>`).join("")}</div>
+        <div class="row">${kind === "Money"
+          ? `<span>They pay for 1</span>${field("from", r.rate?.from ?? "EUR", 64)}${field("num", r.rate?.buy ?? "", 80)}${field("to", r.rate?.to ?? "USD", 64)}`
+          : `<span>They ask</span>${field("num", r.price?.amount ?? "", 90)}${field("cur", r.price?.currency ?? "USD", 64)}`}</div>
+        <button class="btn" id="check">Check it</button></div>`,
+      verdict: () => { const v = s.verdict, w = v.warning; return `<div class="card col">
+        <div class="row"><i class="dot" style="background:${DOT[v.verdict]}"></i><h1 style="flex:1">${LABEL[v.verdict]}</h1>${s.badge ? `<span class="small">${esc(s.badge)}</span>` : ""}</div>
+        ${v.why !== LABEL[v.verdict] ? `<p>${esc(v.why)}</p>` : ""}<p>What to do: ${esc(v.whatToDo)}</p>
+        ${v.saferOption ? `<p>Better: ${esc(v.saferOption)}</p>` : ""}
+        ${w ? `<p class="small">From your New York pack${w.reports ? ` · ${w.reports} traveler reports` : ""}</p><div class="small">${w.sources.map((u) => `<a href="${u.startsWith("https://") ? esc(u) : "#"}" target="_blank" rel="noopener">${esc(u.replace("https://", ""))}</a>`).join("<br>")}</div>` : ""}
+        </div><button class="link" id="again">Scan something else</button>`; },
+    }[s.step];
+    app.innerHTML = `<div class="screen"><button class="link" id="back">← Map</button><h1>Is this legit?</h1>
+      ${s.photo ? `<img class="photo" src="${s.photo}" alt="Your photo">` : ""}${body()}</div>`;
+    $("#back").onclick = () => home();
+    $("#photo")?.addEventListener("change", (e) => takePhoto(e.target.files?.[0]));
+    $("#type")?.addEventListener("click", () => { s.step = "confirm"; draw(); });
+    $("#again")?.addEventListener("click", () => scan());
+    app.querySelectorAll("[data-kind]").forEach((b) => (b.onclick = () => { s.read = { ...(s.read || {}), kind: b.dataset.kind }; draw(); }));
+    $("#check")?.addEventListener("click", () => {
+      const k = s.read?.kind || "Ticket", n = parseNumber($("#num").value), text = s.read?.text || "";
+      const reading = k === "Money" ? { kind: k, text, rate: n == null ? null : { from: $("#from").value.trim().toUpperCase(), to: $("#to").value.trim().toUpperCase(), buy: n } }
+                                    : { kind: k, text, price: n == null ? null : { currency: $("#cur").value.trim().toUpperCase(), amount: n } };
+      s.verdict = judge(reading, ny.scams); s.step = "verdict"; draw();
+    });
+  };
+  async function takePhoto(file) {
+    if (!file) return;
+    s.photo = URL.createObjectURL(file);
+    if (!sample || !canReadPhotos) { s.step = "confirm"; s.note = "Photo reading isn't available here, so type what you see."; return draw(); }
+    s.step = "reading"; draw();
+    try {
+      const r = await sample(`Read this photo for a traveler in New York. Only write what is visible; give no advice. Return ONLY JSON:
+{"kind":"Money|Taxi|Tour|Shop|Ticket|Other","text":"what the sign or person's offer says, max 40 words","rate":{"from":"EUR","to":"USD","buy":1.05},"price":{"currency":"USD","amount":65}}
+Use 3-letter currency codes. Leave out rate or price if there is none.`, { images: [file], modelTier: "quick", cache: false });
+      const t = r.text || "";
+      s.read = JSON.parse(t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1));
+      if (!KINDS.includes(s.read.kind)) s.read.kind = "Other";
+      s.badge = "Read by Claude"; s.note = "Check the number before you go on.";
+    } catch { s.read = null; s.note = "Couldn't read it. Type what you see."; }
+    s.step = "confirm"; draw();
+  }
+  draw();
+}
+
+// ---------- SOS: write a clear message to copy into your messages app ----------
+function sos() {
+  app.innerHTML = `<div class="screen"><button class="link" id="back">← Map</button><h1>What's happening?</h1>
+    <textarea class="field" id="note" placeholder="A few words are enough"></textarea>
+    <div class="chips">${["Being followed", "Feel unsafe", "Hurt", "Lost", "Robbed"].map((q) => `<button class="chip" data-pick="${q}">${q}</button>`).join("")}</div>
+    <p class="small" id="err"></p>
+    <div id="out"></div>
+    <div class="grow"></div>
+    <button class="btn" id="write">Write the message</button>
+    <p class="small" style="text-align:center">In danger? Call 911.</p></div>`;
+  const note = $("#note");
+  $("#back").onclick = () => home();
+  app.querySelectorAll("[data-pick]").forEach((b) => (b.onclick = () => { note.value = note.value.trim() ? `${note.value.trim()}, ${b.dataset.pick.toLowerCase()}` : b.dataset.pick; }));
+  $("#write").onclick = async () => {
+    const text = note.value.trim();
+    if (!text) return ($("#err").textContent = "Type or tap what's happening first.");
+    $("#write").disabled = true; $("#write").textContent = "Writing…";
+    const near = nearestOf();
+    let msg = null;
+    if (sample) { try { msg = (await sample(`Rewrite this emergency note into a clear SOS text message for family. Max 50 words, plain text. Third person about "the traveler", in New York near ${near.name}.
+Keep every fact; add none. End with: "Call them now. If there is no answer, call 911."
+Note: "${text}"`, { modelTier: "quick", cache: false })).text?.trim(); } catch {} }
+    msg ||= `SOS from New York, near ${near.name}: ${text}. Call them now. If there is no answer, call 911.`;
+    $("#out").innerHTML = `<div class="card col"><div class="label">Your message</div><textarea class="field" id="draft" style="height:140px"></textarea><button class="btn red" id="copy">Copy to send</button></div>`;
+    $("#draft").value = msg;
+    $("#copy").onclick = () => copy($("#draft").value);
+    $("#write").remove();
+  };
+}
+
+home();
+</script>
+</body>
+</html>
