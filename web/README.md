@@ -20,3 +20,12 @@ Differences from the Android app:
 - A web page can't send a text by itself. SOS and "I'm OK" open your messages app with everything filled in; you press send.
 - AI is off until `firebase-config.js` exists (copy `firebase-config.example.js`). Until then answers come from plain rules over the saved pack, and the SOS uses a fixed sentence.
 - Outside Lapa the map is a demo: tap it to walk. Your real position is only used inside Lapa, and in the SOS message.
+
+## Beacon New York (`ny/`)
+
+A version you can use today, anywhere in New York: open `ny/` (for example http://localhost:4173/ny/).
+- A real street map (OpenStreetMap through Leaflet, tinted grey) with your live position.
+- Police stations, hospitals and 24-hour pharmacies near you, from OpenStreetMap, saved for offline. If no server answers, a starter list of Manhattan precincts and hospitals is used.
+- Ask Beacon (911, nearby places, reported scams), Scan (New York scams with fair prices), SOS and "I'm OK" through your messages app, and a 911 button.
+- `ny/js/nypack.js`: numbers and scams. `ny/js/places.js`: nearby places. `ny/js/app.js`: the screens. Shared with the Lapa demo: `js/scan.js`, `js/scams.js`, `js/store.js`, `js/ai.js`, `js/sos.js`, `styles.css`.
+- Location only works on https or localhost. The map tiles need a connection; everything else works offline once the page has been opened.

@@ -12,12 +12,16 @@ const READ_PROMPT = `Read this photo for a traveler. Only write what is visible;
  "rate":{"from":"EUR","to":"RON","buy":4.20},"price":{"currency":"EGP","amount":1500}}
 Use 3-letter currency codes; "buy" is what they pay for 1 unit of "from". Leave out rate or price if there is none.`;
 
-let city = "rio"; // the demo can switch to Bucharest for the money-exchange example
+let chosen = null; // which of `packs` is in use; the Lapa demo can switch to Bucharest for the money-exchange example
 
-export function scanScreen(app, { back, showPlace, backIcon }) {
+// packs: { key: {city, scams} } (first one is used; more than one shows a "Demo city" switch).
+// placeNames: saved places that can be shown on the map ("Show … on the map").
+export function scanScreen(app, { back, showPlace, backIcon, packs = scamPacks, placeNames = pack.places.map((p) => p.name) }) {
+  const keys = Object.keys(packs);
+  if (!keys.includes(chosen)) chosen = keys[0];
   const state = { step: "start", photo: null, read: null, note: "", verdict: null };
   const $ = (s) => app.querySelector(s);
-  const saved = () => scamPacks[city];
+  const saved = () => packs[chosen];
 
   const draw = () => {
     app.innerHTML = `<div class="screen">
@@ -26,10 +30,10 @@ export function scanScreen(app, { back, showPlace, backIcon }) {
       ${state.photo ? `<img class="scan-photo" src="${state.photo}" alt="Your photo">` : ""}
       ${{ start, reading: () => '<p>Reading…</p>', confirm, verdict }[state.step]()}
       <div class="grow"></div>
-      ${state.step === "start" ? `<button class="link small center-self" id="city">Demo city: ${saved().city} · switch to ${city === "rio" ? "Bucharest" : "Rio de Janeiro"}</button>` : ""}
+      ${state.step === "start" && keys.length > 1 ? `<button class="link small center-self" id="city">Demo city: ${saved().city} · switch</button>` : ""}
     </div>`;
     $("#back").onclick = back;
-    $("#city")?.addEventListener("click", () => { city = city === "rio" ? "bucharest" : "rio"; draw(); });
+    $("#city")?.addEventListener("click", () => { chosen = keys[(keys.indexOf(chosen) + 1) % keys.length]; draw(); });
     $("#photo")?.addEventListener("change", (e) => takePhoto(e.target.files?.[0]));
     $("#type")?.addEventListener("click", () => { state.step = "confirm"; state.note = ""; draw(); });
     $("#again")?.addEventListener("click", () => { Object.assign(state, { step: "start", photo: null, read: null, verdict: null }); draw(); });
@@ -56,7 +60,7 @@ export function scanScreen(app, { back, showPlace, backIcon }) {
   };
 
   const verdict = () => {
-    const v = state.verdict, w = v.warning, onMap = pack.places.some((p) => p.name === v.saferOption);
+    const v = state.verdict, w = v.warning, onMap = placeNames.includes(v.saferOption);
     return `<div class="card col">
       <div class="row"><i class="dot" style="background:${DOT[v.verdict]}"></i><h1 class="grow">${LABEL[v.verdict]}</h1>${state.badge ? `<span class="small">${state.badge}</span>` : ""}</div>
       ${v.why !== LABEL[v.verdict] ? `<p>${esc(v.why)}</p>` : ""}
