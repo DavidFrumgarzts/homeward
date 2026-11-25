@@ -1,0 +1,265 @@
+{
+  "logic": "UpdateThrottle",
+  "about": "Location updates during an SOS: after 200 m or 5 minutes, never more than one text every 2 minutes; with no signal points are held and one text goes out later.",
+  "cases": [
+    {
+      "name": "too soon, even after moving far",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.912,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1130000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1060000,
+        "canSend": true,
+        "pointsHeld": 0
+      },
+      "expected": {
+        "decision": "nothing"
+      }
+    },
+    {
+      "name": "2 minutes passed and moved over 200 m",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.912,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1130000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1130000,
+        "canSend": true,
+        "pointsHeld": 0
+      },
+      "expected": {
+        "decision": "send",
+        "pointsHeld": 0
+      }
+    },
+    {
+      "name": "2 minutes passed but barely moved",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.91,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1100000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1130000,
+        "canSend": true,
+        "pointsHeld": 0
+      },
+      "expected": {
+        "decision": "nothing"
+      }
+    },
+    {
+      "name": "5 minutes passed, not moved",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.91,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1100000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1300000,
+        "canSend": true,
+        "pointsHeld": 0
+      },
+      "expected": {
+        "decision": "send",
+        "pointsHeld": 0
+      }
+    },
+    {
+      "name": "exactly 2 minutes and moved",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.912,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1130000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1120000,
+        "canSend": true,
+        "pointsHeld": 0
+      },
+      "expected": {
+        "decision": "send",
+        "pointsHeld": 0
+      }
+    },
+    {
+      "name": "no signal: hold",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.912,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1130000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1400000,
+        "canSend": false,
+        "pointsHeld": 3
+      },
+      "expected": {
+        "decision": "hold"
+      }
+    },
+    {
+      "name": "signal back with points held: one catch-up text",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.91,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1100000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1400000,
+        "canSend": true,
+        "pointsHeld": 7
+      },
+      "expected": {
+        "decision": "send",
+        "pointsHeld": 7
+      }
+    },
+    {
+      "name": "signal back but last text under 2 minutes ago: wait",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.91,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1100000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1090000,
+        "canSend": true,
+        "pointsHeld": 7
+      },
+      "expected": {
+        "decision": "nothing"
+      }
+    },
+    {
+      "name": "the alert had no location: first fix goes out after the gap",
+      "fn": "decide",
+      "input": {
+        "lastSentFix": null,
+        "lastSentAtMillis": 1000000,
+        "fix": {
+          "point": {
+            "lat": -22.91,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1100000,
+          "accuracyMeters": 8.0
+        },
+        "nowMillis": 1121000,
+        "canSend": true,
+        "pointsHeld": 0
+      },
+      "expected": {
+        "decision": "send",
+        "pointsHeld": 0
+      }
+    }
+  ]
+}

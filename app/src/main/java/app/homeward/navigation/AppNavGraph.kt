@@ -1,29 +1,43 @@
 package app.homeward.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.navigation.NavType
 import androidx.compose.runtime.remember
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import android.net.Uri
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import app.homeward.app.AppServices
 import app.homeward.features.ask.AskBeaconScreen
 import app.homeward.features.contacts.ContactsScreen
 import app.homeward.features.home.HomeScreen
+import app.homeward.features.incident.contracts.ActivationMethod
+import app.homeward.features.incident.contracts.IncidentPhase
 import app.homeward.features.onboarding.OnboardingFlow
 import app.homeward.features.scancheck.ScanScreen
-import app.homeward.app.AppServices
 import app.homeward.features.sos.SosComposeScreen
 import app.homeward.features.sos.SosSentScreen
-import app.homeward.features.sos.SosViewModel
 
-// Connects screens together: which button goes where. The SOS screens share one SosViewModel.
+// Connects screens together: which button goes where.
+// The two SOS screens follow the incident engine: while an SOS is being written the compose screen
+// shows, once the alert is sent the "SOS sent" screen shows, whichever way the SOS was started.
 @Composable
 fun AppNavGraph() {
     val nav = rememberNavController()
-    val sos: SosViewModel = viewModel()
+    val incident by AppServices.incident.view.collectAsState()
+    fun open(screen: Screen) = nav.navigate(screen.route) { popUpTo(Screen.Home.route); launchSingleTop = true }
+
+    LaunchedEffect(incident.phase, incident.alertSent) {
+        if (!AppServices.onboarding.isDone()) return@LaunchedEffect
+        when {
+            incident.phase == IncidentPhase.SosActive && !incident.alertSent -> open(Screen.SosCompose)
+            incident.phase == IncidentPhase.SosActive || incident.phase == IncidentPhase.Resolved -> open(Screen.SosSent)
+        }
+    }
 
     // First launch starts with onboarding; after that, straight to Home.
     val home = "${Screen.Home.route}?place={place}"
@@ -36,7 +50,8 @@ fun AppNavGraph() {
         }
         composable(home, arguments = listOf(navArgument("place") { type = NavType.StringType; defaultValue = "" })) { entry ->
             HomeScreen(
-                onSos = { nav.navigate(Screen.SosCompose.route) },
+                // Held for 1.5 s: start the SOS (the effect above opens its screen). Already on: just open it.
+                onSos = { if (incident.phase == IncidentPhase.SosActive) open(if (incident.alertSent) Screen.SosSent else Screen.SosCompose) else AppServices.incident.startSos(ActivationMethod.SosButton) },
                 onEditContacts = { nav.navigate(Screen.Contacts.route) },
                 onAsk = { question -> nav.navigate("${Screen.Ask.route}?q=${Uri.encode(question)}") },
                 onScan = { nav.navigate(Screen.Scan.route) },
@@ -44,10 +59,8 @@ fun AppNavGraph() {
                 highlightName = remember(entry) { entry.arguments?.getString("place").orEmpty().also { entry.arguments?.putString("place", "") } },
             )
         }
-        composable(Screen.SosCompose.route) {
-            SosComposeScreen(sos, onBack = { nav.popBackStack() }, onSent = { nav.navigate(Screen.SosSent.route) })
-        }
-        composable(Screen.SosSent.route) { SosSentScreen(sos) }
+        composable(Screen.SosCompose.route) { SosComposeScreen(onCancelled = { nav.popBackStack(Screen.Home.route, inclusive = false) }) }
+        composable(Screen.SosSent.route) { SosSentScreen(onLeave = { nav.popBackStack(Screen.Home.route, inclusive = false) }) }
         composable(Screen.Scan.route) { ScanScreen(onBack = { nav.popBackStack() }, onShowPlace = { showPlace(it) }) }
         composable(Screen.Contacts.route) { ContactsScreen(onBack = { nav.popBackStack() }) }
         composable("${Screen.Ask.route}?q={q}", arguments = listOf(navArgument("q") { type = NavType.StringType; defaultValue = "" })) { entry ->

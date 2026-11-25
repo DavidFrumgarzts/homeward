@@ -4,35 +4,24 @@
 // Either way, numbers and names are copied from the pack, never made up.
 import { askAi } from "./ai.js";
 import { pack, clock, nearestPlace, zoneCloseness, zoneRiskyAt, METERS_PER_STEP } from "./pack.js";
-import { recommends } from "./scams.js";
+import { ASK_BEACON, fill } from "./prompts.js";
 
-function facts(you, hour) {
+// Everything the model may use, in the shape of shared/prompts/ask-beacon.txt (js/prompts.js).
+// It cannot search, so every fact comes from the saved pack and where you are on the map.
+export function prompt(question, earlier, you, hour) {
   const z = pack.zone;
   const zoneMeters = Math.max(0, Math.round((Math.hypot(you.x - z.cx, you.y - z.cy) - z.rx) * METERS_PER_STEP));
-  const places = pack.places.map((p) => `- ${p.name} (${p.kind}), ${Math.round(Math.hypot(p.x - you.x, p.y - you.y) * METERS_PER_STEP)} m away, open 24 hours`).join("\n");
-  return `Police: ${pack.police}. Ambulance: ${pack.ambulance}. Embassy: ${pack.embassy.name}, ${pack.embassy.phone}.
-Street to avoid: ${z.name}, about ${zoneMeters} m from you. Avoid from ${clock(z.fromHour)} to ${clock(z.toHour)} (${zoneRiskyAt(hour) ? "risky right now" : "fine at this hour"}). ${z.reason}.
-Busier, safer street: ${z.saferStreet}.
-Closest open safe places:
-${places}
-Local phrases:
-${pack.phrases.map(([en, pt]) => `- ${en} = ${pt}`).join("\n")}`;
-}
-
-function prompt(question, earlier, you, hour) {
-  const chat = earlier.slice(-2).map(([q, a]) => `Traveler: ${q}\nBeacon: ${a}`).join("\n") || "(nothing yet)";
-  return `You are Beacon, a calm safety helper for a traveler in ${pack.city}, Brazil. It is ${clock(hour)}.
-Answer the question using ONLY the facts below. Copy phone numbers and names exactly.
-If the facts don't cover it, say "I don't have that saved. Police: ${pack.police}."
-Write at most 3 short steps, plain words, no headings.${recommends(question) ? `\nRecommend ${nearestPlace(you).name} first.` : ""}
-
-FACTS
-${facts(you, hour)}
-
-EARLIER IN THIS CHAT
-${chat}
-
-QUESTION: ${question}`;
+  return fill(ASK_BEACON, {
+    city: pack.city, country: pack.country, clock: clock(hour),
+    police: pack.police, ambulance: pack.ambulance, embassyName: pack.embassy.name, embassyPhone: pack.embassy.phone,
+    zones: `- ${z.name}: ${zoneMeters} m from you. Avoid from ${clock(z.fromHour)} to ${clock(z.toHour)} (${zoneRiskyAt(hour) ? "risky right now" : "fine at this hour"}). ${z.reason}`,
+    safer: z.saferStreet,
+    places: pack.places.map((p) => `- ${p.name} (${p.kind}), ${Math.round(Math.hypot(p.x - you.x, p.y - you.y) * METERS_PER_STEP)} m away, open 24h`).join("\n"),
+    phrases: pack.phrases.map(([en, pt]) => `- ${en} = ${pt}`).join("\n"),
+    // The last two exchanges, so a follow-up like "is it open?" makes sense. Her question goes in last.
+    chat: earlier.slice(-2).map(([q, a]) => `Traveler: ${q}\nBeacon: ${a}`).join("\n") || "(nothing yet)",
+    question,
+  });
 }
 
 // No-AI answers: look for a few key words and reply with the matching saved fact.
@@ -52,7 +41,8 @@ function plainAnswer(question, you, hour) {
   return `I don't have that saved. Police: ${pack.police}.`;
 }
 
+// { text, source }: source is "on_device" or "in_cloud" when AI answered, null when the plain rules did.
 export async function answer(question, earlier, you) {
   const hour = new Date().getHours();
-  return (await askAi(prompt(question, earlier, you, hour))) ?? plainAnswer(question, you, hour);
+  return (await askAi(prompt(question, earlier, you, hour))) ?? { text: plainAnswer(question, you, hour), source: null };
 }

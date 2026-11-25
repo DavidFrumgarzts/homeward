@@ -1,0 +1,111 @@
+{
+  "note": "A made-up incident for /demo and tests. Same shape as the Firestore documents in shared/schema/README.md. Times are real timestamps; the demo player shifts them to now.",
+  "shareId": "demo",
+  "share": {
+    "tripId": "demo-trip",
+    "ownerUid": "demo",
+    "contactLabel": "Mom",
+    "createdAtMillis": 1795755360000,
+    "revoked": false
+  },
+  "incident": {
+    "id": "demo-incident",
+    "tripId": "demo-trip",
+    "ownerUid": "demo",
+    "travelerName": "Noa",
+    "city": "Rio de Janeiro",
+    "country": "Brazil",
+    "phase": "Resolved",
+    "method": "SosButton",
+    "userConfirmed": true,
+    "description": "A man is following me near the bars",
+    "situation": "followed",
+    "triggerReasons": [],
+    "message": "Noa needs help. A man is following her near the bars on Rua dos Inválidos, Lapa.\nLocation: -22.9095, -43.1842 at 1:56 AM\nMap: https://maps.google.com/?q=-22.90950,-43.18421\nFollow live: https://homeward-6999c.web.app/f/demo\nCall Noa now. If there is no answer, call 190 (police).",
+    "emergency": {
+      "police": "190",
+      "ambulance": "192",
+      "embassyName": "U.S. Consulate General Rio de Janeiro",
+      "embassyPhone": "+55 21 3823-2000"
+    },
+    "platform": "android",
+    "startedAtMillis": 1795841760000,
+    "alertSentAtMillis": 1795841780000,
+    "resolvedAtMillis": 1795842450000,
+    "updatedAtMillis": 1795842450000
+  },
+  "updates": [
+    {
+      "id": "u00",
+      "ownerUid": "demo",
+      "kind": "alert",
+      "lat": -22.909499,
+      "lng": -43.184214,
+      "takenAtMillis": 1795841775800,
+      "accuracyMeters": 8,
+      "batteryPercent": 62,
+      "pointsHeld": 0,
+      "createdAtMillis": 1795841779800
+    },
+    {
+      "id": "u01",
+      "ownerUid": "demo",
+      "kind": "update",
+      "lat": -22.910819,
+      "lng": -43.185147,
+      "takenAtMillis": 1795841912000,
+      "accuracyMeters": 8,
+      "batteryPercent": 61,
+      "pointsHeld": 0,
+      "createdAtMillis": 1795841916000
+    },
+    {
+      "id": "u02",
+      "ownerUid": "demo",
+      "kind": "update",
+      "lat": -22.911398,
+      "lng": -43.183595,
+      "takenAtMillis": 1795842062000,
+      "accuracyMeters": 8,
+      "batteryPercent": 60,
+      "pointsHeld": 0,
+      "createdAtMillis": 1795842066000
+    },
+    {
+      "id": "u03",
+      "ownerUid": "demo",
+      "kind": "update",
+      "lat": -22.911697,
+      "lng": -43.18142,
+      "takenAtMillis": 1795842212000,
+      "accuracyMeters": 8,
+      "batteryPercent": 59,
+      "pointsHeld": 0,
+      "createdAtMillis": 1795842216000
+    },
+    {
+      "id": "u04",
+      "ownerUid": "demo",
+      "kind": "update",
+      "lat": -22.912549,
+      "lng": -43.180298,
+      "takenAtMillis": 1795842362000,
+      "accuracyMeters": 8,
+      "batteryPercent": 58,
+      "pointsHeld": 0,
+      "createdAtMillis": 1795842366000
+    },
+    {
+      "id": "u05",
+      "ownerUid": "demo",
+      "kind": "ended",
+      "lat": -22.912549,
+      "lng": -43.180298,
+      "takenAtMillis": 1795842446000,
+      "accuracyMeters": 8,
+      "batteryPercent": 58,
+      "pointsHeld": 0,
+      "createdAtMillis": 1795842450000
+    }
+  ]
+}

@@ -1,0 +1,638 @@
+{
+  "logic": "ZoneChecker",
+  "about": "Point in polygon, risky hours (overnight ranges), distance to a zone's nearest edge, and the nearest risky red zone within reach.",
+  "cases": [
+    {
+      "name": "inside a square",
+      "fn": "isInside",
+      "input": {
+        "point": {
+          "lat": 0.005,
+          "lng": 0.005
+        },
+        "polygon": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.01
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.01,
+            0.0
+          ]
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "outside a square",
+      "fn": "isInside",
+      "input": {
+        "point": {
+          "lat": 0.02,
+          "lng": 0.02
+        },
+        "polygon": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.01
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.01,
+            0.0
+          ]
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "inside the Lapa red zone",
+      "fn": "isInside",
+      "input": {
+        "point": {
+          "lat": -22.9098,
+          "lng": -43.1825
+        },
+        "polygon": [
+          [
+            -22.90838,
+            -43.18348
+          ],
+          [
+            -22.90838,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18348
+          ]
+        ]
+      },
+      "expected": true
+    },
+    {
+      "name": "the bar is outside the red zone",
+      "fn": "isInside",
+      "input": {
+        "point": {
+          "lat": -22.9095,
+          "lng": -43.18421
+        },
+        "polygon": [
+          [
+            -22.90838,
+            -43.18348
+          ],
+          [
+            -22.90838,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18348
+          ]
+        ]
+      },
+      "expected": false
+    },
+    {
+      "name": "overnight range is risky at 2am",
+      "fn": "isRiskyAt",
+      "input": {
+        "riskyFromHour": 23,
+        "riskyToHour": 5,
+        "hour": 2
+      },
+      "expected": true
+    },
+    {
+      "name": "overnight range is risky at 11pm sharp",
+      "fn": "isRiskyAt",
+      "input": {
+        "riskyFromHour": 23,
+        "riskyToHour": 5,
+        "hour": 23
+      },
+      "expected": true
+    },
+    {
+      "name": "overnight range is fine at 5am sharp",
+      "fn": "isRiskyAt",
+      "input": {
+        "riskyFromHour": 23,
+        "riskyToHour": 5,
+        "hour": 5
+      },
+      "expected": false
+    },
+    {
+      "name": "overnight range is fine at noon",
+      "fn": "isRiskyAt",
+      "input": {
+        "riskyFromHour": 23,
+        "riskyToHour": 5,
+        "hour": 12
+      },
+      "expected": false
+    },
+    {
+      "name": "same-day range",
+      "fn": "isRiskyAt",
+      "input": {
+        "riskyFromHour": 9,
+        "riskyToHour": 17,
+        "hour": 16
+      },
+      "expected": true
+    },
+    {
+      "name": "always risky (0 to 24)",
+      "fn": "isRiskyAt",
+      "input": {
+        "riskyFromHour": 0,
+        "riskyToHour": 24,
+        "hour": 3
+      },
+      "expected": true
+    },
+    {
+      "name": "distance is 0 inside",
+      "fn": "distanceToZone",
+      "input": {
+        "point": {
+          "lat": -22.9098,
+          "lng": -43.1825
+        },
+        "polygon": [
+          [
+            -22.90838,
+            -43.18348
+          ],
+          [
+            -22.90838,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18348
+          ]
+        ]
+      },
+      "tolerance": 1.0,
+      "expected": 0.0
+    },
+    {
+      "name": "distance is to the edge, not a corner",
+      "fn": "distanceToZone",
+      "input": {
+        "point": {
+          "lat": 0.011,
+          "lng": 0.005
+        },
+        "polygon": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.01
+          ],
+          [
+            0.01,
+            0.01
+          ],
+          [
+            0.01,
+            0.0
+          ]
+        ]
+      },
+      "tolerance": 1.0,
+      "expected": 111.31999999999991
+    },
+    {
+      "name": "from the bar to the red zone",
+      "fn": "distanceToZone",
+      "input": {
+        "point": {
+          "lat": -22.9095,
+          "lng": -43.18421
+        },
+        "polygon": [
+          [
+            -22.90838,
+            -43.18348
+          ],
+          [
+            -22.90838,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18348
+          ]
+        ]
+      },
+      "tolerance": 1.0,
+      "expected": 74.85359823248025
+    },
+    {
+      "name": "from the avenue to the red zone",
+      "fn": "distanceToZone",
+      "input": {
+        "point": {
+          "lat": -22.9117,
+          "lng": -43.183
+        },
+        "polygon": [
+          [
+            -22.90838,
+            -43.18348
+          ],
+          [
+            -22.90838,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18149
+          ],
+          [
+            -22.91125,
+            -43.18348
+          ]
+        ]
+      },
+      "tolerance": 1.0,
+      "expected": 50.094000000080996
+    },
+    {
+      "name": "red zone ahead at night",
+      "fn": "redZoneAhead",
+      "input": {
+        "point": {
+          "lat": -22.9095,
+          "lng": -43.18421
+        },
+        "zones": [
+          {
+            "name": "Rua dos Inválidos",
+            "level": "Avoid",
+            "polygon": [
+              [
+                -22.90838,
+                -43.18348
+              ],
+              [
+                -22.90838,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18348
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "Bars close and the side streets go quiet",
+              "Robberies reported here in local news",
+              "Poor street lighting"
+            ]
+          },
+          {
+            "name": "Lapa nightlife area",
+            "level": "Careful",
+            "polygon": [
+              [
+                -22.9125,
+                -43.1815
+              ],
+              [
+                -22.912,
+                -43.1785
+              ],
+              [
+                -22.9145,
+                -43.178
+              ],
+              [
+                -22.915,
+                -43.181
+              ]
+            ],
+            "riskyFromHour": 22,
+            "riskyToHour": 5,
+            "reasons": [
+              "Crowded at night, watch for pickpockets"
+            ]
+          },
+          {
+            "name": "Av. Mem de Sá",
+            "level": "Safer",
+            "polygon": [
+              [
+                -22.91095,
+                -43.186
+              ],
+              [
+                -22.91213,
+                -43.177
+              ],
+              [
+                -22.91259,
+                -43.177
+              ],
+              [
+                -22.91141,
+                -43.186
+              ]
+            ],
+            "riskyFromHour": 0,
+            "riskyToHour": 24,
+            "reasons": [
+              "Main avenue, busy and lit late"
+            ]
+          }
+        ],
+        "hour": 1,
+        "withinMeters": 300.0
+      },
+      "expected": "Rua dos Inválidos"
+    },
+    {
+      "name": "no red zone in daytime",
+      "fn": "redZoneAhead",
+      "input": {
+        "point": {
+          "lat": -22.9095,
+          "lng": -43.18421
+        },
+        "zones": [
+          {
+            "name": "Rua dos Inválidos",
+            "level": "Avoid",
+            "polygon": [
+              [
+                -22.90838,
+                -43.18348
+              ],
+              [
+                -22.90838,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18348
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "Bars close and the side streets go quiet",
+              "Robberies reported here in local news",
+              "Poor street lighting"
+            ]
+          },
+          {
+            "name": "Lapa nightlife area",
+            "level": "Careful",
+            "polygon": [
+              [
+                -22.9125,
+                -43.1815
+              ],
+              [
+                -22.912,
+                -43.1785
+              ],
+              [
+                -22.9145,
+                -43.178
+              ],
+              [
+                -22.915,
+                -43.181
+              ]
+            ],
+            "riskyFromHour": 22,
+            "riskyToHour": 5,
+            "reasons": [
+              "Crowded at night, watch for pickpockets"
+            ]
+          },
+          {
+            "name": "Av. Mem de Sá",
+            "level": "Safer",
+            "polygon": [
+              [
+                -22.91095,
+                -43.186
+              ],
+              [
+                -22.91213,
+                -43.177
+              ],
+              [
+                -22.91259,
+                -43.177
+              ],
+              [
+                -22.91141,
+                -43.186
+              ]
+            ],
+            "riskyFromHour": 0,
+            "riskyToHour": 24,
+            "reasons": [
+              "Main avenue, busy and lit late"
+            ]
+          }
+        ],
+        "hour": 14,
+        "withinMeters": 300.0
+      },
+      "expected": null
+    },
+    {
+      "name": "too far away",
+      "fn": "redZoneAhead",
+      "input": {
+        "point": {
+          "lat": -22.916,
+          "lng": -43.179
+        },
+        "zones": [
+          {
+            "name": "Rua dos Inválidos",
+            "level": "Avoid",
+            "polygon": [
+              [
+                -22.90838,
+                -43.18348
+              ],
+              [
+                -22.90838,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18348
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "Bars close and the side streets go quiet",
+              "Robberies reported here in local news",
+              "Poor street lighting"
+            ]
+          },
+          {
+            "name": "Lapa nightlife area",
+            "level": "Careful",
+            "polygon": [
+              [
+                -22.9125,
+                -43.1815
+              ],
+              [
+                -22.912,
+                -43.1785
+              ],
+              [
+                -22.9145,
+                -43.178
+              ],
+              [
+                -22.915,
+                -43.181
+              ]
+            ],
+            "riskyFromHour": 22,
+            "riskyToHour": 5,
+            "reasons": [
+              "Crowded at night, watch for pickpockets"
+            ]
+          },
+          {
+            "name": "Av. Mem de Sá",
+            "level": "Safer",
+            "polygon": [
+              [
+                -22.91095,
+                -43.186
+              ],
+              [
+                -22.91213,
+                -43.177
+              ],
+              [
+                -22.91259,
+                -43.177
+              ],
+              [
+                -22.91141,
+                -43.186
+              ]
+            ],
+            "riskyFromHour": 0,
+            "riskyToHour": 24,
+            "reasons": [
+              "Main avenue, busy and lit late"
+            ]
+          }
+        ],
+        "hour": 1,
+        "withinMeters": 300.0
+      },
+      "expected": null
+    },
+    {
+      "name": "careful zones never count as red",
+      "fn": "redZoneAhead",
+      "input": {
+        "point": {
+          "lat": -22.9135,
+          "lng": -43.18
+        },
+        "zones": [
+          {
+            "name": "Lapa nightlife area",
+            "level": "Careful",
+            "polygon": [
+              [
+                -22.9125,
+                -43.1815
+              ],
+              [
+                -22.912,
+                -43.1785
+              ],
+              [
+                -22.9145,
+                -43.178
+              ],
+              [
+                -22.915,
+                -43.181
+              ]
+            ],
+            "riskyFromHour": 22,
+            "riskyToHour": 5,
+            "reasons": [
+              "Crowded at night, watch for pickpockets"
+            ]
+          }
+        ],
+        "hour": 23,
+        "withinMeters": 300.0
+      },
+      "expected": null
+    }
+  ]
+}

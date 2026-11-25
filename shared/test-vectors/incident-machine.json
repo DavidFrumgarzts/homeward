@@ -1,0 +1,2592 @@
+{
+  "logic": "IncidentReducer",
+  "about": "The incident state machine. Each case starts Inactive and feeds the steps in order; expected is a snapshot after every step (phase, effects, and the fields that matter). Time is the step's 'now'.",
+  "cases": [
+    {
+      "name": "confirmed SOS: describe, AI rewrite, send, deliveries, resolve",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": {
+                  "point": {
+                    "lat": -22.9095,
+                    "lng": -43.18421
+                  },
+                  "takenAtMillis": 1000000,
+                  "accuracyMeters": 8.0
+                },
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1000000,
+            "event": {
+              "type": "Describe",
+              "text": "",
+              "plainMessage": "Noa needs help."
+            }
+          },
+          {
+            "now": 1002000,
+            "event": {
+              "type": "Describe",
+              "text": "Being followed",
+              "plainMessage": "Noa needs help: Being followed."
+            }
+          },
+          {
+            "now": 1003000,
+            "event": {
+              "type": "MessageWritten",
+              "forDescription": "old words",
+              "message": "stale",
+              "ranOnDevice": true
+            }
+          },
+          {
+            "now": 1004000,
+            "event": {
+              "type": "MessageWritten",
+              "forDescription": "Being followed",
+              "message": "Noa is being followed.",
+              "ranOnDevice": true
+            }
+          },
+          {
+            "now": 1005000,
+            "event": {
+              "type": "Send",
+              "message": "Noa is being followed."
+            }
+          },
+          {
+            "now": 1006000,
+            "event": {
+              "type": "Delivery",
+              "delivery": {
+                "contactName": "Mom",
+                "channel": "Sms",
+                "status": "SavedOnPhone",
+                "updatedAtMillis": 0
+              }
+            }
+          },
+          {
+            "now": 1007000,
+            "event": {
+              "type": "Delivery",
+              "delivery": {
+                "contactName": "Mom",
+                "channel": "Sms",
+                "status": "Sent",
+                "updatedAtMillis": 0
+              }
+            }
+          },
+          {
+            "now": 1008000,
+            "event": {
+              "type": "Delivery",
+              "delivery": {
+                "contactName": "Dad",
+                "channel": "Sms",
+                "status": "Sent",
+                "updatedAtMillis": 0
+              }
+            }
+          },
+          {
+            "now": 1009000,
+            "event": {
+              "type": "Delivery",
+              "delivery": {
+                "contactName": "Mom",
+                "channel": "Sms",
+                "status": "Delivered",
+                "updatedAtMillis": 0
+              }
+            }
+          },
+          {
+            "now": 1600000,
+            "event": {
+              "type": "ImOk"
+            }
+          },
+          {
+            "now": 1601000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.9122,
+                  "lng": -43.184
+                },
+                "takenAtMillis": 1540000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1660000,
+            "event": {
+              "type": "Reset"
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "WriteMessage",
+              "description": "Being followed"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa needs help: Being followed.",
+          "messageRanOnDevice": null,
+          "writing": true,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa needs help: Being followed.",
+          "messageRanOnDevice": null,
+          "writing": true,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendAlert",
+              "message": "Noa is being followed."
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [
+            "Mom:SavedOnPhone"
+          ],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [
+            "Mom:Sent"
+          ],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [
+            "Mom:Sent",
+            "Dad:Sent"
+          ],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [
+            "Dad:Sent",
+            "Mom:Delivered"
+          ],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Resolved",
+          "effects": [
+            {
+              "type": "SendEnded"
+            },
+            {
+              "type": "StopSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [
+            "Dad:Sent",
+            "Mom:Delivered"
+          ],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": 1600000
+        },
+        {
+          "phase": "Resolved",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Being followed",
+          "situation": "followed",
+          "message": "Noa is being followed.",
+          "messageRanOnDevice": true,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [
+            "Dad:Sent",
+            "Mom:Delivered"
+          ],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1005000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": 1600000
+        },
+        {
+          "phase": "Inactive",
+          "effects": [],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "her own edit is never overwritten",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1000000,
+            "event": {
+              "type": "Describe",
+              "text": "Lost",
+              "plainMessage": "Noa needs help: Lost."
+            }
+          },
+          {
+            "now": 1001000,
+            "event": {
+              "type": "EditMessage",
+              "text": "My own words"
+            }
+          },
+          {
+            "now": 1002000,
+            "event": {
+              "type": "MessageWritten",
+              "forDescription": "Lost",
+              "message": "AI words",
+              "ranOnDevice": false
+            }
+          },
+          {
+            "now": 1003000,
+            "event": {
+              "type": "Describe",
+              "text": "Lost near the arches",
+              "plainMessage": "Noa needs help: Lost near the arches."
+            }
+          },
+          {
+            "now": 1004000,
+            "event": {
+              "type": "Send",
+              "message": "My own words"
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "WriteMessage",
+              "description": "Lost"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Lost",
+          "situation": "lost",
+          "message": "Noa needs help: Lost.",
+          "messageRanOnDevice": null,
+          "writing": true,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Lost",
+          "situation": "lost",
+          "message": "My own words",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Lost",
+          "situation": "lost",
+          "message": "My own words",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Lost near the arches",
+          "situation": "lost",
+          "message": "My own words",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendAlert",
+              "message": "My own words"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "Lost near the arches",
+          "situation": "lost",
+          "message": "My own words",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1004000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "cancel before sending, but not after",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1001000,
+            "event": {
+              "type": "Cancel"
+            }
+          },
+          {
+            "now": 1002000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1003000,
+            "event": {
+              "type": "Send",
+              "message": "Noa needs help."
+            }
+          },
+          {
+            "now": 1004000,
+            "event": {
+              "type": "Cancel"
+            }
+          },
+          {
+            "now": 1005000,
+            "event": {
+              "type": "Send",
+              "message": "   "
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [
+            {
+              "type": "StopSession"
+            }
+          ],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendAlert",
+              "message": "Noa needs help."
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1003000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1003000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1003000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "location updates: gap, distance, five minutes",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": {
+                  "point": {
+                    "lat": -22.9095,
+                    "lng": -43.18421
+                  },
+                  "takenAtMillis": 1000000,
+                  "accuracyMeters": 8.0
+                },
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1001000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.91,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1030000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1002000,
+            "event": {
+              "type": "Send",
+              "message": "Noa needs help."
+            }
+          },
+          {
+            "now": 1060000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.912,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1180000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1180000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.912,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1180000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1240000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.9121,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1240000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1540000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1541000,
+            "event": {
+              "type": "Tick"
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendAlert",
+              "message": "Noa needs help."
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 3,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendUpdate",
+              "pointsHeld": 0,
+              "takenAtMillis": 1180000
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 4,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1180000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 5,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1180000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendUpdate",
+              "pointsHeld": 0,
+              "takenAtMillis": 1240000
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 5,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1540000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 5,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1540000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "no signal: points are held, one catch-up update",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": {
+                  "point": {
+                    "lat": -22.9095,
+                    "lng": -43.18421
+                  },
+                  "takenAtMillis": 1000000,
+                  "accuracyMeters": 8.0
+                },
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1001000,
+            "event": {
+              "type": "Signal",
+              "canSend": false
+            }
+          },
+          {
+            "now": 1002000,
+            "event": {
+              "type": "Send",
+              "message": "Noa needs help."
+            }
+          },
+          {
+            "now": 1180000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.912,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1180000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1240000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.9121,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1240000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1300000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1360000,
+            "event": {
+              "type": "Signal",
+              "canSend": true
+            }
+          },
+          {
+            "now": 1361000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.9122,
+                  "lng": -43.184
+                },
+                "takenAtMillis": 1540000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1362000,
+            "event": {
+              "type": "UpdateConfirmed",
+              "atMillis": 1362000
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": false,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendAlert",
+              "message": "Noa needs help."
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": false,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 1,
+          "canSend": false,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 3,
+          "pointsHeld": 2,
+          "canSend": false,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 3,
+          "pointsHeld": 2,
+          "canSend": false,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "FlushOutbox"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 3,
+          "pointsHeld": 2,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendUpdate",
+              "pointsHeld": 2,
+              "takenAtMillis": 1540000
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 4,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1361000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 4,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1361000,
+          "lastUpdateConfirmedAtMillis": 1362000,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "battery low is sent once",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": {
+                  "point": {
+                    "lat": -22.9095,
+                    "lng": -43.18421
+                  },
+                  "takenAtMillis": 1000000,
+                  "accuracyMeters": 8.0
+                },
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          },
+          {
+            "now": 1001000,
+            "event": {
+              "type": "Battery",
+              "percent": 10
+            }
+          },
+          {
+            "now": 1002000,
+            "event": {
+              "type": "Send",
+              "message": "Noa needs help."
+            }
+          },
+          {
+            "now": 1003000,
+            "event": {
+              "type": "Battery",
+              "percent": 40
+            }
+          },
+          {
+            "now": 1004000,
+            "event": {
+              "type": "Battery",
+              "percent": 14
+            }
+          },
+          {
+            "now": 1005000,
+            "event": {
+              "type": "Battery",
+              "percent": 9
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendAlert",
+              "message": "Noa needs help."
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "SendBatteryLow",
+              "hasFix": true
+            }
+          ],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": true,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SosButton",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "Noa needs help.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1002000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": true,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "quiet safety check answered I'm OK",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "RaiseSafetyCheck",
+              "input": {
+                "sessionId": "s1",
+                "method": "SafeWalkMissedArrival",
+                "userConfirmed": false,
+                "description": "",
+                "triggerReasons": [
+                  "past expected arrival"
+                ],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              },
+              "urgent": false
+            }
+          },
+          {
+            "now": 1010000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1020000,
+            "event": {
+              "type": "AnswerSafetyCheck",
+              "ok": true
+            }
+          },
+          {
+            "now": 1030000,
+            "event": {
+              "type": "AnswerSafetyCheck",
+              "ok": false
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [
+            {
+              "type": "AskSafetyCheck",
+              "urgent": false
+            }
+          ],
+          "method": "SafeWalkMissedArrival",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": false,
+            "deadlineMillis": 1060000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [],
+          "method": "SafeWalkMissedArrival",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": false,
+            "deadlineMillis": 1060000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [
+            {
+              "type": "ClearSafetyCheck"
+            }
+          ],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "quiet check unanswered, then urgent unanswered: automatic SOS",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "RaiseSafetyCheck",
+              "input": {
+                "sessionId": "s1",
+                "method": "SafePhrase",
+                "userConfirmed": false,
+                "description": "",
+                "triggerReasons": [
+                  "left planned route"
+                ],
+                "location": {
+                  "point": {
+                    "lat": -22.9095,
+                    "lng": -43.18421
+                  },
+                  "takenAtMillis": 1000000,
+                  "accuracyMeters": 8.0
+                },
+                "online": false,
+                "startedAtMillis": 1000000
+              },
+              "urgent": false
+            }
+          },
+          {
+            "now": 1059000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1060000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1075000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.91,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1030000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1089000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1090000,
+            "event": {
+              "type": "Tick"
+            }
+          },
+          {
+            "now": 1091000,
+            "event": {
+              "type": "Describe",
+              "text": "I'm hurt",
+              "plainMessage": "Noa needs help: I'm hurt."
+            }
+          },
+          {
+            "now": 1720000,
+            "event": {
+              "type": "ImOk"
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [
+            {
+              "type": "AskSafetyCheck",
+              "urgent": false
+            }
+          ],
+          "method": "SafePhrase",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": false,
+            "deadlineMillis": 1060000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [],
+          "method": "SafePhrase",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": false,
+            "deadlineMillis": 1060000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [
+            {
+              "type": "AskSafetyCheck",
+              "urgent": true
+            }
+          ],
+          "method": "SafePhrase",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 1,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": true,
+            "deadlineMillis": 1090000,
+            "repeated": true
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [],
+          "method": "SafePhrase",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": true,
+            "deadlineMillis": 1090000,
+            "repeated": true
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [],
+          "method": "SafePhrase",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": true,
+            "deadlineMillis": 1090000,
+            "repeated": true
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "ClearSafetyCheck"
+            },
+            {
+              "type": "StartSession"
+            },
+            {
+              "type": "SendAutoAlert"
+            }
+          ],
+          "method": "SafetyCheckEscalation",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1090000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "WriteMessage",
+              "description": "I'm hurt"
+            }
+          ],
+          "method": "SafetyCheckEscalation",
+          "userConfirmed": false,
+          "description": "I'm hurt",
+          "situation": "medical",
+          "message": "Noa needs help: I'm hurt.",
+          "messageRanOnDevice": null,
+          "writing": true,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1090000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Resolved",
+          "effects": [
+            {
+              "type": "SendEnded"
+            },
+            {
+              "type": "StopSession"
+            }
+          ],
+          "method": "SafetyCheckEscalation",
+          "userConfirmed": false,
+          "description": "I'm hurt",
+          "situation": "medical",
+          "message": "Noa needs help: I'm hurt.",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": true,
+          "deliveries": [],
+          "trail": 2,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 1090000,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": 1720000
+        }
+      ]
+    },
+    {
+      "name": "quiet check upgraded to urgent, she says I need help",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "RaiseSafetyCheck",
+              "input": {
+                "sessionId": "s1",
+                "method": "SafeWalkMissedArrival",
+                "userConfirmed": false,
+                "description": "",
+                "triggerReasons": [
+                  "stopped a long time"
+                ],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              },
+              "urgent": false
+            }
+          },
+          {
+            "now": 1005000,
+            "event": {
+              "type": "RaiseSafetyCheck",
+              "input": {
+                "sessionId": "s1",
+                "method": "SafeWalkMissedArrival",
+                "userConfirmed": false,
+                "description": "",
+                "triggerReasons": [
+                  "stopped a long time",
+                  "said \"help\""
+                ],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              },
+              "urgent": true
+            }
+          },
+          {
+            "now": 1006000,
+            "event": {
+              "type": "RaiseSafetyCheck",
+              "input": {
+                "sessionId": "s1",
+                "method": "SafeWalkMissedArrival",
+                "userConfirmed": false,
+                "description": "",
+                "triggerReasons": [
+                  "ignored"
+                ],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              },
+              "urgent": false
+            }
+          },
+          {
+            "now": 1007000,
+            "event": {
+              "type": "AnswerSafetyCheck",
+              "ok": false
+            }
+          },
+          {
+            "now": 1008000,
+            "event": {
+              "type": "StartSos",
+              "input": {
+                "sessionId": "s1",
+                "method": "SosButton",
+                "userConfirmed": true,
+                "description": "",
+                "triggerReasons": [],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              }
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [
+            {
+              "type": "AskSafetyCheck",
+              "urgent": false
+            }
+          ],
+          "method": "SafeWalkMissedArrival",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": false,
+            "deadlineMillis": 1060000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [
+            {
+              "type": "AskSafetyCheck",
+              "urgent": true
+            }
+          ],
+          "method": "SafeWalkMissedArrival",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": true,
+            "deadlineMillis": 1035000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [],
+          "method": "SafeWalkMissedArrival",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": true,
+            "deadlineMillis": 1035000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [
+            {
+              "type": "ClearSafetyCheck"
+            },
+            {
+              "type": "StartSession"
+            }
+          ],
+          "method": "SafetyCheckEscalation",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SosActive",
+          "effects": [],
+          "method": "SafetyCheckEscalation",
+          "userConfirmed": true,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    },
+    {
+      "name": "I'm OK on the safety check screen; events with nothing active are ignored",
+      "fn": "run",
+      "input": {
+        "steps": [
+          {
+            "now": 1000000,
+            "event": {
+              "type": "ImOk"
+            }
+          },
+          {
+            "now": 1000000,
+            "event": {
+              "type": "Send",
+              "message": "x"
+            }
+          },
+          {
+            "now": 1000000,
+            "event": {
+              "type": "Location",
+              "fix": {
+                "point": {
+                  "lat": -22.9095,
+                  "lng": -43.18421
+                },
+                "takenAtMillis": 1000000,
+                "accuracyMeters": 8.0
+              }
+            }
+          },
+          {
+            "now": 1000000,
+            "event": {
+              "type": "Describe",
+              "text": "x",
+              "plainMessage": "x"
+            }
+          },
+          {
+            "now": 1000000,
+            "event": {
+              "type": "RaiseSafetyCheck",
+              "input": {
+                "sessionId": "s1",
+                "method": "SafeWalkMissedArrival",
+                "userConfirmed": false,
+                "description": "",
+                "triggerReasons": [],
+                "location": null,
+                "online": false,
+                "startedAtMillis": 1000000
+              },
+              "urgent": true
+            }
+          },
+          {
+            "now": 1001000,
+            "event": {
+              "type": "ImOk"
+            }
+          }
+        ]
+      },
+      "expected": [
+        {
+          "phase": "Inactive",
+          "effects": [],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        },
+        {
+          "phase": "SafetyCheckRequested",
+          "effects": [
+            {
+              "type": "AskSafetyCheck",
+              "urgent": true
+            }
+          ],
+          "method": "SafeWalkMissedArrival",
+          "userConfirmed": false,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": {
+            "urgent": true,
+            "deadlineMillis": 1030000,
+            "repeated": false
+          },
+          "endedAtMillis": null
+        },
+        {
+          "phase": "Inactive",
+          "effects": [
+            {
+              "type": "ClearSafetyCheck"
+            }
+          ],
+          "method": null,
+          "userConfirmed": null,
+          "description": "",
+          "situation": "other",
+          "message": "",
+          "messageRanOnDevice": null,
+          "writing": false,
+          "alertSent": false,
+          "deliveries": [],
+          "trail": 0,
+          "pointsHeld": 0,
+          "canSend": true,
+          "lastSentAtMillis": 0,
+          "lastUpdateConfirmedAtMillis": null,
+          "batteryLowSent": false,
+          "check": null,
+          "endedAtMillis": null
+        }
+      ]
+    }
+  ]
+}

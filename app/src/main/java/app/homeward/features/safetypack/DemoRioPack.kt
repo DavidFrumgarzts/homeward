@@ -6,8 +6,14 @@ import app.homeward.features.scancheck.ScamKind
 import app.homeward.features.scancheck.ScamLevel
 import app.homeward.features.scancheck.ScamWarning
 
-// Hand-made pack for the demo video (Lapa, Rio de Janeiro). Coordinates are approximate.
-// Real users get a pack built by SafetyPackBuilder. Check numbers before relying on them.
+// Hand-made pack for the demo (Lapa, Rio de Janeiro). Real users get a pack built by SafetyPackBuilder.
+// Check numbers before relying on them.
+//
+// Places and zones sit where the illustrated Lapa map draws them (features/lapamap), so the green dot,
+// the red patch and the warnings agree. The drawing is stylized, so these coordinates are approximate.
+//
+// This is the source of shared/fixtures/rio-lapa-pack.json, which iOS and web load. DemoPackFixtureTest
+// fails if the two differ; run it with BEACON_WRITE_FIXTURES=1 to write the file again after a change here.
 object DemoRioPack {
     val pack = SafetyPack(
         city = "Rio de Janeiro",
@@ -23,15 +29,14 @@ object DemoRioPack {
             Phrase("I need a hospital", "Preciso de um hospital"),
         ),
         safePlaces = listOf(
-            SafePlace("Shell gas station", "gas station", -22.9116, -43.1817, open24h = true, note = "main road, well lit"),
-            SafePlace("Police post Lapa", "police", -22.9128, -43.1792, open24h = false, opensHour = 8, closesHour = 22),
-            SafePlace("Hospital Souza Aguiar", "hospital", -22.9079, -43.1885, open24h = true, note = "large public hospital"),
+            SafePlace("5º DP police station", "police", -22.91255, -43.1803, open24h = true),
+            SafePlace("Hospital Cruz Vermelha", "hospital", -22.91297, -43.18456, open24h = true),
         ),
         zones = listOf(
             SafetyZone(
                 name = "Rua dos Inválidos",
                 level = ZoneLevel.Avoid,
-                polygon = listOf(listOf(-22.9105, -43.1860), listOf(-22.9100, -43.1830), listOf(-22.9125, -43.1825), listOf(-22.9130, -43.1855)),
+                polygon = listOf(listOf(-22.90838, -43.18348), listOf(-22.90838, -43.18149), listOf(-22.91125, -43.18149), listOf(-22.91125, -43.18348)),
                 riskyFromHour = 23, riskyToHour = 5,
                 reasons = listOf("Bars close and the side streets go quiet", "Robberies reported here in local news", "Poor street lighting"),
             ),
@@ -45,7 +50,7 @@ object DemoRioPack {
             SafetyZone(
                 name = "Av. Mem de Sá",
                 level = ZoneLevel.Safer,
-                polygon = listOf(listOf(-22.9135, -43.1870), listOf(-22.9130, -43.1820), listOf(-22.9140, -43.1818), listOf(-22.9145, -43.1868)),
+                polygon = listOf(listOf(-22.91095, -43.186), listOf(-22.91213, -43.177), listOf(-22.91259, -43.177), listOf(-22.91141, -43.186)),
                 reasons = listOf("Main avenue, busy and lit late"),
             ),
         ),

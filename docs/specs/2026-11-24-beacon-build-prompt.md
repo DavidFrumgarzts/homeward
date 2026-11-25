@@ -1,0 +1,372 @@
+# Build prompt: Beacon (repo: Homeward) for #BuildHybridAI 2026
+
+Paste everything below into your coding agent, opened at the root of `github.com/DavidFrumgarzts/homeward`.
+
+---
+
+## 1. What you are doing
+
+You are extending an existing Android app into a complete travel-safety product for a hackathon submission. Do not start over and do not restructure what already works.
+
+- **Product:** the app is called Beacon in everything a user sees (`app_name` is already "Beacon"). The repo and the code package stay `homeward` / `app.homeward`; do not rename packages, classes or folders.
+- **Already built** (keep, extend, do not rebuild): onboarding with an opening story on the illustrated Lapa map, a contacts picker, a "get ready offline" step; Home as a map with a bottom sheet; the Lapa illustrated map (`features/lapamap/`); Ask Beacon, an offline chat answered from the saved pack (`features/ask/`); a manual "I'm OK" message to family with optional location (`features/checkin/`); on-device SOS writing, SMS sending, safety photos, red-zone warnings, OpenStreetMap places. **Also already built: Beacon web** (`web/`), the traveler flow as a plain HTML, CSS and JavaScript page with no build step: story, setup, the drawn Lapa map (tap to walk in demo mode, real GPS inside Lapa), Ask Beacon, and SOS and "I'm OK" that open the messages app with everything filled in. Its hybrid AI path (`web/js/ai.js`, `PREFER_ON_DEVICE`) was wired but had never been run, because the config file did not exist; it exists now (section 2, step 4).
+- **Promise:** a traveler in an unfamiliar place with little or no connectivity gives the smallest possible signal that something is wrong. The app tells her what to do, keeps her trusted contacts informed without her doing anything, and gives her something to show a stranger nearby.
+- **Hackathon:** #BuildHybridAI 2026 (Firebase AI Logic hybrid inference). Submissions close **Nov 30, 2026, 2:00 PM PST**. Judged on technical implementation (how well hybrid inference is used), design (a complete product, not a proof of concept), potential impact, and quality of the idea (creative, non-obvious use of Firebase AI Logic).
+- **Platforms:** Beacon ships on **Android, iOS and Web (desktop Chrome)**, all on one Firebase project. The hackathon gives multi-platform apps strong consideration for the Grand Prize, so all three must be real, working apps that use Firebase AI Logic hybrid inference, not mock-ups. Each platform uses its native stack, because the hybrid on-device APIs only exist in the native SDKs (section 10A). Sections 3 to 10 describe the Android app; section 10A describes the shared backend, iOS and Web.
+- **Shape of the app:** one pipeline in three layers. Input is how a safety session starts and what it captures. Processing is the incident state machine and everything the SOS does. Display is the map, screens, design and UX. The layers talk only through the contracts in section 5.
+
+## 2. Before you write code
+
+1. Read `README.md`, `ARCHITECTURE.md`, `web/README.md` and every file under `web/`, `docs/specs/2026-11-24-first-screens-design.md`, `app/build.gradle.kts`, `AndroidManifest.xml`, `app/AppServices.kt`, `ai/`, `design/` (including `components/`), `navigation/`, `features/home/`, `features/onboarding/`, `features/ask/`, `features/checkin/`, `features/lapamap/`, `features/sos/` (including `sending/`), `features/safetypack/`, `features/safetymap/`, `features/safeplace/`, `features/offlinemap/`, `features/osmplaces/`, `features/safetyphoto/` and `device/`. Then look at every image in `docs/beacon-demo/img/` and `docs/walkthrough/img/` (section 9).
+2. Run `./gradlew test` and `./gradlew assembleDebug` and record the baseline. If either fails before your changes, stop and report.
+3. Check the other toolchains and record what is missing: a JDK for Gradle (Gradle 8.11.1 here cannot run on the Java 25 bundled with Android Studio; use Java 21 with `export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`, and `export ANDROID_HOME=~/Library/Android/sdk` if `local.properties` is missing; do not upgrade Gradle to work around it), `xcodebuild -version` (Xcode with the iOS 26 SDK or later; this Mac has Xcode 27.2 with the iOS 27.2 SDK and iPhone 17 and 18 simulators), `node --version` (20 or later), `firebase --version` and whether `firebase login` is done, and whether `app/google-services.json` and `ios/Beacon/GoogleService-Info.plist` exist. A missing toolchain only blocks that platform: build everything else and list exactly what the person must install.
+4. Check the Firebase project. The team's project id is `homeward-6999c`, with an Android app (`app.homeward`), an iOS app (bundle id `app.homeward`) and a web app registered. Their config files are already on disk and git-ignored: `app/google-services.json`, `ios/Beacon/GoogleService-Info.plist` and `web/firebase-config.js` (exports `firebaseConfig`, the shape `web/js/ai.js` already imports). Keep them where they are, build the Xcode and Vite projects around them, and never commit them. The project should also have Firebase AI Logic (Gemini Developer API), Anonymous Auth, Cloud Firestore and App Check turned on in the console. App Check is already **enforced** for AI Logic in this project and only the Android app is registered with it, so every AI call from iOS or web is rejected until that app sends a valid App Check token. In debug builds use the App Check debug provider on each platform, print the debug token once at first launch, and tell the person exactly where to paste it (console → App Check → Apps → the app's menu → Manage debug tokens). Registering App Attest and reCAPTCHA Enterprise for release builds is a console step for the person; list it in the report. The Google Routes API (section 8) needs billing on the project, the Routes API enabled, and a restricted API key in `MAPS_API_KEY`; if the key is not in local config, build the feature with its fallback and list this as a console step. You cannot do console steps yourself: if `firebase projects:list` does not show the project, or a config file is missing, keep building against the Firestore emulator and list the missing console steps in the report.
+5. Write a short plan to `docs/specs/2026-11-25-beacon-full-app-plan.md`: files to add, files to change, and anything in this prompt that the code or current documentation contradicts. Then start Phase 1 without waiting, unless you found a contradiction that changes the design.
+
+## 3. Rules of this codebase (keep them)
+
+- One job per file, aim for under 150 lines. Every folder has a `README.md` listing its files. Update those and `ARCHITECTURE.md` in the same commit as the code.
+- Pure logic (no Android, no AI) lives in its own file with a unit test in `app/src/test/`. Take time and location as parameters so tests control them, as `ApproachDetector` does.
+- Screens never call Firebase or Android APIs directly. Shared objects come from `AppServices`. AI models are created only in `ai/AiModels.kt`.
+- The on-device model only rewrites or classifies text it is given. Phone numbers, places and phrases come from the saved pack, never from model output. Every AI call has a non-AI fallback that returns something usable.
+- She sees and can edit any AI-written message before it is sent. The one exception is the automatic alert in section 7, which uses a fixed template and no AI.
+- Zones describe places and times, never people. Call places "nearby places to seek help", not "safe" as a guarantee.
+- Exact location goes only to trusted contacts: during an active SOS, or in an "I'm OK" message when she turned that on. Location is read on the phone only while a Safe Walk or SOS she started is running.
+- Two words must not be mixed up. **"I'm OK"** is the existing message she sends family herself (`features/checkin/`); the same button also answers a safety check and, with a confirmation, ends an active SOS. A **safety check** is the app asking her "Are you OK?" (section 7). Use these names in code and UI.
+- Never commit `google-services.json`, `local.properties` or keys. Work on a branch per phase (`beacon/phase-1-slice`, ...), small commits in the existing style, and do not push or open a PR unless asked.
+
+This task reverses two earlier decisions in `docs/specs/2026-11-24-first-screens-design.md`: live location updates to contacts are now in scope (only while an SOS is active), and the dark navy theme is replaced by the warm light Figma "Beacon v2" look already in `design/Colors.kt`. Update the doc to say so.
+
+## 4. Platform facts that shape the design
+
+These were checked against the documentation on Nov 24, 2026. The hybrid API is experimental, so re-check each one on a real device and report any that no longer hold. Sources are in section 12.
+
+1. **Gemini Nano runs only while the app is the top foreground app.** Calls made from the background, including from a foreground service, fail with `BACKGROUND_USE_BLOCKED`. Nano cannot analyse a conversation while the phone is in a pocket. Background detection must therefore be deterministic code, and Nano runs once a safety check or SOS screen is on top.
+2. **On-device inference is single-turn text from text, or from text plus one Bitmap.** No audio input, no chat. Speech must be transcribed by a separate on-device recogniser first.
+3. **AICore has per-app quotas** (`BUSY`, `PER_APP_BATTERY_USE_QUOTA_EXCEEDED`). Never call Nano in a loop or on a timer. Call it on events only, with backoff.
+4. **Inference modes:** `PREFER_ON_DEVICE` falls back to cloud; `ONLY_ON_DEVICE` throws if the model is unavailable; `PREFER_IN_CLOUD` falls back to on-device when offline; `ONLY_IN_CLOUD` throws when offline. `response.inferenceSource` says where a call ran. Config is fixed per `GenerativeModel` instance.
+5. **Target Gemini Nano 4.** The hackathon FAQ names Gemini Nano 4 as the on-device model for Android and Chrome, running on phones such as Pixel 10 and 11, Galaxy S26+, Z Fold8 and Z Flip8. When this prompt was written it was selected on Android with `OnDeviceModelOption.PREVIEW` or `PREVIEW_FAST` and needed the AICore Developer Preview on the device; check the current hybrid docs for how it is selected now. Make the model option one constant in `AiModels.kt` (and a Remote Config value, section 10) that defaults to Nano 4. Config is fixed per model instance, so at app start check the on-device model's status: if Nano 4 is downloadable, start the download in the background and show progress in "get ready"; if the device cannot run Nano 4, use the stable on-device model if it has one; if it has neither, `PREFER_ON_DEVICE` falls back to cloud and `ONLY_ON_DEVICE` jobs take their non-AI fallback. Show which on-device model is in use on the debug "AI activity" screen. On web, Nano 4 in Chrome is behind the flag "Gemma 4 for Built-in AI" in `chrome://flags`; put that in the README's setup steps and in the hardware checklist.
+6. **A foreground service that uses the microphone cannot be started while the app is in the background.** The session service must be started from a visible screen with types `location|microphone`, and the microphone opened and closed inside that running service. Outside a session, leaving a safe zone can only post a notification that opens the app.
+7. **Background location without a foreground service is delivered only a few times an hour.** Tracking needs the session foreground service.
+8. **Map tiles cannot be bulk-downloaded from the current providers.** tile.openstreetmap.org prohibits offline and prefetch use outright; `MapStyle.kt` records that CARTO forbids bulk download and caps device caching at 30 days. Keep `OfflineArea`'s small cap for raster tiles from these providers.
+9. **Overpass public servers** ask for roughly under 10,000 requests and 1 GB per day, counted per app across all its users, and far less for an app that calls regularly. One query per pack build, a unique User-Agent, cached results.
+10. **Android 16 Live Updates** (`Notification.ProgressStyle`, promoted ongoing notifications, `POST_PROMOTED_NOTIFICATIONS`) are the equivalent of an iOS Live Activity. They need `compileSdk 36`; the repo is on 35.
+
+## 5. Shared contracts (build these first, in `features/incident/contracts/`)
+
+Plain Kotlin data classes, `@Serializable`, no Android types. Adjust names to fit the code, keep the fields.
+
+```kotlin
+enum class ActivationMethod { SosButton, Widget, TalkTile, AskBeacon, VoiceShortcut, SafePhrase, SafetyCheckEscalation, SafeWalkMissedArrival }
+
+data class LocationFix(val point: GeoPoint, val takenAtMillis: Long, val accuracyMeters: Float?)
+
+data class IncidentInput(                 // input -> processing
+    val sessionId: String,
+    val method: ActivationMethod,
+    val userConfirmed: Boolean,           // false when the app raised it without her tapping
+    val description: String,              // her words or a quick pick, kept verbatim; may be empty
+    val triggerReasons: List<String>,     // plain words, e.g. "left planned route", "said 'help'"
+    val location: LocationFix?,           // null if no fix; never invent one
+    val online: Boolean,
+    val startedAtMillis: Long,
+)
+
+enum class DeliveryStatus { SavedOnPhone, WaitingForSignal, Sent, Delivered, Failed }
+
+data class ContactDelivery(val contactName: String, val channel: SendChannel, val status: DeliveryStatus, val updatedAtMillis: Long)
+
+enum class IncidentPhase { Inactive, SafetyCheckRequested, SosActive, Resolved }
+
+data class IncidentViewState(             // processing -> display
+    val phase: IncidentPhase,
+    val forMe: List<String>,              // short checklist from approved actions
+    val emergencyNumber: String,          // from the pack
+    val suggestedPlace: SafePlacePicker.Pick?,
+    val contactMessage: String,           // editable draft
+    val contactMessageRanOnDevice: Boolean?,
+    val showNearby: Phrase?,              // reviewed phrase from the pack
+    val deliveries: List<ContactDelivery>,
+    val lastFix: LocationFix?,            // UI shows its age
+    val safetyCheckSecondsLeft: Int?,
+)
+```
+
+`SavedSafetyPack` is the existing `SafetyPack`, extended in section 8. The input layer only produces `IncidentInput`. Screens only render `IncidentViewState` and call a small set of intents (`describe`, `editMessage`, `send`, `imOk`, `callEmergency`). Nobody parses AI prose to get structured values.
+
+## 6. Processing: incident state machine
+
+Create `features/incident/` with an `IncidentEngine` that owns all state and is the only writer of `IncidentViewState` (a `StateFlow`). It must survive the activity being closed, so it lives in the session service's scope, not in a ViewModel. `SosViewModel` becomes a thin adapter or is replaced.
+
+`Inactive -> SafetyCheckRequested -> SosActive -> Resolved`, with `Inactive -> SosActive` for confirmed triggers. Write the transitions as a pure function `(state, event, now) -> state + effects` and test every edge.
+
+When SOS becomes active, produce three cards:
+
+- **For me.** Choose 3 to 5 steps from a fixed, reviewed list of actions keyed by situation (lost, followed, vehicle, medical, harassment, other). On-device AI may pick the situation key from her description; with no AI, use keyword matching, defaulting to "other". Add the pack's emergency number and `SafePlacePicker`'s pick with its reason.
+- **For my contacts.** Reuse `SosMessageWriter` and `SosPrompt`. Fix the hard-coded "Noa" and "Call her now": add a small profile (name, and the pronoun she chooses, defaulting to her name with no pronoun). The message carries her description, location as coordinates plus a maps link, the fix's time, and what she wants contacts to do.
+- **Show someone nearby.** Pick the best-matching reviewed phrase from `pack.localPhrases`, shown large. No free translation offline. When online, a custom sentence may be translated with `PREFER_IN_CLOUD`, labelled "machine translated".
+
+**Delivery.** Extend `SosDispatcher` and `SmsSender` to use sent and delivery `PendingIntent`s so `Sent` and `Delivered` are reported only when the radio confirms them. With no signal the message is `SavedOnPhone` then `WaitingForSignal`, persisted in an outbox modelled on `PhotoOutbox` and `OutboxSender`, and flushed by `ConnectivityWatcher` plus a cellular-signal check. SMS needs cell signal, not data; with neither, nothing sends, and the UI must say so. Leave `PushSender` stubbed.
+
+**Ongoing updates.** While `SosActive`, send contacts a location update when she has moved more than 200 m or 5 minutes have passed, whichever comes first, and at most one SMS every 2 minutes. If updates queued while offline, send one message on reconnect with the latest fix and the count of points recorded, not a flood. Keep a local breadcrumb trail (last 200 fixes). Below 15% battery, send one "battery low, last known location" update.
+
+**End.** "I'm OK" asks for confirmation, moves to `Resolved`, tells contacts the session ended, stops updates and the microphone.
+
+## 7. Input: activation, Safe Walk and listening
+
+Create `features/session/` (the foreground service), `features/activation/`, `features/safewalk/` and `features/listening/`.
+
+**Session service.** `SafetySessionService`, foreground types `location|microphone`, started only from a visible screen. It owns location updates, the listening pipeline and the `IncidentEngine`. Add the manifest permissions and types it needs, `POST_NOTIFICATIONS`, and `RECORD_AUDIO`, and explain each in `PermissionsStep`. Its notification is the lock-screen surface: neutral wording by default ("Beacon is on"), with "I'm OK" and "SOS" actions. On Android 16 and later, upgrade it to a promoted Live Update behind an SDK check; only raise `compileSdk` to 36 if the build stays green. The iOS equivalent is the Live Activity in section 10A.
+
+**Ways to start an SOS.**
+
+1. **Hold for SOS** on Home (the red button in the mockup). Require a press of about 1.5 seconds with a visible fill, so it can't fire from a pocket; also reachable with TalkBack.
+2. **Quick Settings tile, "Beacon · Hold to talk"** (onboarding mockup 5). Tapping the tile opens a listening screen in the app, which brings the app to the front, so the microphone and Gemini Nano are allowed. She says one sentence. A keyword match plus an `ONLY_ON_DEVICE` intent check decide: danger ("Someone's following me") opens the SOS screen with her words as the description and the contact message already drafted; a question ("How do I get to my hostel?") opens Ask Beacon with that question. If the two disagree or nothing is heard, open the SOS screen, never silently drop it. Android tiles respond to a tap, and a long press normally opens the app's settings, so check whether a true hold-to-talk on the tile itself is possible; if not, keep the tap and change the label to "Tap to talk" and report it. Build this before the widget.
+3. **Home-screen widget** with a neutral name and icon that opens the same listening screen.
+4. **Ask Beacon.** If a question she types or says in Ask Beacon matches the danger keywords or the intent check, show a large "Send SOS" button at the top of the answer, prefilled with her words. Never send from Ask Beacon on its own.
+5. Voice shortcut (stretch). A static app shortcut with a deep link (`homeward://sos`). Check the current Assistant and Gemini documentation for whether a spoken shortcut name can still launch it before spending time here. The demo must not depend on it.
+6. Safe phrase. She sets a phrase in onboarding (for example "I want pepperoni pizza"). While a session is running, hearing it starts an SOS wherever she is, including inside a safe zone. Match it deterministically on the transcript (normalised, tolerant of small recognition errors), never with AI.
+
+**Safe Walk.** She starts a session, optionally with a destination and expected arrival time. Trusted areas are user-defined plus the pack's Safer zones. Add a saved **home base** (her hostel or hotel, set in onboarding or from the map) since the mockups use it everywhere: tapping "Way to my hostel" on Home answers in Ask Beacon and offers "Start Safe Walk home" with the home base as destination.
+
+**Listening modes inside a session.**
+
+- `PhraseOnly` inside a trusted area: transcribe, match the safe phrase, discard everything else immediately.
+- `Full` after leaving a trusted area: transcribe and score as below.
+- `Off` when no session is running, when she pauses it, or when SOS has been resolved.
+
+Use an on-device speech recogniser (ML Kit GenAI Speech Recognition in basic mode, or the platform on-device `SpeechRecognizer`; both need API 31, so gate by SDK and fall back to no listening below it). Gate the recogniser with a cheap voice-activity check so it is not running on silence. Audio is never written to disk and never leaves the phone. Keep at most the last 90 seconds of transcript in memory. Put the recogniser behind an interface so tests and the demo can feed it text.
+
+**Risk scoring (pure logic, `RiskScorer`, fully unit-tested).** Points are added per event and expire after 5 minutes.
+
+| Signal | Points |
+|---|---|
+| Her distress words: "help", "let me go", "stop the car", "leave me alone", "don't touch me", plus the pack's local-language equivalents | 3 |
+| Threat or coercion words from anyone: "give me your phone", "get in", "don't scream", "be quiet" | 3 |
+| Unease: "where are we going", "this isn't the way", "I'm lost", "I want to get out" | 2 |
+| Inside an Avoid zone during its risky hours | 2 |
+| Within 250 m of one and approaching (`ApproachDetector`) | 1 |
+| More than 300 m off the Safe Walk route, or moving away from the destination for 3 minutes | 2 |
+| On a walking session but moving faster than 25 km/h for 30 seconds | 2 |
+| Stopped for 5 minutes outside any trusted area between 22:00 and 05:00 | 1 |
+| Past expected arrival by 10 minutes, or a scheduled safety check missed | 3 |
+
+- Score 3 or 4: quiet safety check. One gentle vibration, "Are you OK?" on the notification, 60 seconds to answer.
+- Score 5 or more, or two 3-point speech signals within 60 seconds: urgent safety check. Full-screen prompt (check `canUseFullScreenIntent()`, fall back to a heads-up notification), 30 seconds.
+- "I'm OK" clears the score and suppresses new safety checks for 10 minutes. "I need help" starts an SOS.
+- No answer to an urgent safety check: start an SOS with `userConfirmed = false`. Contacts get a fixed template: her name, "did not respond to a safety check", the time, last location and its age, and the trigger reasons in plain words. It never states that a crime is happening.
+- No answer to a quiet safety check: repeat once as urgent.
+
+**Where Gemini Nano comes in.** When a safety check or SOS screen is on top, send the transcript window and the trigger reasons to an `ONLY_ON_DEVICE` model and ask for one of `SAFE | UNCLEAR | UNSAFE`, a situation key, and a one-sentence summary that quotes only what was said. Parse defensively; on any failure keep the rule-based result. The model may shorten a countdown or pre-fill her description. It may never cancel a safety check, lower a score or send anything. Only she can stand an alert down.
+
+## 8. Offline pack and tracking
+
+The pack is two things with different sizes, so give them different radii.
+
+- **Data (places, zones, numbers, phrases):** small JSON, cheap to store. Download with an adaptive radius: start at 5 miles, then 10, 20 and 30, stopping when the pack has at least 40 places including one police station and one hospital. Dense cities stop early; rural areas reach 30 miles. Replace `out center 200` in `OverpassQuery` so results are not cut off arbitrarily; fetch, then keep the nearest 500. Add `radiusMeters`, `centerLat`, `centerLng` and `placeCount` to `SafetyPack` with defaults so saved packs still load.
+- **Map tiles:** keep the existing small pre-save and the 30-day purge. A 30-mile radius at zoom 10 to 16 is about 31,000 raster tiles (roughly 450 MB); adding zoom 17 makes it about 123,000 (roughly 1.8 GB), and the providers forbid it. Draw places and zones as overlays so the map is still useful where street tiles are missing, and show the pack's coverage circle. Record in the plan, as a follow-up and not for this deadline, the option of a self-hosted vector extract (PMTiles with MapLibre) to get wide-area offline maps in tens of megabytes.
+- **Walking routes (Google Routes API).** When a pack is built or her home base changes, and she is online, call the Routes API (`computeRoutes`, travel mode walk) for the way to her home base from where she is, and from the pack's nearest police station and hospital. Store each route in the pack as a polyline, its steps, distance and duration, with the time it was fetched. This is the route source for "Way to my hostel" in Ask Beacon, the route line on Home, the Safe Walk destination route, and the "off the route" signal in `RiskScorer`. Rules:
+  - One file per platform makes the call (`features/routes/` on Android, the same on iOS and web), behind an interface with a fake for tests. Request only the fields you use (field mask).
+  - The key is `MAPS_API_KEY`, read from `local.properties` on Android, an untracked xcconfig on iOS and `.env.local` on web. Never commit it. If the key is missing or the call fails, do not fail the pack build: keep the existing behaviour (direction and distance to the home base, which red zones lie between, "not turn-by-turn"), and the hand-checked Lapa route in `DemoRioPack` for the demo.
+  - Routes are requested only when online and at most once per pack build or home-base change, never on a timer, and never during an SOS.
+  - Before writing code, read the current Google Maps Platform terms for the Routes API on two points and put what you found in the plan: whether route content may be drawn on a non-Google map (Beacon draws on OpenStreetMap tiles, the illustrated Lapa map and MapKit), and how long it may be stored on the device. Follow them. If drawing on a non-Google map is not allowed, show Google routes on a Google map view (Maps SDK for Android and iOS, Maps JavaScript API on web) on the screens that show a route, and say so in the report. Drop stored routes when the terms' caching limit is reached, and refetch on the next online pack refresh.
+  - A route never overrides the red zones: if a returned route passes through an Avoid zone during its risky hours, say so in the answer and on the map.
+- **Refresh:** WorkManager job, unmetered network and battery not low. Rebuild when she is more than half the pack radius from its centre or the pack is over 7 days old. Show pack age and size in the UI and let her delete it. Let her download a pack for a destination before she travels.
+- **Tracking:** put location behind one interface with sampling tiers. No session: no updates. Session inside a trusted area: every 60 seconds or 50 m. Outside: every 10 seconds or 10 m. SOS active: every 5 seconds. Drop to the slowest tier while stationary. GPS works without data but costs the most battery, so never leave the fast tier running after a session ends; add a hard 8-hour session cap with a reminder.
+
+## 9. Display
+
+**Design reference.** The Figma file is "Beacon v2". Its screens are exported to the repo, and they are the source of truth for layout, hierarchy, copy and visual style:
+
+| Mockup (`docs/beacon-demo/img/`) | Screen | In code |
+|---|---|---|
+| `1.png`, `2.png` | Opening story: the night without Beacon, then with it | `onboarding/StoryStep.kt`, `StoryMap.kt` |
+| `3.png` | Welcome | `onboarding/WelcomeStep.kt` |
+| `4.png` | Who should hear from you (contacts, "Add my location to I'm OK") | `onboarding/ContactsStep.kt` |
+| `5.png` | One press, even in your pocket (Quick Settings tile) | not built |
+| `6.png` | Getting Rio ready for when you're offline | `onboarding/GetReadyStep.kt` |
+| `7.png` | Home: map, Ask Beacon box, two suggested questions, nearest place, I'm OK, Police, Hold for SOS | `home/` |
+| `8.png` | Ask Beacon answer | `ask/AskBeaconScreen.kt` |
+| `9.png` | SOS sent | `sos/SosSentScreen.kt` |
+
+`docs/beacon-demo/index.html` is a clickable version of these screens. `docs/walkthrough/img/` holds emulator screenshots of what is built now; compare against them to see what already matches.
+
+Before building or changing any screen, open its mockup. Use the existing tokens and components: `design/Colors.kt` (warm paper background, ink text, blue primary, red only for SOS, the police call and red zones, green for OK and delivered), `design/Type.kt` (Sora for headings, Inter for body), `WhiteCard`, `PrimaryButton`, `IconCircle`, `ProgressDots`. Add new components to `design/components/` rather than styling one-off. Lapa landmark pictures come from `docs/design/landmarks/make_landmarks.py`; never hand-edit `res/drawable/landmark_*.xml`.
+
+**Where the mockups and the rules disagree, the rules win.** Make these specific changes and list them in your report:
+
+- **SOS sent (`9.png`).** "Mom, Dad and Alwis know" with a green tick is only true once those messages are confirmed. Today `SosSentScreen` counts a contact as reached when the send call didn't throw. Show the green tick and "X knows" only for `Delivered`; otherwise use the same layout with honest wording ("Saved on your phone. It sends when you have signal", "Sent to Mom, waiting for delivery"), per contact.
+- **SOS sent is also the active-session screen.** Below the mockup's cards, in the same style: the "Show someone nearby" phrase (`LocalPhrasesCard`), when the last location update went out, and a quiet "I'm safe now, end SOS" button. The mockup's "Call police 190" and "Walk to 5º DP police station" cards are the "For me" card; add the 1 to 3 checklist steps above them.
+- **Contacts (`4.png`).** "Only when you tap it. Beacon never tracks you." stops being true once SOS sends location updates and Safe Walk reads location. Change it to something accurate, for example "Only when you tap it. Beacon shares where you are only in an SOS or a Safe Walk you start."
+- **Get ready (`6.png`).** "74 safe places saved": say "places to get help". The rest of the screen stays.
+- **Ask Beacon (`8.png`).** The answer shows walking directions and "Your hostel is Rua Joaquim Silva 99, from your booking". There is no booking import. The home base address comes from what she saved. Step-by-step directions may only come from a route stored in the pack: one fetched from the Google Routes API while she was online (section 8), or the hand-checked Lapa route in `DemoRioPack`. With no stored route, answer with the direction and distance to the home base and which red zones lie between, and say it is not turn-by-turn. Replace "from your booking" with "from what you saved". Keep the cop, the follow-up box and "From your Rio pack, saved on wifi."
+- **Home (`7.png`).** The drawn route to "Your hostel" may only appear when it comes from a route stored in the pack. Add, without crowding the sheet, a small status line for pack age and whether a Safe Walk is on.
+
+**Screens with no mockup yet.** Build these in the same style (white cards on paper, one full-width blue button at the bottom, red only for SOS) and say so in your report:
+
+- **SOS compose:** one description box with a mic button, quick picks (Being followed, Feel unsafe, Hurt, Lost, In a vehicle), then the editable contact message with an "On device" or "Cloud" badge from `inferenceSource`, and Send.
+- **Talk screen** (opened by the tile and widget): a large pulsing mic, "Say what's happening", her words appearing as she speaks, and a Cancel.
+- **Safety check:** "Are you OK?", two very large buttons ("I'm OK", "I need help") and a visible countdown. Usable with one hand in the dark; full-screen over the lock screen when allowed.
+- **Safe Walk setup:** destination (home base by default), arrival time, and the trusted areas on the map.
+- **Onboarding additions:** home base, safe phrase (with a "say it now" test), microphone and notification permissions in `PermissionsStep`, and a practice SOS that sends nothing. Keep the segmented progress bar and update its count.
+- **Lock-screen notification:** neutral ("Beacon is on"), with I'm OK and SOS actions. Nothing alarming on the lock screen by default.
+- **Trusted contact:** contacts receive SMS. Make the messages read well in order (alert, updates, ended), in the style of the message card in `9.png`. An in-app or web contact view is a stretch.
+
+Keep 48 dp minimum touch targets.
+
+## 10. Hybrid inference map (make this visible to judges)
+
+| Job | Mode | Why |
+|---|---|---|
+| Research a city for the pack | Cloud only, with Google Search | Needs the web |
+| Write the SOS from what she typed | `PREFER_ON_DEVICE` | Works offline; cloud fallback on phones without Nano; she is about to send this text anyway |
+| Ask Beacon: answer from the saved pack (exists) | `PREFER_ON_DEVICE` | Works offline; answers only from pack facts |
+| Tile and widget: is this sentence danger or a question? | `ONLY_ON_DEVICE`, keyword fallback | Her words stay on the phone; ties go to SOS |
+| Judge an overheard conversation | `ONLY_ON_DEVICE` | What the microphone heard never leaves the phone; fallback is the rule scorer |
+| Pick situation and checklist | `ONLY_ON_DEVICE` | Same input as above |
+| Translate a custom sentence for a stranger | `PREFER_IN_CLOUD` | Better quality online; on-device when offline |
+| Read a safety photo, explain a zone | existing | Unchanged |
+
+**The pattern to make obvious.** Beacon is "prepare online, rely on it offline": the cloud model with Google Search builds the pack while she has wifi, and the on-device model answers from that pack when she has nothing. Say this in one sentence at the top of the README, show it in the first 30 seconds of the demo script, and show it in the product: every AI answer carries its "On device" or "Cloud" badge from `inferenceSource`, and a debug-only "AI activity" screen (and the same panel on web) lists the last 20 calls with job, mode requested, where it ran, and latency. Judges score how well hybrid inference is used, so they must be able to see it without reading code.
+
+**Use more of Firebase AI Logic, not more unrelated APIs.** Check each against the current documentation first and report any that is unavailable; none may block a phase.
+
+- **Structured output** (a response schema) for every cloud call that returns data: pack research, the situation key, the intent check's cloud fallback. This replaces defensive parsing of prose where the SDK supports it. On-device calls keep the defensive parser.
+- **Remote Config** for the model names and the on-device model option, with the current values as in-app defaults, so a model can be changed without a new build. Setting values in the console is a step for the person; list it.
+- **AI monitoring** is already a tab in the project's console: make sure calls from all three apps show up there and mention it in the README.
+- **Multimodal on-device input** where the platform supports it: the existing safety photo on Android, and on web let her attach a photo of a sign or a street in Ask Beacon, answered by Gemini Nano in Chrome with a cloud fallback.
+- **Server prompt templates** (preview) for the pack research prompt, as a stretch in Phase 5, only if it works with Google Search grounding.
+
+Add the two new model instances in `AiModels.kt`. Put this table, extended with the iOS and Web rows from section 10A (family-view summary, trip planner, Ask Beacon on each platform), in `ARCHITECTURE.md` and the README, with one column per platform.
+
+## 10A. Shared backend, iOS and Web
+
+### Stack per platform
+
+| Platform | Stack | Why this one |
+|---|---|---|
+| Android | Kotlin, Jetpack Compose, `firebase-ai` + `firebase-ai-ondevice` (existing) | Gemini Nano through AICore; direct SMS; foreground services; Quick Settings tile |
+| iOS | Swift 6, SwiftUI, iOS 26 SDK or later (deployment target iOS 18.1, the first with Apple Intelligence; Foundation Models features behind `if #available(iOS 26, *)`), Firebase Apple SDK 12.13 or later **through Swift Package Manager**, MapKit, ActivityKit, App Intents, WidgetKit, Speech | Firebase's iOS hybrid inference runs on Apple's Foundation Models and is only available through SPM; Live Activities and the Action Button are the iOS discreet surfaces |
+| Web | The existing `web/` app: plain HTML, CSS and JavaScript modules with **no build step** (keep it that way; no Vite, no TypeScript, no framework). Firebase JS SDK 12.5 or later loaded as ES modules from `gstatic.com` as `js/ai.js` already does (AI, Firestore, Auth, App Check), MapLibre GL JS from a CDN for real-street maps, Firebase Hosting serving `web/` directly | On-device inference uses Chrome's built-in Prompt API (Gemini Nano), desktop Chrome 139 or later; static hosting gives judges a URL |
+| Backend | Firebase Auth (anonymous), Cloud Firestore with offline persistence, App Check on every client, Firebase Hosting | These work on the free Spark plan (only the Routes API in section 8 needs billing); no Cloud Functions needed |
+
+Do not use Flutter, React Native or any cross-platform UI framework: none of them exposes the native hybrid on-device APIs. Share **data and behaviour**, not UI code.
+
+### Repository layout
+
+Keep the Android app where it is. Add:
+
+```
+shared/
+  schema/          JSON Schemas: safety-pack, incident, location-update, share
+  fixtures/        rio-lapa-pack.json (exported from DemoRioPack), demo-incident.json
+  test-vectors/    JSON input/expected-output cases for the pure logic (zones, place picker, risk scorer, phrase matcher, message templates)
+  prompts/         the pack research prompt and Ask Beacon prompt text, with {placeholders}
+ios/               Xcode project "Beacon" (app, widget/Live Activity extension, unit tests)
+web/               existing plain HTML/JS traveler app; add the family view, trip planner and demo to it
+firebase/          firebase.json, firestore.rules, firestore.indexes.json, rules tests
+```
+
+Every platform's unit tests load `shared/test-vectors/` and must produce the same outputs, so the three ports of `ZoneChecker`, `SafePlacePicker`, `ApproachDetector`, `RiskScorer`, the phrase matcher and the message templates behave identically. Android's existing tests stay; add a test that runs the vectors.
+
+### Shared backend (Firestore)
+
+The phones already work with no internet. Firestore is the layer that connects platforms when there is a connection.
+
+- `trips/{tripId}`: owner uid, traveler display name, city, pack reference, created time. Owner-only read and write.
+- `trips/{tripId}/incidents/{incidentId}`: phase, activation method, her description, trigger reasons, created and resolved times. Owner writes.
+- `trips/{tripId}/incidents/{incidentId}/updates/{id}`: lat, lng, taken-at, accuracy, battery. Owner writes.
+- `packs/{packId}`: a safety pack built on the web planner or a phone; owner-only.
+- `shares/{shareId}`: `shareId` is a random 128-bit id. Contains the trip id and a contact label. Rules allow `get` but never `list`, so knowing the link is the permission. A share can read its trip's incidents and updates and nothing else, and can be revoked.
+- Clients sign in anonymously. Enable Firestore offline persistence on all three clients so writes made with no signal queue and sync later; show that state honestly in the UI ("Saved on your phone").
+- Write `firestore.rules` and rules tests with the Firestore emulator (`@firebase/rules-unit-testing`). Tests prove: no one can list shares; a share cannot read another trip; a contact cannot write.
+- Android: when an SOS starts, also write the incident and its updates to Firestore, and add the family link (`https://<hosting-domain>/f/<shareId>`) to the SMS. SMS stays the path that works with no data. `PushSender` stays stubbed; the family web view replaces push.
+- App Check is required by Firebase AI Logic and must be on for every client: Play Integrity on Android, App Attest on iOS, reCAPTCHA Enterprise on web, with debug providers in debug builds. Read debug tokens from local config, never commit them.
+- **Deploys are allowed** to the team's Firebase project `homeward-6999c` and nowhere else. The judges need a public URL, so at the end of Phase 2, before the stop after Phase 3, and again in Phase 7 run `firebase deploy --only hosting,firestore` once the web build and the rules tests pass, and put the hosting URL in the phase report and the README. The hosted site may contain only the app and the fixture data in `shared/fixtures/`: no keys, no debug tokens, no real contact details. If `firebase login` is not done or the project id above is still a placeholder, do not deploy; leave the exact command in the report.
+
+### Web (desktop Chrome)
+
+Read `web/README.md` and every file in `web/` first. The traveler flow there is already built: keep its structure (one job per file, `js/ai.js` the only file that talks to AI, `js/app.js` one function per screen, every AI caller with a no-AI fallback) and its styling in `styles.css` (same colour tokens and Sora/Inter fonts; the OFL licences are in `docs/licenses/`). Add to it; do not rewrite it or introduce a bundler.
+
+0. **Traveler flow, `/` (exists; finish it).**
+   - Get its AI path working for the first time: `web/firebase-config.js` now exists, so load the page in desktop Chrome, add App Check (reCAPTCHA Enterprise, debug provider on localhost) and anonymous Auth before the first AI call, raise the Firebase SDK version in `js/ai.js` to the current one, and confirm both an on-device and a cloud answer. Have `askAi` also return where the call ran, and show the "On this computer" or "Cloud" badge on Ask Beacon answers and the SOS message.
+   - Its SOS opens the messages app, the same limit as iOS. At the same moment write the incident to Firestore and add the family link to the message, so an SOS started in the browser also shows in the family view.
+   - `js/pack.js` is a hand-made copy of the Rio pack on the drawn map's grid. Keep the drawn map and its grid, but check its facts against `shared/fixtures/rio-lapa-pack.json` in a test so the web, Android and iOS demo packs cannot drift apart.
+
+The two new parts live in the same app, as new screens and files in the same style:
+
+1. **Family view, `/f/{shareId}`.** What a trusted contact opens from the SMS. A live map (MapLibre, standard OSM tiles viewed normally, credit shown) with her latest position, its age and the trail; a timeline of the alert, each update and the end; the pack's police and embassy numbers for her city as large `tel:` links. A "What's happening and what should I do?" panel written by **`PREFER_ON_DEVICE`** (Gemini Nano in Chrome) from the incident data and pack facts only, so her location trail can be summarised without leaving the contact's computer; cloud fallback in other browsers; shows an "On this computer" or "Cloud" badge. It must never claim a crime is happening, and must fall back to a fixed template. Optional browser notification while the tab is open.
+2. **Trip planner, `/plan`.** The traveler, before leaving, enters a destination on her laptop. The web app builds the safety pack with the cloud model and Google Search (same prompt as `shared/prompts/`) plus OpenStreetMap places within the adaptive radius (section 8; one Overpass query per build), shows it on a map, lets her review it, and saves it to `packs/`. A six-digit pairing code or QR code lets her phone (Android or iOS) download it on wifi. "Ask Beacon about this city" runs `PREFER_ON_DEVICE` on the saved pack.
+- Chrome's Prompt API needs a user gesture before the model is created and a one-time model download: create the model on the first click, show download progress, and keep everything usable while it downloads.
+- **Installable and offline.** `web/sw.js` already keeps a copy of the app's files, with a hand-written file list: add every new file to it (and a test that fails when a file in `web/js/` is missing from the list), add a web app manifest so it can be installed, and cache the fonts, so after one online visit the planner opens with no connection, shows the saved pack from Firestore's offline cache, and "Ask Beacon about this city" still answers through Gemini Nano in Chrome. Show an offline indicator. Do not cache map tiles beyond what the tile provider allows.
+- A `/demo` route loads `shared/fixtures/` (a seeded trip, a replayed incident in Lapa) so judges can see the whole family view without phones. This is the hosted URL for the submission.
+- **Routes without a build step.** The app draws screens into one page, so `/f/{shareId}`, `/plan` and `/demo` are handled by a small router in `js/app.js` plus a Hosting rewrite of all paths to `index.html`; the local `python3 -m http.server` command in `web/README.md` cannot rewrite paths, so also accept `?f=`, `?plan` and `?demo` and document both.
+- **Tests.** Add a `package.json` in `web/` for development tools only (nothing it installs is shipped or imported by the page): Vitest for the shared logic, the pack check and the summary-template fallback; a Playwright smoke test for the traveler flow, `/f/` and `/plan` against the Firestore emulator. `npm test` must pass; there is no `npm run build`.
+
+### iOS (iPhone with Apple Intelligence; the team's test phone is an iPhone 15 Pro)
+
+The traveler app, matching the Android feature set as closely as iOS allows, in the Beacon v2 design (port `design/Colors.kt` and `Type.kt` to a SwiftUI theme; reuse the landmark SVGs and Figma screens in section 9).
+
+- **AI.** One place that creates the models (mirror `AiModels.kt`): hybrid `PREFER_ON_DEVICE` (Foundation Models, Gemini fallback) for the SOS message, Ask Beacon and the talk intent check; cloud-only with Google Search for pack research. On-device inference on iOS only runs while the app is in the foreground, same as Android: background detection is rule-based (ported `RiskScorer`), and the model runs once a safety check or SOS screen is open. Show the inference source badge.
+- **Onboarding:** story, contacts with `CNContactPickerViewController`, home base, safe phrase, permissions, and "get ready" that downloads a pack (from the pairing code or by building one) and checks Apple Intelligence availability, explaining what still works without it.
+- **Home:** MapKit with the pack's zones and places as overlays (they still show when tiles are not cached), the bottom sheet from `7.png`, Ask Beacon, I'm OK, Police, Hold for SOS.
+- **SOS.** iOS does not let apps send SMS silently. Prefill `MFMessageComposeViewController` with all contacts and the message, so she sends with one tap; say so on screen. At the same moment write the incident to Firestore (queues offline) and include the family link. While SOS is active, location updates go to Firestore (Always or When In Use location with background updates and the location background mode); contacts follow them in the family view. Be honest in the UI about which path worked.
+- **Discreet activation, iOS-native:** an App Intent "Beacon SOS" that she can put on the **Action Button** (iPhone 15 Pro and later) and in **Control Center** (a `ControlWidget`), and App Shortcuts phrases for Siri (check current App Intents rules on phrases; Siri phrases must include the app name, so the safe phrase stays in-app). These open the talk screen or start the SOS flow.
+- **Live Activity and Dynamic Island** for an active Safe Walk or SOS: neutral by default ("Beacon is on"), with interactive "I'm OK" and "SOS" buttons (App Intents). This is the lock-screen surface.
+- **Safe Walk and listening (Phase 6 stretch):** the same modes as Android, using `SFSpeechRecognizer` with `requiresOnDeviceRecognition` (or `SpeechAnalyzer` on iOS 26) while a session she started is running, with the audio background mode; rule-based scoring; safety checks as time-sensitive local notifications with actions.
+- **Tests:** XCTest for the ported logic against `shared/test-vectors/`; build with `xcodebuild` for the simulator. Signing: use the person's free Apple ID team for their own phone; note in the README that TestFlight needs a paid developer account.
+
+## 11. Order of work, tests and done
+
+1. **Phase 1, Android vertical slice:** contracts, `IncidentEngine`, Hold for SOS, SOS compose, the SOS sent screen with honest delivery status and outbox, the three cards, active-session updates, resolved. Also create `shared/` with the schemas, the Rio fixture and the first test vectors. This must demo end to end before anything else starts.
+2. **Phase 2, backend and family view:** Firestore model, rules and rules tests, anonymous auth and App Check on Android, Android writes incidents and updates and puts the family link in the SMS; on the existing web app, get the hybrid AI path running with App Check and Auth, then add the family view and `/demo`; Firebase Hosting serves `web/` as it is. After this phase the cross-platform story already works: an SOS on Android appears live in desktop Chrome.
+3. **Phase 3, iOS core:** project, theme, onboarding, Home with MapKit, Ask Beacon, SOS with message compose and Firestore (so an SOS on the iPhone also appears in the family view), and the logic that exists so far (zones, place picker, approach detector, message templates, incident state machine) ported and passing the shared vectors. The pack comes from the bundled `shared/fixtures/rio-lapa-pack.json` or is built on the phone; download by pairing code arrives with the web planner in Phase 5. After this phase all three platforms exist.
+4. **Phase 4, Android session and input:** session service, lock-screen notification, adaptive pack radius, refresh job, tracking tiers, talk tile and talk screen, widget, home base, Safe Walk, listening modes, `RiskScorer`, safety check, safe phrase, the SOS button in Ask Beacon. Add `RiskScorer` and the phrase matcher to the shared vectors and port both to iOS in the same phase, so the three ports stay in step. The team cannot test this phase on a real Android phone, so it is the first thing to trim if time runs short (see below).
+5. **Phase 5, platform extras:** web trip planner and pairing, and pack download by pairing code on both phones; iOS Action Button, Control Center control, Live Activity; Android Nano verdict on safety check, badges, onboarding additions, the stored Lapa route, Live Update, voice shortcut.
+6. **Phase 6, stretch:** iOS Safe Walk, listening and safety checks; web notifications.
+7. **Phase 7, submission:** README with a section per platform (how Firebase AI Logic is used on each, setup, limitations, what was built during the submission period), `ARCHITECTURE.md`, debug demo modes (recorded GPS route and scripted transcript on both phones, `/demo` on web), a three-minute demo script in `docs/` that shows all three platforms in one story (plan the trip in Chrome, walk in Lapa on Android, SOS, Mom watching in Chrome, the same flow on iPhone with the Dynamic Island), a release APK, and the hosted URL. Refresh `docs/beacon-demo/` and `docs/walkthrough/`. Confirm the Apache-2.0 licence shows in the repo's About section and App Check is on for all three apps.
+
+If time runs short, drop phase 6 first, then the parts of phase 4 that need a real Android phone to show (listening modes, the widget, Live Update), then the parts of phase 5 that are not visible in the demo script. Keep the talk tile, home base and Safe Walk. Never skip phase 7.
+
+Tests: every pure-logic file has unit tests (state machine transitions, scorer thresholds and expiry, phrase matcher, talk-tile intent keywords, adaptive radius, update throttling, message templates, delivery wording on the SOS sent screen). `./gradlew test` and `assembleDebug` must pass at the end of every phase; from the phase that adds them, so must the web tests (`npm test` in `web/`; the web app has no build step), the Firestore rules tests, and the iOS tests and simulator build.
+
+**Emulators and simulators.** An Android emulator and an iOS simulator are available on this Mac, plus desktop Chrome. At the end of every phase that changes a platform, install and launch the app there, walk the changed flow, and save screenshots to `docs/walkthrough/img/`. Use them for layout, navigation, the state machine, simulated location (a recorded GPS route), Firestore sync between the phone app and the web family view, and the cloud side of hybrid inference. Do not treat an emulator run as proof of anything in this list, which needs real hardware: Gemini Nano on Android (AICore is not on emulator images, so `PREFER_ON_DEVICE` calls fall back to cloud and `ONLY_ON_DEVICE` calls take their non-AI fallback), real SMS sending and delivery reports, the iOS message composer, App Attest and Play Integrity (use the App Check debug providers), and the Action Button. Check at run time whether Foundation Models is available in the simulator and report what you found rather than assuming.
+
+**Run the phases in two stretches, with one stop.** At the end of each phase, commit and append a short phase report to `docs/specs/2026-11-25-beacon-full-app-plan.md`.
+
+- **Stretch 1: Phases 1, 2 and 3, then stop.** Do not start Phase 4. The team has no Android phone for now, so this stop is tested on the Android emulator (the `Pixel_9` virtual device), an iPhone simulator and desktop Chrome on this Mac. First run each flow yourself on the emulator and the simulator and save screenshots; then end your turn with a checklist for the person, in the order they should do it:
+  1. Start the emulator and install the debug APK (give the exact commands).
+  2. Hold for SOS, describe what is happening, and check the contact message appears with a "Cloud" badge. The emulator has no Gemini Nano, so "Cloud" is the pass here; turning the emulator's network off should show the non-AI fallback message.
+  3. Send it. The emulator cannot deliver real SMS, so add a debug-only fake SMS sender (debug builds only, clearly labelled on screen as "Test mode: no real SMS") that walks each contact through Saved on phone, Sent and Delivered, so the screen states can be seen. Release builds must use the real sender.
+  4. Turn on airplane mode in the emulator and confirm "Saved on your phone"; turn it off and confirm it sends.
+  5. Set a simulated location and a short recorded route in the emulator and confirm location updates go out.
+  6. Open the family link in desktop Chrome and see the incident and location updates arrive; check the summary panel shows "On this computer" once Chrome's model has downloaded (README says which flag to turn on).
+  7. Open `/demo` on the hosted URL. Then open the traveler flow at the hosted root in desktop Chrome, ask Beacon a question and write an SOS, and check both show an "On this computer" or "Cloud" badge.
+  8. Build and run the iOS app on an iPhone simulator (give the exact `xcodebuild` and `xcrun simctl` commands, or the Xcode steps). Walk onboarding, see Home with the Lapa zones and places on the map, and ask Beacon a question. State which badge to expect: say whether Foundation Models turned out to be available in the simulator on this Mac, and if not, "Cloud" is the pass.
+  9. On the simulator, hold for SOS and send. The simulator cannot open the message composer, so in debug builds show the composed message on screen labelled "Test mode: Messages is not available in the simulator". Confirm the incident reaches Firestore and appears in the same family view in Chrome.
+  10. Paste the App Check debug tokens for the iOS and web apps into the console (say exactly where, and where each token is printed), since AI calls from those apps are rejected until this is done.
+
+  For each item say what a pass looks like and what to send you if it fails (a screenshot, the `adb logcat` or Xcode console lines to copy). Then list separately, under "Needs a real phone later", everything this stop could not prove: Gemini Nano 4 on Android and the "On device" badge, real SMS sending and delivery reports, Apple's on-device model and the message composer on a real iPhone, and every fact in section 4 you could not check on the emulator. Do not describe any of those as verified.
+- **Stretch 2: Phases 4 to 7 in one go,** once the person replies with the results. Fix anything they reported before starting Phase 4. Do not stop for approval between these phases.
+
+Within a stretch, stop early only if the build or tests are red and you cannot fix them, or a decision would remove a feature described here.
+
+Each phase report says: what you verified and how (unit test, build, emulator), what still needs real hardware to verify (Android: a phone that runs Gemini Nano 4 and has a SIM for on-device inference, SMS, microphone, the tile, Live Updates; iOS: an iPhone with Apple Intelligence for Foundation Models, message compose, Action Button, Live Activity; Web: desktop Chrome with the on-device model downloaded), which facts in section 4 you could re-check, and what you cut. At the very end, write a single list of everything a person must test on real devices, per platform, in the order of the demo. If something cannot be built as written, say so and propose the nearest thing that can; do not fake it with a hard-coded result outside demo mode.
+
+## 12. Sources for sections 4 and 10A
+
+- https://firebase.google.com/docs/ai-logic/hybrid/android/get-started
+- https://firebase.google.com/docs/ai-logic/hybrid/android/configuration-options
+- https://developers.google.com/ml-kit/genai
+- https://developers.google.com/ml-kit/genai/speech-recognition/android
+- https://developer.android.com/develop/background-work/services/fgs/service-types
+- https://developer.android.com/about/versions/12/foreground-services
+- https://developer.android.com/develop/sensors-and-location/location/battery
+- https://developer.android.com/develop/ui/compose/notifications/live-update
+- https://operations.osmfoundation.org/policies/tiles/
+- https://wiki.openstreetmap.org/wiki/Overpass_API
+- https://firebasehybridaihackathon.devpost.com/
+- https://firebase.google.com/docs/ai-logic/hybrid/ios/get-started
+- https://firebase.google.com/docs/ai-logic/hybrid/web/get-started
+- https://developer.chrome.com/docs/ai/get-started
+- https://developer.chrome.com/docs/ai/prompt-api

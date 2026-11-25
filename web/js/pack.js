@@ -1,13 +1,16 @@
 // The saved safety pack for Lapa, Rio de Janeiro: numbers, phrases, the red zone and safe places.
 // Hand-made for the demo, same facts as the Android app's DemoRioPack. Check numbers before relying on them.
 // Places sit on the drawn map's own grid (393 wide, 520 tall), not on real coordinates.
+// tests/pack.test.js checks every fact here against shared/fixtures/rio-lapa-pack.json, so the web,
+// Android and iOS demo packs cannot drift apart. Change the fixture and this file together.
 
 export const pack = {
   city: "Rio de Janeiro",
+  country: "Brazil",
   police: "190",
   ambulance: "192",
   embassy: { name: "U.S. Consulate General Rio de Janeiro", phone: "+55 21 3823-2000" },
-  phrases: [["Help!", "Socorro!"], ["Call the police", "Chame a polícia"], ["I need a hospital", "Preciso de um hospital"]],
+  phrases: [["Help!", "Socorro!"], ["Call the police", "Chame a polícia"], ["I am being followed", "Estou sendo seguida"], ["I need a hospital", "Preciso de um hospital"]],
   zone: { name: "Rua dos Inválidos", fromHour: 23, toHour: 5, reason: "Bars close and the side streets go quiet", saferStreet: "Av. Mem de Sá",
           cx: 153, cy: 172, rx: 40, ry: 70 },
   places: [

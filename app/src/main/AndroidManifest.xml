@@ -1,15 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- App manifest: the permissions Homeward needs, and which classes start the app. -->
+<!-- App manifest: the permissions Beacon needs, and which classes start the app. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Cloud AI, safety pack download, push. Not needed for the offline SOS. -->
+    <!-- Cloud AI, safety pack download. Not needed for the offline SOS. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- GPS works with no signal; used for the SOS location and red-zone warnings. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <!-- SMS fallback when there is no mobile data. -->
+    <!-- SOS by text: works with no mobile data, only cell signal. -->
     <uses-permission android:name="android.permission.SEND_SMS" />
+    <!-- Keeps location updates going during an SOS when the screen is off (SafetySessionService). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Shows "Beacon is on" while a session runs (Android 13+ asks the user). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Lets the SOS screen offer the phone's own speech-to-text for "say what's happening". -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
 
     <application
         android:name=".app.HomewardApplication"
@@ -19,13 +31,19 @@
 
         <activity
             android:name=".app.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- Runs only while an SOS (or, later, a Safe Walk) she started is active. -->
+        <service
+            android:name=".features.session.SafetySessionService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
         <!-- Lets the camera app save the scan-check photo into our cache. -->
         <provider
             android:name="androidx.core.content.FileProvider"

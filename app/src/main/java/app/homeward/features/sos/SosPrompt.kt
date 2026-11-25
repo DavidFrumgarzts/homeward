@@ -1,16 +1,29 @@
 package app.homeward.features.sos
 
-import app.homeward.device.GeoPoint
+import app.homeward.profile.Pronoun
+import app.homeward.profile.UserProfile
 
-// The instructions given to the ON-DEVICE model to turn a panicked note into a clear SOS.
+// PURE LOGIC: the instructions given to the model to turn a panicked note into one clear sentence.
 // Rule from past winners: the small model only REWRITES what she said. It must not invent facts.
+// It is never shown her location, the police number or the family link, and never asked to write
+// them: IncidentMessages adds those by code. Tested in SosMessageWriterTest.
+// TEMPLATE is the same text as shared/prompts/sos-sentence.txt (SharedPromptsTest fails if they differ).
 object SosPrompt {
-    fun build(userName: String, note: String, where: String, location: GeoPoint?, policeNumber: String) = """
-        Rewrite this emergency note into a clear SOS text message for family. Max 50 words.
-        Write in third person about $userName. Keep every fact from the note. Do NOT add any new facts.
-        End with: "Call her now. If she doesn't answer, call $policeNumber (police)."
-        Note from $userName: "$note"
-        Place: $where
-        Coordinates: ${location?.short() ?: "unknown"}
+    val TEMPLATE = """
+        Rewrite this emergency note as one or two clear sentences for the person's family. At most 40 words.
+        Write in the third person about {name}. {refer}
+        Keep every fact from the note. Do NOT add facts, places, numbers, advice or greetings.
+        Answer with the sentences only.
+        Note from {name}: "{note}"
     """.trimIndent()
+
+    fun build(profile: UserProfile, note: String): String {
+        val refer = when (profile.pronoun) {
+            Pronoun.She -> "Use \"she\" and \"her\" after the first mention."
+            Pronoun.He -> "Use \"he\" and \"him\" after the first mention."
+            Pronoun.They -> "Use \"they\" and \"them\" after the first mention."
+            Pronoun.UseName -> "Use the name each time; do not use \"he\" or \"she\"."
+        }
+        return TEMPLATE.replace("{name}", profile.displayName).replace("{refer}", refer).replace("{note}", note)
+    }
 }

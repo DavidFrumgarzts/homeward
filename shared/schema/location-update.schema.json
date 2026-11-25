@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "location-update",
+  "title": "Location update (…/incidents/{incidentId}/updates/{updateId})",
+  "type": "object",
+  "required": [
+    "ownerUid",
+    "kind",
+    "createdAtMillis"
+  ],
+  "properties": {
+    "ownerUid": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "alert",
+        "update",
+        "batteryLow",
+        "ended"
+      ]
+    },
+    "lat": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "lng": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "takenAtMillis": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "When the GPS fix was taken; null with lat/lng when there was no fix"
+    },
+    "accuracyMeters": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "batteryPercent": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "pointsHeld": {
+      "type": "integer",
+      "default": 0,
+      "description": "Location points recorded while there was no signal, reported with this update"
+    },
+    "createdAtMillis": {
+      "type": "number"
+    }
+  }
+}

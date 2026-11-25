@@ -1,0 +1,390 @@
+{
+  "logic": "IncidentMessages, GeoPoint.short, MapsLink",
+  "about": "Every text a trusted contact can get, in order: alert, updates, low battery, ended; plus the automatic alert. Numbers, coordinates, links and times are added by code, never by AI. Coordinates always use a dot.",
+  "cases": [
+    {
+      "name": "coordinates, 4 places",
+      "fn": "short",
+      "input": {
+        "point": {
+          "lat": -22.90951,
+          "lng": -43.18421
+        }
+      },
+      "expected": "-22.9095, -43.1842"
+    },
+    {
+      "name": "coordinates, positive and small",
+      "fn": "short",
+      "input": {
+        "point": {
+          "lat": 1.0,
+          "lng": 2.5
+        }
+      },
+      "expected": "1.0000, 2.5000"
+    },
+    {
+      "name": "map link, 5 places",
+      "fn": "mapsLink",
+      "input": {
+        "point": {
+          "lat": -22.9133,
+          "lng": -43.1801
+        }
+      },
+      "expected": "https://maps.google.com/?q=-22.91330,-43.18010"
+    },
+    {
+      "name": "plain sentence with her words",
+      "fn": "plainSentence",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "description": "Being followed, grey hoodie."
+      },
+      "expected": "Noa needs help: Being followed, grey hoodie."
+    },
+    {
+      "name": "plain sentence with no words",
+      "fn": "plainSentence",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "description": "   "
+      },
+      "expected": "Noa needs help."
+    },
+    {
+      "name": "plain sentence with no name",
+      "fn": "plainSentence",
+      "input": {
+        "profile": {
+          "name": "  ",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "description": "Lost"
+      },
+      "expected": "Your contact needs help: Lost."
+    },
+    {
+      "name": "alert, name only",
+      "fn": "alert",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "sentence": "Noa needs help: being followed.",
+        "fix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "1:56 AM",
+        "police": "190",
+        "familyLink": null
+      },
+      "expected": "Noa needs help: being followed.\nLocation: -22.9095, -43.1842 at 1:56 AM\nMap: https://maps.google.com/?q=-22.90950,-43.18421\nCall Noa now. If there is no answer, call 190 (police)."
+    },
+    {
+      "name": "alert with the family link",
+      "fn": "alert",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "sentence": "Noa needs help. A man is following her near the bars.",
+        "fix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "1:56 AM",
+        "police": "190",
+        "familyLink": "https://homeward-6999c.web.app/f/0123456789abcdef0123456789abcdef"
+      },
+      "expected": "Noa needs help. A man is following her near the bars.\nLocation: -22.9095, -43.1842 at 1:56 AM\nMap: https://maps.google.com/?q=-22.90950,-43.18421\nFollow live: https://homeward-6999c.web.app/f/0123456789abcdef0123456789abcdef\nCall Noa now. If there is no answer, call 190 (police)."
+    },
+    {
+      "name": "alert, she",
+      "fn": "alert",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "She",
+          "nationality": ""
+        },
+        "sentence": "Noa needs help: hurt.",
+        "fix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "1:56 AM",
+        "police": "190",
+        "familyLink": null
+      },
+      "expected": "Noa needs help: hurt.\nLocation: -22.9095, -43.1842 at 1:56 AM\nMap: https://maps.google.com/?q=-22.90950,-43.18421\nCall her now. If there is no answer, call 190 (police)."
+    },
+    {
+      "name": "alert, he",
+      "fn": "alert",
+      "input": {
+        "profile": {
+          "name": "Dan",
+          "pronoun": "He",
+          "nationality": ""
+        },
+        "sentence": "Dan needs help.",
+        "fix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "11:02 PM",
+        "police": "112",
+        "familyLink": null
+      },
+      "expected": "Dan needs help.\nLocation: -22.9095, -43.1842 at 11:02 PM\nMap: https://maps.google.com/?q=-22.90950,-43.18421\nCall him now. If there is no answer, call 112 (police)."
+    },
+    {
+      "name": "alert, they, no location",
+      "fn": "alert",
+      "input": {
+        "profile": {
+          "name": "Sam",
+          "pronoun": "They",
+          "nationality": ""
+        },
+        "sentence": "Sam needs help: lost.",
+        "fix": null,
+        "fixTime": null,
+        "police": "112",
+        "familyLink": null
+      },
+      "expected": "Sam needs help: lost.\nLocation: unknown (no GPS fix yet).\nCall them now. If there is no answer, call 112 (police)."
+    },
+    {
+      "name": "automatic alert with reasons",
+      "fn": "autoAlert",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "checkTime": "1:58 AM",
+        "fix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "1:55 AM",
+        "reasons": [
+          "left planned route",
+          "said \"help\""
+        ],
+        "police": "190",
+        "familyLink": "https://homeward-6999c.web.app/f/0123456789abcdef0123456789abcdef"
+      },
+      "expected": "Beacon safety check: Noa did not respond to a safety check at 1:58 AM.\nLast location: -22.9095, -43.1842 at 1:55 AM\nMap: https://maps.google.com/?q=-22.90950,-43.18421\nWhy Beacon asked: left planned route; said \"help\".\nFollow live: https://homeward-6999c.web.app/f/0123456789abcdef0123456789abcdef\nCall Noa now. If there is no answer, call 190 (police)."
+    },
+    {
+      "name": "automatic alert, no reasons, no location",
+      "fn": "autoAlert",
+      "input": {
+        "profile": {
+          "name": "Sam",
+          "pronoun": "They",
+          "nationality": ""
+        },
+        "checkTime": "1:58 AM",
+        "fix": null,
+        "fixTime": null,
+        "reasons": [],
+        "police": "112",
+        "familyLink": null
+      },
+      "expected": "Beacon safety check: Sam did not respond to a safety check at 1:58 AM.\nLast location: unknown (no GPS fix yet).\nCall them now. If there is no answer, call 112 (police)."
+    },
+    {
+      "name": "update",
+      "fn": "update",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "fix": {
+          "point": {
+            "lat": -22.91141,
+            "lng": -43.18591
+          },
+          "takenAtMillis": 1150000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "1:59 AM",
+        "pointsHeld": 0
+      },
+      "expected": "Beacon update: Noa was here at 1:59 AM.\n-22.9114, -43.1859\nhttps://maps.google.com/?q=-22.91141,-43.18591"
+    },
+    {
+      "name": "update after no signal, several points",
+      "fn": "update",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "fix": {
+          "point": {
+            "lat": -22.91141,
+            "lng": -43.18591
+          },
+          "takenAtMillis": 1150000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "2:10 AM",
+        "pointsHeld": 12
+      },
+      "expected": "Beacon update: Noa was here at 2:10 AM.\n-22.9114, -43.1859\nhttps://maps.google.com/?q=-22.91141,-43.18591\n12 location points were recorded while there was no signal."
+    },
+    {
+      "name": "update after no signal, one point",
+      "fn": "update",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "She",
+          "nationality": ""
+        },
+        "fix": {
+          "point": {
+            "lat": -22.91141,
+            "lng": -43.18591
+          },
+          "takenAtMillis": 1150000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "2:10 AM",
+        "pointsHeld": 1
+      },
+      "expected": "Beacon update: Noa was here at 2:10 AM.\n-22.9114, -43.1859\nhttps://maps.google.com/?q=-22.91141,-43.18591\n1 location point was recorded while there was no signal."
+    },
+    {
+      "name": "battery low",
+      "fn": "batteryLow",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "fix": {
+          "point": {
+            "lat": -22.9095,
+            "lng": -43.18421
+          },
+          "takenAtMillis": 1000000,
+          "accuracyMeters": 8.0
+        },
+        "fixTime": "2:20 AM"
+      },
+      "expected": "Beacon: Noa's phone battery is low. Updates may stop.\nLast known location: -22.9095, -43.1842 at 2:20 AM\nMap: https://maps.google.com/?q=-22.90950,-43.18421"
+    },
+    {
+      "name": "battery low, no location",
+      "fn": "batteryLow",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "fix": null,
+        "fixTime": null
+      },
+      "expected": "Beacon: Noa's phone battery is low. Updates may stop.\nLast known location: unknown (no GPS fix yet)."
+    },
+    {
+      "name": "ended, name only",
+      "fn": "ended",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "UseName",
+          "nationality": ""
+        },
+        "time": "2:07 AM"
+      },
+      "expected": "Beacon: Noa says the SOS is over (2:07 AM). Beacon has stopped sharing Noa's location."
+    },
+    {
+      "name": "ended, she",
+      "fn": "ended",
+      "input": {
+        "profile": {
+          "name": "Noa",
+          "pronoun": "She",
+          "nationality": ""
+        },
+        "time": "2:07 AM"
+      },
+      "expected": "Beacon: Noa says the SOS is over (2:07 AM). Beacon has stopped sharing her location."
+    },
+    {
+      "name": "ended, they",
+      "fn": "ended",
+      "input": {
+        "profile": {
+          "name": "Sam",
+          "pronoun": "They",
+          "nationality": ""
+        },
+        "time": "2:07 AM"
+      },
+      "expected": "Beacon: Sam says the SOS is over (2:07 AM). Beacon has stopped sharing their location."
+    },
+    {
+      "name": "ended, he",
+      "fn": "ended",
+      "input": {
+        "profile": {
+          "name": "Dan",
+          "pronoun": "He",
+          "nationality": ""
+        },
+        "time": "2:07 AM"
+      },
+      "expected": "Beacon: Dan says the SOS is over (2:07 AM). Beacon has stopped sharing his location."
+    }
+  ]
+}

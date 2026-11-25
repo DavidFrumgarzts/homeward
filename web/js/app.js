@@ -1,20 +1,28 @@
 // Beacon web: decides which screen is showing and draws it.
-// One function per screen, in the order a new user sees them:
+// The traveler's screens, one function each, in the order a new user sees them:
 //   story -> welcome -> contacts -> ready -> home -> (ask | sos -> sent)
 // Each screen builds its HTML, puts it in #app, then wires up its buttons.
+// Two more pages live at their own addresses (js/router.js): the family view (js/family.js) at
+// /f/{shareId}, and the same view with a replayed, made-up incident at /demo.
 import { store, cleanPhone, joinNames } from "./store.js";
 import { pack, START, clock, nearestPlace, zoneCloseness, zoneRiskyAt } from "./pack.js";
 import { mapSvg, dotSvg, badge, tapToSpot, gpsToSpot, headingBetween } from "./map.js";
 import { copSvg } from "./cop.js";
 import { answer } from "./ask.js";
-import { aiReady } from "./ai.js";
-import { writeSos, checkInText, smsLink } from "./sos.js";
+import { aiReady, sourceLabel, warmUp } from "./ai.js";
+import { writeSos, checkInText, smsLink, endedText } from "./sos.js";
+import { esc, aiBadge } from "./html.js";
+import { route } from "./router.js";
+import { familyScreen } from "./family.js";
+import { watchShare } from "./familydata.js";
+import { watchDemo } from "./demo.js";
+import { prepareIncident, saveIncident, endIncident, flushPending, resumeSync } from "./incident.js";
+import { pickSituation } from "./situation.js";
 import { scanScreen } from "./scan.js";
 import { recommends } from "./scams.js";
 
 const app = document.getElementById("app");
 const $ = (selector) => app.querySelector(selector);
-const esc = (text) => String(text).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // Where you are on the drawn map. Starts at the demo spot; real GPS takes over if you are in Lapa.
 const here = { you: { ...START }, heading: null, demo: true, real: null };
@@ -29,6 +37,7 @@ const icon = {
   camera: '<svg viewBox="0 0 24 24" fill="none" stroke="#2F6BFF" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>',
 };
+const CHECK = '<svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#22A06B" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#E4F4EC"/><path d="M48 67l12 12 24-26" stroke="#22A06B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const progress = (step) => `<div class="progress">${[1, 2, 3].map((i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
 
 // ---------- Story: one night in Lapa, without and then with Beacon ----------
@@ -182,7 +191,7 @@ function watchGps() {
   if (watching || !navigator.geolocation) return;
   watching = true;
   navigator.geolocation.watchPosition((pos) => {
-    here.real = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    here.real = { lat: pos.coords.latitude, lng: pos.coords.longitude, takenAtMillis: pos.timestamp, accuracy: pos.coords.accuracy };
     const spot = gpsToSpot(here.real.lat, here.real.lng);
     if (!spot) return;
     here.heading = headingBetween(here.you, spot) ?? here.heading; here.you = spot; here.demo = false;
@@ -191,14 +200,14 @@ function watchGps() {
 }
 
 // ---------- Ask Beacon: a chat that answers from the saved pack ----------
-const chat = []; // [{you: true|false, text, place?}] place = the saved place Beacon recommended, for "Show on map"
+const chat = []; // [{you, text, source, place}]: source = where an AI answer ran (null = plain rules); place = the saved place Beacon recommended, for "Show on map"
 async function ask(question) {
   let thinking = false, talking = false;
   const draw = () => {
     app.innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
       <div class="chat-top"><button class="back" id="back" aria-label="Back">${icon.back}</button>${copSvg(talking)}</div>
       <div class="bubbles" id="bubbles">
-        ${chat.map((line) => `<div class="bubble ${line.you ? "you" : "beacon"}">${esc(line.text)}</div>${line.place && !talking ? `<button class="link left show" data-place="${esc(line.place)}">Show ${esc(line.place)} on the map</button>` : ""}`).join("")}
+        ${chat.map((line) => `<div class="bubble ${line.you ? "you" : "beacon"}">${esc(line.text)}</div>${line.you ? "" : aiBadge(sourceLabel(line.source))}${line.place && !talking ? `<button class="link left show" data-place="${esc(line.place)}">Show ${esc(line.place)} on the map</button>` : ""}`).join("")}
         ${thinking ? '<div class="bubble beacon">…</div>' : ""}
         ${chat.length || thinking ? "" : `<div class="stack center">${["What's the police number?", "Is this area OK now?", "Where's a safe place?"].map((q) => `<button class="chip label" data-q="${q}">${q}</button>`).join("")}</div>`}
       </div>
@@ -217,7 +226,7 @@ async function ask(question) {
     const earlier = []; for (let i = 0; i + 1 < chat.length; i += 2) earlier.push([chat[i].text, chat[i + 1].text]);
     chat.push({ you: true, text }); thinking = true; draw();
     const reply = await answer(text, earlier, here.you);
-    chat.push({ you: false, text: reply, place: recommends(text) ? nearestPlace(here.you).name : null }); thinking = false; talking = true; draw();
+    chat.push({ you: false, text: reply.text, source: reply.source, place: recommends(text) ? nearestPlace(here.you).name : null }); thinking = false; talking = true; draw();
     setTimeout(() => { talking = false; if ($("#bubbles")) { draw(); $("#box").focus(); } }, 1600);
   };
   draw();
@@ -225,15 +234,19 @@ async function ask(question) {
 }
 
 // ---------- SOS: a few words in, a clear message out ----------
-function sos(note = "", draft = "") {
+// draft is null until the message is written; then { text, source, ids }:
+// source = where AI rewrote her words (null = plain sentence), ids = the family page's ids (null = no Firebase).
+function sos(note = "", draft = null) {
   const people = store.contacts;
   app.innerHTML = `<div class="screen">
     <button class="back" id="back" style="position:static;transform:none" aria-label="Back">${icon.back}</button>
     <h1>What's happening?</h1>
     <textarea class="field" id="note" placeholder="A few words are enough">${esc(note)}</textarea>
-    <div class="chips">${["Being followed", "Feel unsafe", "Hurt", "Lost"].map((q) => `<button class="chip" data-pick="${q}">${q}</button>`).join("")}</div>
+    <div class="chips">${["Being followed", "Feel unsafe", "Hurt", "Lost", "In a vehicle"].map((q) => `<button class="chip" data-pick="${q}">${q}</button>`).join("")}</div>
     <p class="error" id="error"></p>
-    ${draft ? `<div class="stack"><div class="label">Message to ${esc(joinNames(people.map((c) => c.name)))}</div><textarea class="field" id="draft" style="height:150px">${esc(draft)}</textarea></div>` : ""}
+    ${draft ? `<div class="stack"><div class="row-between"><span class="label">Message to ${esc(joinNames(people.map((c) => c.name)))}</span>${aiBadge(sourceLabel(draft.source))}</div>
+      <textarea class="field" id="draft" style="height:190px">${esc(draft.text)}</textarea>
+      <p class="small">${draft.ids ? "The link in it opens a page where they can follow this SOS. " : ""}You can change anything before you send.</p></div>` : ""}
     <div class="grow"></div>
     ${draft ? `<a class="btn red" id="send" style="display:grid;place-items:center;text-decoration:none" href="#">Open messages to send</a>` : `<button class="btn" id="write">Write the message</button>`}
   </div>`;
@@ -243,33 +256,93 @@ function sos(note = "", draft = "") {
   app.querySelectorAll("[data-pick]").forEach((b) => (b.onclick = () => { noteBox.value = noteBox.value.trim() ? `${noteBox.value.trim()}, ${b.dataset.pick.toLowerCase()}` : b.dataset.pick; error.textContent = ""; }));
   if (!draft) {
     $("#write").onclick = async () => {
-      if (!noteBox.value.trim()) return (error.textContent = "Type or tap what's happening first.");
+      const words = noteBox.value.trim();
+      if (!words) return (error.textContent = "Type or tap what's happening first.");
       $("#write").disabled = true; $("#write").textContent = "Writing…";
-      sos(noteBox.value, await writeSos(store.name, noteBox.value.trim(), here.real));
+      const ids = await prepareIncident();
+      sos(words, { ...(await writeSos(store.name, words, here.real, ids?.link ?? null)), ids });
     };
   } else {
     const link = $("#send"), draftBox = $("#draft");
     const refresh = () => (link.href = smsLink(people.map((c) => c.phone), draftBox.value));
     draftBox.oninput = refresh; refresh();
-    link.onclick = () => setTimeout(() => sent(draftBox.value), 300); // let the messages app open first
+    link.onclick = () => setTimeout(() => sent(draftBox.value, noteBox.value.trim(), draft.ids), 300); // let the messages app open first
   }
 }
 
 // ---------- After the SOS: call the police, walk to a safe place, words to show people ----------
-function sent(message) {
-  const place = nearestPlace(here.you);
+// ids: the family page's ids, or null when there is no Firebase. The incident is saved for the family
+// page here, at the moment she opens her messages app.
+function sent(message, note, ids) {
+  const place = nearestPlace(here.you), people = store.contacts;
+  // What is true about the family page right now, in plain words.
+  const SYNC = {
+    saving: "Family page: saving…",
+    synced: "Family page updated. The link in your message shows them this SOS.",
+    saved: "Family page: saved on this device. It updates when you're online.",
+    failed: "Family page could not be updated. Your text still has your message.",
+    off: "",
+  };
   app.innerHTML = `<div class="screen center" style="text-align:center">
-    <svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#22A06B" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#E4F4EC"/><path d="M48 67l12 12 24-26" stroke="#22A06B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    ${CHECK}
     <h1>Press send in your messages app</h1>
+    <p class="small" id="sync" aria-live="polite">${ids ? SYNC.saving : ""}</p>
     <div class="card" style="width:100%;text-align:left"><p class="small" style="color:var(--ink);white-space:pre-wrap">${esc(message)}</p></div>
     <a class="btn red" style="display:grid;place-items:center;text-decoration:none" href="tel:${pack.police}">Call police ${pack.police}</a>
     <div class="outline" style="width:100%;text-align:left">${badge(place.kind, 32)}<div><div class="label">Walk to ${place.name}</div><p class="small">${place.meters} m, open 24 hours</p></div></div>
     <div class="card" style="width:100%;text-align:left;flex-direction:column;align-items:flex-start;gap:8px"><div class="label">Show to people nearby</div>${pack.phrases.slice(0, 2).map(([en, pt]) => `<div><div class="phrase">${pt}</div><p class="small">${en}</p></div>`).join("")}</div>
-    <div class="grow"></div><button class="link" id="back">Back to the map</button></div>`;
+    <div class="grow"></div>
+    <div id="end" class="stack center" style="width:100%"></div>
+    <button class="link" id="back">Back to the map</button></div>`;
   $("#back").onclick = home;
+  const say = (status) => { if ($("#sync")) $("#sync").textContent = SYNC[status] ?? ""; };
+  if (ids) {
+    saveIncident(ids, { name: store.name, description: note, situation: pickSituation(note), message, fix: here.real }, () => say("synced")).then(say);
+  }
+  // Ending it: tell the family page, then open messages with a short "it's over" text for her to send.
+  // She confirms on the page itself (a browser pop-up can be blocked without her seeing it).
+  const offerEnd = () => {
+    $("#end").innerHTML = `<button class="btn quiet" id="safe">${icon.check}I'm safe now, end SOS</button>`;
+    $("#safe").onclick = () => {
+      $("#end").innerHTML = `<p class="label">End the SOS and tell your contacts it is over?</p>
+        <div class="two" style="width:100%"><button id="yes">Yes, end it</button><button id="no">Not yet</button></div>`;
+      $("#no").onclick = offerEnd;
+      $("#yes").onclick = end;
+    };
+  };
+  offerEnd();
+  const end = () => {
+    if (ids) endIncident(ids, here.real);
+    const over = endedText(store.name);
+    app.innerHTML = `<div class="screen center" style="text-align:center">${CHECK}<h1>SOS ended</h1>
+      <p class="small">Press send in your messages app so they know.</p>
+      <div class="card" style="width:100%;text-align:left"><p class="small" style="color:var(--ink);white-space:pre-wrap">${esc(over)}</p></div>
+      <a class="btn" style="display:grid;place-items:center;text-decoration:none" href="${esc(smsLink(people.map((c) => c.phone), over))}">Open messages to send</a>
+      <div class="grow"></div><button class="link" id="back">Back to the map</button></div>`;
+    $("#back").onclick = home;
+  };
+}
+
+// ---------- On-device AI getting ready ----------
+// Chrome downloads its built-in model once, after the first click on the page. A small note at the
+// bottom shows the progress; nothing waits for it (answers come from the cloud until it is ready).
+function showAiProgress(loaded) {
+  let note = document.getElementById("ai-status");
+  if (!note) { if (loaded >= 1) return; note = Object.assign(document.createElement("div"), { id: "ai-status" }); note.setAttribute("role", "status"); document.body.append(note); }
+  note.textContent = loaded >= 1 ? "AI is ready on this computer" : `Getting AI ready on this computer · ${Math.round(loaded * 100)}%`;
+  if (loaded >= 1) setTimeout(() => note.remove(), 2500);
 }
 
 // ---------- Start ----------
 if (new URLSearchParams(location.search).has("reset")) store.reset(); // add ?reset to the address to start over
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {}); // lets the page open offline
-store.setupDone && store.contacts.length ? home() : story();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {}); // lets the page open offline
+document.addEventListener("click", () => warmUp(showAiProgress), { once: true });
+const page = route(location);
+if (page.name === "family") familyScreen(app, (onState) => watchShare(page.param, onState));
+else if (page.name === "demo") familyScreen(app, watchDemo, { demo: true });
+else {
+  store.setupDone && store.contacts.length ? home() : story();
+  // An SOS saved while there was no connection goes to the family page once there is one.
+  resumeSync();
+  addEventListener("online", () => flushPending());
+}

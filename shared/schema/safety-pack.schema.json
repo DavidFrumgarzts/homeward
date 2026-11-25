@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "safety-pack",
+  "title": "Safety pack",
+  "description": "Everything Beacon needs for one city, saved on the device so it works offline.",
+  "type": "object",
+  "required": [
+    "city",
+    "country",
+    "police",
+    "ambulance",
+    "embassyName",
+    "embassyPhone",
+    "localPhrases",
+    "safePlaces",
+    "zones",
+    "builtAtMillis"
+  ],
+  "properties": {
+    "city": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "police": {
+      "type": "string"
+    },
+    "ambulance": {
+      "type": "string"
+    },
+    "embassyName": {
+      "type": "string"
+    },
+    "embassyPhone": {
+      "type": "string"
+    },
+    "localPhrases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "english",
+          "local"
+        ],
+        "properties": {
+          "english": {
+            "type": "string"
+          },
+          "local": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "safePlaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "lat",
+          "lng",
+          "open24h"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "description": "police, hospital, pharmacy, gas station, hotel"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "open24h": {
+            "type": "boolean"
+          },
+          "opensHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 24,
+            "default": 0
+          },
+          "closesHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 24,
+            "default": 24
+          },
+          "note": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      }
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "level",
+          "polygon",
+          "reasons"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "Safer",
+              "Careful",
+              "Avoid"
+            ]
+          },
+          "polygon": {
+            "type": "array",
+            "description": "[[lat, lng], ...]",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "riskyFromHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 24,
+            "default": 0
+          },
+          "riskyToHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 24,
+            "default": 24
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Places and times only, never people."
+          }
+        }
+      }
+    },
+    "builtAtMillis": {
+      "type": "number"
+    },
+    "placesFromOsm": {
+      "type": "boolean",
+      "default": false
+    },
+    "radiusMeters": {
+      "type": "number",
+      "default": 0,
+      "description": "How far from the centre the places were collected (0 = not recorded)"
+    },
+    "centerLat": {
+      "type": "number",
+      "default": 0
+    },
+    "centerLng": {
+      "type": "number",
+      "default": 0
+    },
+    "placeCount": {
+      "type": "integer",
+      "default": 0
+    },
+    "homeBase": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "default": null,
+      "description": "Where she is staying, as she saved it",
+      "required": [
+        "name",
+        "lat",
+        "lng"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "default": ""
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "default": [],
+      "description": "Walking routes saved while online, from an OpenStreetMap router or checked by hand",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "toName",
+          "points",
+          "distanceMeters",
+          "durationSeconds",
+          "fetchedAtMillis",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "home",
+              "police",
+              "hospital"
+            ]
+          },
+          "fromName": {
+            "type": "string",
+            "default": ""
+          },
+          "toName": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "description": "[[lat, lng], ...]",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "steps": {
+            "type": "array",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": [
+                "text",
+                "meters"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "meters": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "distanceMeters": {
+            "type": "number"
+          },
+          "durationSeconds": {
+            "type": "number"
+          },
+          "fetchedAtMillis": {
+            "type": "number"
+          },
+          "source": {
+            "enum": [
+              "osrm-fossgis",
+              "hand-checked"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -185,7 +185,7 @@ FACTS
 ${facts()}
 EARLIER
 ${earlier}
-QUESTION: ${text}`)) ?? plainAnswer(text);
+QUESTION: ${text}`))?.text ?? plainAnswer(text);
     chat.push({ you: false, text: reply, place: pick?.name || null }); thinking = false; draw();
   };
   draw();
@@ -219,7 +219,7 @@ function sos(note = "", draft = "") {
       const ai = await askAi(`Rewrite this emergency note into a clear SOS text message for family. Max 50 words. Third person about ${who}, in New York.
 Keep every fact; add none. End with: "Call ${who} now. If there is no answer, call 911."
 Note: "${text}"`);
-      sos(text, (ai ?? `${who} needs help in New York: ${text}. Call ${who} now. If there is no answer, call 911.`) + map);
+      sos(text, (ai?.text ?? `${who} needs help in New York: ${text}. Call ${who} now. If there is no answer, call 911.`) + map);
     };
   } else {
     const link = $("#send"), box = $("#draft");

@@ -25,16 +25,18 @@ import androidx.compose.ui.unit.dp
 import app.homeward.R
 import app.homeward.design.HomewardColors
 import app.homeward.design.HomewardType
+import app.homeward.design.components.HoldButton
 import app.homeward.design.components.WhiteCard
 import app.homeward.features.safeplace.SafePlacePicker
 
 // The sheet at the bottom of Home (Figma "07 Home"), top to bottom:
-// Ask Beacon box, two ready-made questions, the nearest open safe place, I'm OK + Scan + Police, and the SOS button.
+// Ask Beacon box, two ready-made questions, the nearest open safe place, I'm OK + Scan + Police, and Hold for SOS.
 @Composable
 fun HomeBottomSheet(
     police: String,
     contactNames: String,
     safePlace: SafePlacePicker.Pick?,
+    sosActive: Boolean,            // an SOS is already running: the button opens it instead of starting one
     onAsk: (String) -> Unit,       // "" opens Ask Beacon empty; a ready-made question asks it right away
     onScan: () -> Unit,            // the scan check: is this board, meter or price legit?
     onSafePlace: () -> Unit,
@@ -93,10 +95,12 @@ fun HomeBottomSheet(
             QuickAction("Police $police", Icons.Outlined.Phone, HomewardColors.Red, Modifier.weight(1f), onPolice)
         }
 
-        // SOS: the biggest thing on the sheet, and the only red one.
-        Box(Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(20.dp)).background(HomewardColors.Red).clickable(onClick = onSos), contentAlignment = Alignment.Center) {
-            Text("SOS · works with no signal", style = HomewardType.Heading, color = Color.White)
-        }
+        // SOS: the biggest thing on the sheet, and the only red one. Held, so it can't go off in a pocket.
+        if (sosActive) {
+            Box(Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(20.dp)).background(HomewardColors.Red).clickable(onClick = onSos), contentAlignment = Alignment.Center) {
+                Text("SOS is on · tap to open", style = HomewardType.Heading, color = Color.White)
+            }
+        } else HoldButton("Hold for SOS · works with no signal", onHeld = onSos)
         // Who gets the SOS, with a way to change it.
         Row(Modifier.fillMaxWidth().clickable(onClick = onEditContacts), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(if (contactNames.isBlank()) "No one gets your SOS yet" else "Goes to $contactNames", style = HomewardType.Small, modifier = Modifier.weight(1f), maxLines = 1)

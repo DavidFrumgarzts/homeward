@@ -1,0 +1,366 @@
+{
+  "logic": "ApproachDetector",
+  "about": "Buzz only when walking toward a risky red zone, once per zone, then quiet for a while. Each case feeds the steps in order to one fresh detector; expected is the zone name (or null) returned at each step.",
+  "cases": [
+    {
+      "name": "warns when walking toward it at night",
+      "fn": "sequence",
+      "input": {
+        "warnWithinMeters": 250.0,
+        "quietMinutes": 15,
+        "zones": [
+          {
+            "name": "Test street",
+            "level": "Avoid",
+            "polygon": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.01
+              ],
+              [
+                0.01,
+                0.01
+              ],
+              [
+                0.01,
+                0.0
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "quiet"
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "point": {
+              "lat": 0.0125,
+              "lng": 0.005
+            },
+            "hour": 1,
+            "nowMillis": 0
+          },
+          {
+            "point": {
+              "lat": 0.0115,
+              "lng": 0.005
+            },
+            "hour": 1,
+            "nowMillis": 1000
+          }
+        ]
+      },
+      "expected": [
+        null,
+        "Test street"
+      ]
+    },
+    {
+      "name": "silent when walking away",
+      "fn": "sequence",
+      "input": {
+        "warnWithinMeters": 250.0,
+        "quietMinutes": 0,
+        "zones": [
+          {
+            "name": "Test street",
+            "level": "Avoid",
+            "polygon": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.01
+              ],
+              [
+                0.01,
+                0.01
+              ],
+              [
+                0.01,
+                0.0
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "quiet"
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "point": {
+              "lat": 0.0105,
+              "lng": 0.005
+            },
+            "hour": 23,
+            "nowMillis": 0
+          },
+          {
+            "point": {
+              "lat": 0.0115,
+              "lng": 0.005
+            },
+            "hour": 23,
+            "nowMillis": 1000
+          }
+        ]
+      },
+      "expected": [
+        "Test street",
+        null
+      ]
+    },
+    {
+      "name": "once per 15 minutes",
+      "fn": "sequence",
+      "input": {
+        "warnWithinMeters": 250.0,
+        "quietMinutes": 15,
+        "zones": [
+          {
+            "name": "Test street",
+            "level": "Avoid",
+            "polygon": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.01
+              ],
+              [
+                0.01,
+                0.01
+              ],
+              [
+                0.01,
+                0.0
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "quiet"
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "point": {
+              "lat": 0.0115,
+              "lng": 0.005
+            },
+            "hour": 1,
+            "nowMillis": 0
+          },
+          {
+            "point": {
+              "lat": 0.0105,
+              "lng": 0.005
+            },
+            "hour": 1,
+            "nowMillis": 300000
+          },
+          {
+            "point": {
+              "lat": 0.0101,
+              "lng": 0.005
+            },
+            "hour": 1,
+            "nowMillis": 960000
+          }
+        ]
+      },
+      "expected": [
+        "Test street",
+        null,
+        "Test street"
+      ]
+    },
+    {
+      "name": "silent in daytime",
+      "fn": "sequence",
+      "input": {
+        "warnWithinMeters": 250.0,
+        "quietMinutes": 15,
+        "zones": [
+          {
+            "name": "Test street",
+            "level": "Avoid",
+            "polygon": [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.01
+              ],
+              [
+                0.01,
+                0.01
+              ],
+              [
+                0.01,
+                0.0
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "quiet"
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "point": {
+              "lat": 0.0115,
+              "lng": 0.005
+            },
+            "hour": 14,
+            "nowMillis": 0
+          }
+        ]
+      },
+      "expected": [
+        null
+      ]
+    },
+    {
+      "name": "Lapa: bar toward Rua dos Inválidos",
+      "fn": "sequence",
+      "input": {
+        "warnWithinMeters": 250.0,
+        "quietMinutes": 15,
+        "zones": [
+          {
+            "name": "Rua dos Inválidos",
+            "level": "Avoid",
+            "polygon": [
+              [
+                -22.90838,
+                -43.18348
+              ],
+              [
+                -22.90838,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18149
+              ],
+              [
+                -22.91125,
+                -43.18348
+              ]
+            ],
+            "riskyFromHour": 23,
+            "riskyToHour": 5,
+            "reasons": [
+              "Bars close and the side streets go quiet",
+              "Robberies reported here in local news",
+              "Poor street lighting"
+            ]
+          },
+          {
+            "name": "Lapa nightlife area",
+            "level": "Careful",
+            "polygon": [
+              [
+                -22.9125,
+                -43.1815
+              ],
+              [
+                -22.912,
+                -43.1785
+              ],
+              [
+                -22.9145,
+                -43.178
+              ],
+              [
+                -22.915,
+                -43.181
+              ]
+            ],
+            "riskyFromHour": 22,
+            "riskyToHour": 5,
+            "reasons": [
+              "Crowded at night, watch for pickpockets"
+            ]
+          },
+          {
+            "name": "Av. Mem de Sá",
+            "level": "Safer",
+            "polygon": [
+              [
+                -22.91095,
+                -43.186
+              ],
+              [
+                -22.91213,
+                -43.177
+              ],
+              [
+                -22.91259,
+                -43.177
+              ],
+              [
+                -22.91141,
+                -43.186
+              ]
+            ],
+            "riskyFromHour": 0,
+            "riskyToHour": 24,
+            "reasons": [
+              "Main avenue, busy and lit late"
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "point": {
+              "lat": -22.9095,
+              "lng": -43.18421
+            },
+            "hour": 1,
+            "nowMillis": 0
+          },
+          {
+            "point": {
+              "lat": -22.9095,
+              "lng": -43.1838
+            },
+            "hour": 1,
+            "nowMillis": 20000
+          },
+          {
+            "point": {
+              "lat": -22.9098,
+              "lng": -43.1825
+            },
+            "hour": 1,
+            "nowMillis": 60000
+          }
+        ]
+      },
+      "expected": [
+        "Rua dos Inválidos",
+        null,
+        null
+      ]
+    }
+  ]
+}

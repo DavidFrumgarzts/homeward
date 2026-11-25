@@ -22,7 +22,7 @@ class RecommendedPlaceTest {
         assertEquals(pack.safePlaces.first { SafePlacePicker.isOpen(it, 1) }, RecommendedPlace.pick("Where's a safe place?", pack, null, 1))
 
     @Test fun byNameIgnoresAccentsAndCase() =
-        assertEquals("Hospital Souza Aguiar", RecommendedPlace.byName("hospital souza aguiar", pack)?.name)
+        assertEquals("5º DP police station", RecommendedPlace.byName("5º dp POLICE STATION", pack)?.name)
 
     @Test fun byNameUnknownIsNull() = assertNull(RecommendedPlace.byName("Nowhere", pack))
 
