@@ -111,7 +111,7 @@ Copy `google-config.example.js` to `google-config.js` (git-ignored) with the OAu
 4. In Ask Beacon: "Tonight I'm going to <a place near you>, then back to my hotel". Turn on airplane mode, then tap "Way back…".
 5. Open the check-in link on another device and tap "Ask how … is" while the app is open.
 
-Judges' Gmail test account: _to be added_.
+Judges' Gmail test account: trialhackathon@gmail.com (password in the Devpost form). Sign in with it on **Let Beacon find my bookings**; Google shows "Google hasn't verified this app" while the app is in Testing: tap **Continue**.
 
 ### Run and test locally
 - `?at=lat,lng` on localhost fakes a position (e.g. `?at=26.9157,75.8069` for Jaipur). `?reset` starts over.
