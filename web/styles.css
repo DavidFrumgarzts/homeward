@@ -160,3 +160,20 @@ a.tel { text-decoration: none; }
 .fam-dot.start { width: 14px; height: 14px; background: var(--blue); border: 2.5px solid #fff; }
 .fam-map .maplibregl-ctrl-group { border-radius: 14px; box-shadow: none; border: 1px solid var(--line); }
 .fam-map .maplibregl-ctrl-attrib { font: 400 11px/16px var(--body); color: var(--muted); }
+
+/* Figma "Beacon v2" pieces added 2026-11-25 */
+.hero { width: 100%; height: auto; display: block; }
+.avatar { font: 600 18px var(--display); }
+.tick svg { width: 22px; height: 22px; display: block; }
+.dashed { border: 1.5px dashed #D3CCBF; border-radius: 22px; height: 57px; display: flex; align-items: center; gap: 10px; padding: 0 18px; color: var(--blue); font-weight: 500; font-size: 15px; }
+.dashed svg { width: 20px; height: 20px; }
+.switch { width: 52px; height: 32px; border-radius: 16px; background: var(--line); position: relative; flex: none; transition: background .15s; }
+.switch i { position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: left .15s; }
+.switch[aria-checked="true"] { background: var(--blue); }
+.switch[aria-checked="true"] i { left: 23px; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--blue); border-radius: 3px; }
+.askbar #ask { flex: 1; text-align: left; color: var(--muted); height: 48px; }
+.btn.hold { position: relative; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+.btn.hold::after { content: ""; position: absolute; inset: 0; width: 0; background: rgba(0,0,0,.16); }
+.btn.hold.holding::after { width: 100%; transition: width .9s linear; }

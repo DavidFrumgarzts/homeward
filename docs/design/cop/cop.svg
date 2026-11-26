@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="72" viewBox="0 0 64 72" role="img" aria-label="Beacon">
+    <rect x="26.5" y="44" width="11" height="10" fill="#F2C6A0"/>
+    <path d="M5,72 C5,59 13,53 24,51 L40,51 C51,53 59,59 59,72 Z" fill="#2B3D66" stroke="#14213D" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><path d="M32,59 V72" fill="none" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M25,50 L32,59 L26.5,63 L21,53 Z" fill="#3A5088" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M39,50 L32,59 L37.5,63 L43,53 Z" fill="#3A5088" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="12.5" y="63" width="9.5" height="7.5" rx="1" fill="none" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M45,60.5 L49,62 V65 C49,67.4 47.2,68.8 45,69.5 C42.8,68.8 41,67.4 41,65 V62 Z" fill="#F2B33D" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="18.6" cy="34" r="3.2" fill="#F2C6A0" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="45.4" cy="34" r="3.2" fill="#F2C6A0" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M19,26 C19,41 24,49 32,49 C40,49 45,41 45,26 Z" fill="#F2C6A0" stroke="#14213D" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <rect x="19.8" y="26" width="2.6" height="6.5" fill="#2B2118"/><rect x="41.6" y="26" width="2.6" height="6.5" fill="#2B2118"/>
+    <path d="M13,22.5 C10.5,10 23,5 32,5 C41,5 53.5,10 51,22.5 C44,19.5 20,19.5 13,22.5 Z" fill="#2B3D66" stroke="#14213D" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M16.5,22 C22,19.6 42,19.6 47.5,22 V27 H16.5 Z" fill="#3A5088" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M16.5,27 C21,31.5 43,31.5 47.5,27 C42,25.6 22,25.6 16.5,27 Z" fill="#14213D" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M32,9 L35.4,10.4 V13.2 C35.4,15.2 33.9,16.5 32,17.2 C30.1,16.5 28.6,15.2 28.6,13.2 V10.4 Z" fill="#F2B33D" stroke="#14213D" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M23.8,33.2 L28.8,32.6 M35.2,32.6 L40.2,33.2" fill="none" stroke="#14213D" stroke-width="1.7" stroke-linecap="round"/>
+    <circle cx="26.6" cy="36.2" r="1.7" fill="#14213D"/><circle cx="37.4" cy="36.2" r="1.7" fill="#14213D"/>
+    <path d="M32.2,37 Q34,40 31.4,40.6" fill="none" stroke="#14213D" stroke-width="1.4" stroke-linecap="round"/>
+    <path class="mouth-smile" d="M27.6,42.6 Q32,46.4 36.4,42.6" fill="none" stroke="#14213D" stroke-width="1.7" stroke-linecap="round"/>
+    <ellipse class="mouth-open" cx="32" cy="43.6" rx="3" ry="2.6" fill="#14213D"/>
+  </svg>

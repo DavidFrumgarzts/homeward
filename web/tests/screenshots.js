@@ -26,7 +26,7 @@ await settle(t, 1200); await shot(t, "2-home");
 await t.getByRole("button", { name: "Is this area OK now?" }).click();
 await settle(t, 2200); await shot(t, "3-ask-beacon");
 await t.getByRole("button", { name: "Back" }).click();
-await t.locator("#sos").click();
+await t.locator("#sos").press("Enter");
 await t.getByRole("button", { name: "Being followed" }).click();
 await t.getByRole("button", { name: "Write the message" }).click();
 await t.locator("#draft").waitFor(); await shot(t, "4-sos-message");

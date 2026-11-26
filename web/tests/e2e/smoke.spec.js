@@ -39,7 +39,7 @@ test("traveler: setup, Ask Beacon, SOS, and the family page it creates", async (
   await page.getByRole("button", { name: "Back" }).click();
 
   // SOS: a quick pick becomes a full message with the place, the family link and the police number.
-  await page.locator("#sos").click();
+  await page.locator("#sos").press("Enter"); // the button starts on a hold; from the keyboard one press is enough
   await page.getByRole("button", { name: "Being followed" }).click();
   await page.getByRole("button", { name: "Write the message" }).click();
   const draft = page.locator("#draft");
@@ -49,7 +49,7 @@ test("traveler: setup, Ask Beacon, SOS, and the family page it creates", async (
   // Don't really hand over to the Mac's Messages app: Chrome would ask "Open Messages?" and wait for an answer.
   await page.locator("#send").evaluate((a) => a.addEventListener("click", (e) => e.preventDefault()));
   await page.locator("#send").click();
-  await expect(page.getByRole("heading", { name: "Press send in your messages app" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Press send so Mom knows" })).toBeVisible();
   await expect(page.locator("#sync")).toHaveText(/Family page updated/);
 
   // What reached the database is what shared/schema/README.md describes.
