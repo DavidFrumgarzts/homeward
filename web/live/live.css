@@ -17,6 +17,7 @@ button.card { width: 100%; text-align: left; }
 .place-badge b { display: none; position: absolute; left: 29px; top: 50%; transform: translateY(-50%); white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis;
   font: 500 11px/14px Inter, system-ui, sans-serif; color: var(--c); text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 3px #fff; }
 .place-badge.named b { display: block; }
+.place-badge.left b { left: auto; right: 29px; }
 /* You, as in the onboarding art: a green circle with a white arrow toward where you're walking (a white dot when still). */
 .me-dot { pointer-events: none; border-radius: 50%; background: #22A06B; border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px rgba(16,26,51,.3); }
 .me-dot svg { display: block; width: 100%; height: 100%; }
@@ -67,3 +68,40 @@ button.card { width: 100%; text-align: left; }
 #bk { padding-top: 12px; }
 .onb-note { width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; box-shadow: 0 1px 0 var(--line); }
 @media (prefers-reduced-motion: reduce) { .onb-ping, .onb-steps li.now i, .onb-spin, .onb-steps li.done i { animation: none; } }
+/* Red zones (routemap.js drawAreas): the patch see-through as a whole, David's label in Sora 10/12 caps. */
+.zone-patch { opacity: .7; }
+.zone-label { font: 600 10px/12px Sora, var(--display); letter-spacing: .7px; color: #B4282D; text-align: center; white-space: nowrap; pointer-events: none; }
+.zone-pop .zone-src { color: #5E6880; font-size: 12px; }
+.note-amber { border-left: 3px solid #E07A2B; padding-left: 8px; }
+.zones-far .zone-label { display: none; }
+
+/* Desktop layout (see "Desktop layout" in ../styles.css). The zoom buttons exist only from 900 px wide. */
+.mapwrap .leaflet-control-zoom { display: none; }
+@media (min-width: 900px) {
+  .map-tools { right: 24px; top: 24px; }
+  /* Zoom bottom-right, the credit bottom-left */
+  .mapwrap .leaflet-bottom.leaflet-right { left: 0; display: flex; justify-content: space-between; align-items: flex-end; }
+  .mapwrap .leaflet-bottom.leaflet-right .leaflet-control { float: none; clear: none; }
+  .mapwrap .leaflet-control-attribution { order: -1; margin: 0 0 6px 24px; }
+  .mapwrap .leaflet-control-zoom { display: block; margin: 0 24px 24px 0; border: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(16,26,51,.15); }
+  .mapwrap .leaflet-control-zoom a { width: 38px; height: 37px; font: 500 20px/37px var(--body); color: var(--ink); border-bottom-color: var(--line); }
+  .side .chat-top:has(h2) { place-items: center start; min-height: 40px; padding-left: 40px; }
+
+  /* Onboarding: the picture as 600 x 600 art (radius 28) beside the 440 text column; Skip top-right */
+  .onb { position: relative; min-height: max(100dvh, calc(var(--art) + 160px)); justify-content: center; padding: 110px 0 40px; gap: 12px; }
+  .onb > :not(.onb-img, .onb-scan) { width: var(--col); margin-left: calc(50% + (var(--art) + var(--gap) - var(--col)) / 2); }
+  .onb > .onb-img, .onb > .onb-scan {
+    position: absolute; left: calc(50% - (var(--art) + var(--gap) + var(--col)) / 2); top: max(110px, calc(50% - var(--art) / 2));
+    width: var(--art); height: var(--art); border-radius: 28px; object-fit: cover; background: #E9EBEE;
+  }
+  .onb-scan .onb-img { width: 100%; height: 100%; object-fit: cover; }
+  /* Steps with no picture: the text column on its own, centred */
+  .onb:not(:has(> .onb-img, > .onb-scan)) > * { margin-left: auto; margin-right: auto; }
+  .onb .onb-pad { padding-left: 0; padding-right: 0; }
+  .onb .stack { flex: none; }
+  .onb .stack > .grow { display: none; }
+  .onb-top { padding: 0; min-height: 0; }
+  .onb #skip { position: absolute; top: 38px; right: 64px; }
+  .onb-story { font-size: 26px; line-height: 34px; margin-top: 8px; }
+  #bk { padding-top: 0; }
+}

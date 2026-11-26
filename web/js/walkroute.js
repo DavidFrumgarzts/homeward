@@ -24,7 +24,37 @@ export function safetyFactor(tags) {
   let f = BUSY[tags.service === "alley" ? "alley" : tags.highway] ?? 1.2;
   if (tags.lit === "yes" || tags.lit === "24/7" || tags.lit === "automatic") f *= 0.8;
   if (tags.lit === "no") f *= 1.5;
+  if (tags.tunnel === "yes" || tags.tunnel === "building_passage") f *= 1.5; // underpasses: quiet after dark
   return f;
+}
+
+// "Quiet after dark" (OpenStreetMap tags, not crime data): bit 1 unlit footpath, 2 underpass, 4 path through a park.
+// Shown as an amber note on the route only; never a red zone, never a reason to text anyone.
+const FOOT = /^(footway|path|track|steps|cycleway|bridleway)$/;
+export function quietBits(tags, inPark = false) {
+  let q = 0;
+  if (FOOT.test(tags.highway) && (tags.lit === "no" || (/^(path|track)$/.test(tags.highway) && tags.lit !== "yes"))) q |= 1;
+  if (tags.tunnel === "yes" && FOOT.test(tags.highway)) q |= 2;
+  if (inPark && FOOT.test(tags.highway) && tags.lit !== "yes") q |= 4;
+  return q;
+}
+// Parks (and big lawns) from the same Overpass reply: closed ways only. -> [ring]
+function parksOf(ways) {
+  const out = [];
+  for (const w of ways) {
+    const t = w.tags || {}, g = w.geometry;
+    if (!g || g.length < 4 || !(t.leisure === "park" || t.landuse === "grass")) continue;
+    const ring = g.map((p) => [p.lat, p.lon]);
+    if (t.landuse === "grass" && areaM2(ring) < 10000) continue;
+    out.push(ring);
+  }
+  return out;
+}
+function areaM2(ring) {
+  const k = 111320 * Math.cos(rad(ring[0][0]));
+  let a = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) a += (ring[j][1] * k) * (ring[i][0] * 110540) - (ring[i][1] * k) * (ring[j][0] * 110540);
+  return Math.abs(a / 2);
 }
 
 // Point-in-polygon (ray casting). poly = [[lat, lng], ...].
@@ -37,21 +67,23 @@ export function inside(p, poly) {
   return hit;
 }
 
-// Overpass "out geom" ways -> { nodes: [[lat,lng]], edges: [[to, metres, factor, nameIndex, danger]] per node, names }
+// Overpass "out geom" ways -> { nodes: [[lat,lng]], edges: [[to, metres, factor, nameIndex, danger, quiet]] per node, names }
 export function buildGraph(ways, avoid = []) {
   const id = new Map(), nodes = [], adj = [], names = [""], nameIx = new Map([["", 0]]);
+  const parks = parksOf(ways);
   const key = (p) => `${p.lat.toFixed(6)},${p.lon.toFixed(6)}`;
   const node = (p) => { const k = key(p); if (!id.has(k)) { id.set(k, nodes.length); nodes.push([p.lat, p.lon]); adj.push([]); } return id.get(k); };
   for (const w of ways) {
     if (!w.geometry || !walkable(w.tags || {})) continue;
-    const t = w.tags, f = safetyFactor(t), nm = t.name || t.ref || "";
+    const t = w.tags, nm = t.name || t.ref || "";
     if (!nameIx.has(nm)) { nameIx.set(nm, names.length); names.push(nm); }
     const n = nameIx.get(nm);
     for (let i = 1; i < w.geometry.length; i++) {
       const a = node(w.geometry[i - 1]), b = node(w.geometry[i]), len = meters(nodes[a], nodes[b]);
       const mid = [(nodes[a][0] + nodes[b][0]) / 2, (nodes[a][1] + nodes[b][1]) / 2];
       const danger = avoid.some((poly) => inside(mid, poly)) ? 1 : 0;
-      adj[a].push([b, len, f, n, danger]); adj[b].push([a, len, f, n, danger]);
+      const q = quietBits(t, parks.length > 0 && parks.some((poly) => inside(mid, poly))), f = safetyFactor(t) * (q & 4 ? 1.3 : 1);
+      adj[a].push([b, len, f, n, danger, q]); adj[b].push([a, len, f, n, danger, q]);
     }
   }
   return { nodes, adj, names };
@@ -94,7 +126,25 @@ export function route(g, from, to, mode = "safe") {
   for (let v = t; v !== -1; v = prev[v]) { path.push(g.nodes[v]); if (prev[v] !== -1) edges.push(g.adj[prev[v]][via[v]]); }
   path.reverse(); edges.reverse();
   const metres = edges.reduce((s, e) => s + e[1], 0), inDanger = edges.filter((e) => e[4]).reduce((s, e) => s + e[1], 0);
-  return { path, metres: Math.round(metres), minutes: Math.round(metres / 80), dangerMetres: Math.round(inDanger), steps: steps(g, edges) };
+  const quiet = (bit) => Math.round(edges.filter((e) => (e[5] || 0) & bit).reduce((s, e) => s + e[1], 0));
+  return { path, metres: Math.round(metres), minutes: Math.round(metres / 80), dangerMetres: Math.round(inDanger), steps: steps(g, edges),
+    quiet: { unlit: quiet(1), underpass: quiet(2), park: quiet(4) } };
+}
+
+// Walking distance (metres, plain) from `from` to every node up to maxM; Infinity beyond. For "within a 30-minute walk".
+export function walkDistances(g, from, maxM = 2400) {
+  const s = nearestNode(g, from).i, dist = new Float64Array(g.nodes.length).fill(Infinity);
+  if (s < 0) return dist;
+  dist[s] = 0;
+  const heap = [[0, s]];
+  const push = (x) => { heap.push(x); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  while (heap.length) {
+    const [d, a] = pop();
+    if (d > dist[a]) continue;
+    for (const [b, len] of g.adj[a]) if (d + len < dist[b] && d + len <= maxM) { dist[b] = d + len; push([d + len, b]); }
+  }
+  return dist;
 }
 
 // "MI Road 600 m, then Station Road 300 m" from the street names along the path.
@@ -107,12 +157,12 @@ function steps(g, edges) {
 // Compact form for saving on the phone (and size check): nodes rounded, edges once per pair.
 export function pack(g) {
   const e = [];
-  for (let a = 0; a < g.adj.length; a++) for (const [b, len, f, n, d] of g.adj[a]) if (a < b) e.push(a, b, Math.round(len * 10), Math.round(f * 100), n, d); // length in tenths of a metre
-  return JSON.stringify({ n: g.nodes.map(([a, b]) => [+a.toFixed(6), +b.toFixed(6)]), e, names: g.names });
+  for (let a = 0; a < g.adj.length; a++) for (const [b, len, f, n, d, q = 0] of g.adj[a]) if (a < b) e.push(a, b, Math.round(len * 10), Math.round(f * 100), n, d, q); // length in tenths of a metre
+  return JSON.stringify({ v: 2, n: g.nodes.map(([a, b]) => [+a.toFixed(6), +b.toFixed(6)]), e, names: g.names });
 }
 export function unpack(s) {
-  const { n, e, names } = JSON.parse(s), adj = n.map(() => []);
-  for (let i = 0; i < e.length; i += 6) { const [a, b, len, f, nm, d] = e.slice(i, i + 6); adj[a].push([b, len / 10, f / 100, nm, d]); adj[b].push([a, len / 10, f / 100, nm, d]); }
+  const { v, n, e, names } = JSON.parse(s), adj = n.map(() => []), k = v === 2 ? 7 : 6; // v1 (no quiet field) saved before 2026-11-26
+  for (let i = 0; i < e.length; i += k) { const [a, b, len, f, nm, d, q = 0] = e.slice(i, i + k); adj[a].push([b, len / 10, f / 100, nm, d, q]); adj[b].push([a, len / 10, f / 100, nm, d, q]); }
   return { nodes: n, adj, names };
 }
 
