@@ -22,3 +22,7 @@ test("an unknown or missing country falls back to 112, marked as not known", () 
   assert.deepEqual(numbersFor(""), { police: "112", ambulance: "112", known: false });
   assert.deepEqual(numbersFor(undefined), { police: "112", ambulance: "112", known: false });
 });
+
+test("India: police 112, ambulance 108", () => {
+  assert.deepEqual(numbersFor("in"), { police: "112", ambulance: "108", known: true });
+});

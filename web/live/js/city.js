@@ -9,6 +9,7 @@ import { askAi, askAiWithSearch } from "../../js/ai.js";
 import { researchPrompt, memoryPrompt, readResearch, needsResearch, mergeScams } from "../../js/cityscams.js";
 import { numbersFor } from "../../js/emergency.js";
 import { meters } from "./places.js";
+import { cleanCity } from "../../js/trip.js";
 
 const NYC = { lat: 40.758, lng: -73.9855 };
 const CITY_KEY = "beacon.city", scamKey = (name) => `beacon.scams.${name.toLowerCase()}`;
@@ -38,7 +39,7 @@ export async function arriveAt(at, onChange) {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=en&lat=${at.lat}&lon=${at.lng}`, { signal: AbortSignal.timeout(10000) });
       const a = (await res.json()).address || {};
-      let name = a.city || a.town || a.village || a.municipality || a.county || a.state || "";
+      let name = cleanCity(a.city || a.town || a.village || a.municipality || a.county || a.state || "");
       if (meters(at, NYC) < 50000 && a.country_code === "us") name = "New York"; // all five boroughs share New York's pack
       if (name) {
         Object.assign(city, { name, country: a.country || "", countryCode: a.country_code || "", at });

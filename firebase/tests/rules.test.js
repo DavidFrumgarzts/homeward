@@ -154,3 +154,35 @@ describe("the owner", () => {
     await assertFails(setDoc(doc(anon(), "trips/tripZ"), trip("noa")));
   });
 });
+
+// "How is she?" Mom asks with her public key; Noa's phone answers, locked for Mom only.
+const ask = (uid = "mom") => ({ viewerUid: uid, askerName: "Mom", askerKey: '{"kty":"EC"}', askedAtMillis: 10, answer: null, answeredAtMillis: null });
+describe("check-ins (trusted people asking how she is)", () => {
+  test("a contact who opened the link can ask; others cannot", async () => {
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/checkins/q1"), ask()));
+    await claim();
+    await assertSucceeds(setDoc(doc(as("mom"), "trips/trip1/checkins/q1"), ask()));
+    await assertFails(setDoc(doc(as("dad"), "trips/trip1/checkins/q2"), ask("dad")));
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/checkins/q3"), ask("dad")));
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/checkins/q4"), { ...ask(), answer: { data: "x" } }));
+  });
+  test("only the trip's owner writes the answer, and only the answer", async () => {
+    await claim(); await setDoc(doc(as("mom"), "trips/trip1/checkins/q1"), ask());
+    const answer = { answer: { epk: {}, iv: "a", data: "b" }, answeredAtMillis: 20 };
+    await assertFails(updateDoc(doc(as("mom"), "trips/trip1/checkins/q1"), answer));
+    await assertFails(updateDoc(doc(as("noa"), "trips/trip1/checkins/q1"), { ...answer, askerName: "Someone" }));
+    await assertSucceeds(updateDoc(doc(as("noa"), "trips/trip1/checkins/q1"), answer));
+  });
+  test("the asker reads their own question; the owner reads all; nobody else", async () => {
+    await claim(); await setDoc(doc(as("mom"), "trips/trip1/checkins/q1"), ask());
+    await assertSucceeds(getDoc(doc(as("mom"), "trips/trip1/checkins/q1")));
+    await assertSucceeds(getDocs(collection(as("noa"), "trips/trip1/checkins")));
+    await assertFails(getDoc(doc(as("dana"), "trips/trip1/checkins/q1")));
+    await assertFails(getDocs(collection(as("mom"), "trips/trip1/checkins")));
+  });
+  test("nobody can ask once the link is turned off", async () => {
+    await claim();
+    await env.withSecurityRulesDisabled((ctx) => updateDoc(doc(ctx.firestore(), `shares/${SHARE}`), { revoked: true }));
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/checkins/q1"), ask()));
+  });
+});

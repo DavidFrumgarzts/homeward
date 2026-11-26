@@ -6,4 +6,49 @@
 button.card { width: 100%; text-align: left; }
 .chat-top h2 { margin: 0; }
 /* Grey streets like the drawn map: OSM's colors toned down. */
-.leaflet-tile-pane { filter: grayscale(1) brightness(1.06) contrast(.88); }
+.leaflet-tile-pane { filter: saturate(.8); }
+/* After 9 p.m.: safe places nearby blink yellow, slowly, all night. */
+.night-ring { fill: #E0A10F; fill-opacity: .25; stroke: #E0A10F; stroke-width: 3; animation: night-ring 1.2s ease-in-out infinite; }
+@keyframes night-ring { 50% { opacity: .25; } }
+@media (prefers-reduced-motion: reduce) { .night-ring { animation: none; } }
+.hotel-pin span { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; background: #2F6BFF; border: 2px solid #fff; font-size: 13px; }
+.map-tools { position: absolute; right: 12px; top: 12px; z-index: 600; }
+.map-tools button { background: #fff; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 500; box-shadow: 0 1px 3px rgba(16,26,51,.15); }
+.route-card { display: flex; flex-direction: column; gap: 4px; }
+
+/* Onboarding (Figma "Onboarding v3"): Figtree, pictures full width, text in a padded column. */
+.onb { flex: 1; display: flex; flex-direction: column; font-family: "Figtree", var(--body); padding-bottom: 24px; }
+.onb h1, .onb h2 { font-family: "Figtree", var(--display); letter-spacing: -.2px; }
+.onb h1 { font-weight: 600; }
+.onb-top { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px 8px; min-height: 28px; }
+.onb-pad { padding: 0 24px; display: flex; flex-direction: column; }
+.onb .stack { gap: 12px; flex: 1; }
+.onb .stamp { padding-bottom: 8px; }
+.onb-img { width: 100%; display: block; height: auto; }
+.onb-story { font: 600 19px/26px "Figtree", sans-serif; margin: 20px 0 4px; }
+.onb .bubble.you { margin: 8px 0 12px; }
+.onb-photo { display: flex; flex-direction: column; gap: 8px; padding: 6px 6px 10px !important; align-items: flex-end; }
+.onb-photo img { width: 236px; height: 157px; object-fit: cover; border-radius: 16px; display: block; }
+.onb-photo span { padding: 0 8px; }
+.onb .tile { flex: none; display: grid; place-items: center; font-weight: 600; }
+.center-text { text-align: center; }
+
+/* Checking a booking: a ring spreads from the hotel, and the 4 stages tick off. */
+.onb-scan { position: relative; overflow: hidden; }
+.onb-ping { position: absolute; left: 46%; top: 50%; width: 28px; height: 28px; margin: -14px; border: 2px solid var(--blue); border-radius: 50%; opacity: 0; animation: onb-ping 2.4s ease-out infinite; }
+.onb-ping.late { animation-delay: 1.2s; }
+@keyframes onb-ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(9); opacity: 0; } }
+.onb-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.onb-steps li { display: flex; align-items: center; gap: 12px; color: var(--muted); transition: color .3s; }
+.onb-steps li i, .onb-spin { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); box-sizing: border-box; display: grid; place-items: center; font: normal 600 11px/1 var(--body); }
+.onb-steps li.now { color: var(--ink); }
+.onb-steps li.now i, .onb-spin { border-color: var(--blue); border-top-color: transparent; animation: onb-spin .8s linear infinite; }
+.onb-steps li.done { color: var(--ink); }
+.onb-steps li.done i { background: var(--green); border-color: var(--green); color: #fff; animation: onb-pop .25s ease-out; }
+.onb-steps li.done i::after { content: "✓"; }
+@keyframes onb-spin { to { transform: rotate(360deg); } }
+@keyframes onb-pop { from { transform: scale(.6); } }
+#bk:empty { display: none; }
+#bk { padding-top: 12px; }
+.onb-note { width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; box-shadow: 0 1px 0 var(--line); }
+@media (prefers-reduced-motion: reduce) { .onb-ping, .onb-steps li.now i, .onb-spin, .onb-steps li.done i { animation: none; } }

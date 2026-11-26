@@ -10,6 +10,15 @@ import { recommends, judge } from "../../js/scams.js";
 import { smsLink } from "../../js/sos.js";
 import { placesAround, nearest, saved, meters } from "./places.js";
 import { city, scamsHere, savedAt, fromMemory, arriveAt, research, numbers } from "./city.js";
+import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow } from "./trips.js";
+import { drawExtras } from "./routemap.js";
+import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused, turnOffLink, trail } from "./answering.js";
+import { sendText, textsSent } from "./texts.js";
+import { entered, stoppedMinutes, shouldTextStill } from "../../js/alerts.js";
+import { onboarding } from "./onboard.js";
+import { hospitalsAround, saveHospitalDrive, savedHospitalDrive } from "./drive.js";
+import { driveText, googleMapsLink } from "../../js/trip.js";
+import { placeFromPlan, isPlanning } from "../../js/trip.js";
 
 const app = document.getElementById("app");
 const $ = (s) => app.querySelector(s);
@@ -28,6 +37,25 @@ const icon = {
   camera: '<svg viewBox="0 0 24 24" fill="none" stroke="#2F6BFF" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>',
 };
+const savedHotel = () => {
+  let b = null; try { b = JSON.parse(localStorage.getItem("beacon.booking")); } catch { /* none */ }
+  if (!b?.at || b.sample || !where()) return null;
+  return meters(where(), { lat: b.at[0], lng: b.at[1] }) < 30000 ? b.at : null; // only a hotel in the city she's in
+};
+// The saved hospital drive, only when it was worked out near where she is now (never another city's).
+const driveHere = () => { const d = savedHospitalDrive(); return d && where() && meters(where(), { lat: d.from[0], lng: d.from[1] }) < 5000 ? d : null; };
+const homeName = () => (savedTrip()?.homeIsHotel ? "your hotel" : "where you started");
+const compassWord = { N: "north", NE: "north-east", E: "east", SE: "south-east", S: "south", SW: "south-west", W: "west", NW: "north-west" };
+// The way back as words: "2.9 km · 36 min on busy, lit streets" or, off the saved streets, direction and distance.
+function wayText(w) {
+  if (!w) return "";
+  if (w.arrived) return `You're at ${homeName()}.`;
+  if (w.partial) return `You're outside the streets Beacon saved. ${homeName()[0].toUpperCase() + homeName().slice(1)} is ${dist(w.direction.metres)} to the ${compassWord[w.direction.compass]}. This is a direction, not a full route.`;
+  const r = w.route, f = w.fastest, extra = f && r.minutes > f.minutes ? ` ${r.minutes - f.minutes} min longer than the fastest way, and it stays on busier streets.` : "";
+  if (r.dangerMetres) return `${dist(r.metres)} · ${r.minutes} min. There's no way around it: this route goes through an area to avoid for ${dist(r.dangerMetres)}. Stay on the main road and keep your phone ready.`;
+  return `${dist(r.metres)} · ${r.minutes} min on busy, lit streets.${extra}${f?.dangerMetres ? " It goes around the areas to avoid." : ""}`;
+}
+let avoiding = null; // corners tapped while marking an area to avoid
 const helpPlace = () => (where() ? nearest(here.places, where(), ["police", "hospital"]) || nearest(here.places, where()) : null);
 
 // ---------- Setup: your name and who gets your SOS ----------
@@ -42,6 +70,13 @@ function setup() {
     <input class="field" id="cphone" placeholder="Phone with country code, +1 212 555 0100" inputmode="tel">
     <p class="error" id="error"></p>
     <button class="link left" id="add">Add this person</button>
+    ${store.contacts.length ? `<div class="card col"><div class="label">They can ask how you are, any time</div>
+      <p class="small">Beacon answers by itself with where you are, your route and your plans, locked so only they can read it. You see every answer here.</p>
+      <a class="btn quiet" id="sendlink" href="#">Text them their check-in link</a>
+      <label class="row small"><input type="checkbox" id="pause" ${paused() ? "checked" : ""}> Pause answers for now</label>
+      ${textsSent().slice(0, 5).map((t) => `<p class="small">Texted ${esc(joinNames(t.to))} at ${new Date(t.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}: ${esc(t.what)}${t.status === "sent" ? "" : ` (${esc(t.status)})`}</p>`).join("")}
+      ${answersSent().slice(0, 5).map((a) => `<p class="small">${esc(a.who)} asked at ${new Date(a.askedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Beacon answered: “${esc(a.text)}”</p>`).join("")}
+      ${store.trip ? '<button class="link left small" id="linkoff">Turn off their link (they\'ll need a new one)</button>' : ""}</div>` : ""}
     <div class="grow"></div>
     <button class="btn" id="done">Start</button>
   </div>`;
@@ -52,6 +87,17 @@ function setup() {
     store.name = $("#name").value; store.addContact(name, phone); return true;
   };
   $("#add").onclick = () => add() && setup();
+  $("#pause")?.addEventListener("change", (e) => setPaused(e.target.checked));
+  $("#linkoff")?.addEventListener("click", async () => { await turnOffLink(); setup(); });
+  $("#sendlink")?.addEventListener("click", async (e) => {
+    e.preventDefault(); store.name = $("#name").value;
+    e.target.textContent = "Sending…";
+    const link = await checkinLink({ city: city.name, country: city.country });
+    if (!link) { e.target.textContent = "Text them their check-in link"; return ($("#error").textContent = "Beacon needs a connection once to make the link."); }
+    const r = await sendText("invite", { link });
+    answer(); setup();
+    if (r === "waiting") $("#error").textContent = "No signal: Beacon sends it as soon as there's a connection.";
+  });
   app.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { store.removeContact(+b.dataset.del); setup(); }));
   $("#done").onclick = () => {
     if (!add()) return;
@@ -62,22 +108,26 @@ function setup() {
 
 // ---------- Home: the map, Ask Beacon, the nearest place to get help, Scan, SOS ----------
 let map = null;
-function home(highlight = null) {
+function home(highlight = null, way = null) {
   const shown = here.places.find((p) => p.name === highlight) || null;
   const card = shown && where() ? { ...shown, meters: meters(where(), shown) } : helpPlace();
   app.innerHTML = `
     <div class="mapwrap" style="min-height:320px"><div id="map"></div>
+      <div class="map-tools"><button id="avoid">${avoiding ? `Tap corner ${avoiding.length + 1} of 4` : "Avoid an area"}</button></div>
       ${here.at ? "" : `<div class="hint small">${here.denied ? "Turn on location so Beacon knows which city you're in." : "Finding where you are…"}</div>`}</div>
     <div class="sheet"><div class="grab"></div>
       <button class="askbar" id="ask"><span>Ask Beacon anything</span><i class="sq">${icon.arrow}</i></button>
-      <div class="chips">${["Where can I get help?", "I think I'm being followed"].map((q) => `<button class="chip" data-q="${q}">${q}</button>`).join("")}</div>
+      <div class="chips">${[savedTrip() ? (savedTrip().homeIsHotel ? "Way back to my hotel" : "Way back to where I started") : "I'm going out tonight", "Where can I get help?", "I think I'm being followed"].map((q) => `<button class="chip" data-q="${q}">${q}</button>`).join("")}</div>
+      ${way?.drive ? `<div class="card route-card"><div class="label">Drive to ${esc(way.drive.name)}</div><p class="small">${esc(driveText(way.drive))} · saved for no signal · route © OpenStreetMap contributors</p></div>` : ""}
+      ${way && !way.drive ? `<div class="card route-card"><div class="label">Back to ${homeName()}</div><p class="small">${esc(wayText(way))}</p>${way.route ? `<p class="small">${esc(way.route.steps.slice(0, 4).map((x) => `${x.name} ${dist(x.m)}`).join(" → "))}</p><p class="small">Saved for no signal · route © OpenStreetMap contributors</p>` : ""}</div>` : ""}
       ${card ? `<button class="card" id="place"><i class="dot big" style="background:${KIND_COLOR[card.kind]}"></i><div><div class="label">${esc(card.name)} · ${dist(card.meters)}</div><p class="small">${KIND_LABEL[card.kind]} · open 24 hours</p></div></button>`
              : `<div class="card"><p class="small">${!where() ? "Places to get help show up once Beacon knows where you are." : navigator.onLine ? "Looking for police stations and hospitals near you…" : "Go online once to save places near you."}</p></div>`}
       <div class="two"><a id="ok" href="#">${icon.check}I'm OK</a><button id="scan">${icon.camera}Scan</button><a href="tel:${police()}">${icon.phone}${police()}</a></div>
       <button class="btn red" id="sos">SOS</button>
       <div class="foot small"><span>Goes to ${esc(joinNames(store.contacts.map((c) => c.name)))}</span><button class="link small" id="edit">Edit</button></div>
     </div>`;
-  drawMap(shown);
+  drawMap(shown, way);
+  $("#avoid").onclick = () => { avoiding = avoiding ? null : []; home(highlight, way); };
   $("#ask").onclick = () => ask("");
   app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => ask(b.dataset.q)));
   $("#place")?.addEventListener("click", () => home(card.name));
@@ -102,39 +152,84 @@ function openScan() {
 
 // The street map (OpenStreetMap through Leaflet): you as a green dot, places to get help, and a yellow ring
 // that blinks around a recommended place (`shown`) and then stays until you tap the map.
-function drawMap(shown) {
+function drawMap(shown, way = null) {
   if (!window.L) { $("#map").innerHTML = '<p class="small" style="padding:16px">The map needs a connection. Everything else works offline.</p>'; return; }
   map?.remove();
   const at = where();
   map = L.map($("#map"), { zoomControl: false, attributionControl: true });
   if (!at) map.setView([25, 0], 2); // no position yet: the world, until the phone says where you are
   else map.setView(shown ? [(at.lat + shown.lat) / 2, (at.lng + shown.lng) / 2] : [at.lat, at.lng], 16);
-  // OpenStreetMap tiles, tinted light grey in live.css to look like Beacon's drawn map. Credit required.
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap contributors" }).addTo(map);
+  // CARTO Voyager: sharp tiles on phone screens ({r} = @2x), OpenStreetMap data.
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 20, subdomains: "abcd", attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>' }).addTo(map);
   for (const p of here.places) {
     if (!p.open24h) continue;
     L.circleMarker([p.lat, p.lng], { radius: 7, color: "#fff", weight: 2, fillColor: KIND_COLOR[p.kind], fillOpacity: 1 }).bindTooltip(esc(p.name)).addTo(map); // OSM names are outside data: escaped
   }
   if (shown) {
     L.circleMarker([shown.lat, shown.lng], { radius: 20, className: "go-here" }).addTo(map);
-    map.once("click", () => home());
+    if (!avoiding) map.once("click", () => home());
   }
+  const trip = savedTrip(), hotel = savedHotel() || (trip?.homeIsHotel ? trip.home : null);
+  drawExtras(map, { areas: areasNow(city.name), way, home: hotel, places: here.places, at: here.at });
+  if (way?.route) map.fitBounds(L.latLngBounds(way.route.path).pad(0.15));
+  if (avoiding) map.on("click", (e) => {
+    avoiding.push([e.latlng.lat, e.latlng.lng]);
+    if (avoiding.length < 4) { $("#avoid").textContent = `Tap corner ${avoiding.length + 1} of 4`; L.circleMarker(e.latlng, { radius: 4, color: "#E5484D" }).addTo(map); return; }
+    addMyArea(avoiding); avoiding = null; home(null, savedTrip() && where() ? wayBack([where().lat, where().lng]) : null);
+  });
   if (here.at) {
     L.circleMarker([here.at.lat, here.at.lng], { radius: 16, stroke: false, fillColor: "#22A06B", fillOpacity: 0.18 }).addTo(map);
     L.circleMarker([here.at.lat, here.at.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#22A06B", fillOpacity: 1 }).addTo(map);
   }
 }
 
+// The drive to the nearest hospital, saved for no signal (OpenStreetMap car router). Once per 1.5 km move, online only.
+async function keepHospitalDrive() {
+  const d = savedHospitalDrive();
+  if (!here.at || !navigator.onLine || (d && meters({ lat: d.from[0], lng: d.from[1] }, here.at) < 1500)) return;
+  // (if the router is down nothing is saved, and driveHere() keeps ignoring any drive worked out elsewhere)
+  const near = here.places.filter((p) => p.kind === "hospital").map((p) => ({ ...p, airM: meters(here.at, p) })).sort((a, b) => a.airM - b.airM);
+  const list = near.length ? near : await hospitalsAround(here.at, 30000);
+  if (list?.length) await saveHospitalDrive(here.at, list);
+}
+const hospitalLine = () => { const d = driveHere(); return d ? `The nearest hospital is ${driveText(d)}; the drive is saved on this phone.` : ""; };
+
 // Follows your position. The first fix (and any move of more than 1.5 km) loads places to get help around you.
+let watching = false;
 function watchGps() {
-  if (!navigator.geolocation) return;
+  if (!navigator.geolocation || watching) return;
+  watching = true;
   navigator.geolocation.watchPosition(async (pos) => {
     const first = !here.at, before = here.at;
     here.at = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    recordTrail(here.at); watchAlerts();
     if (first || meters(before, here.at) > 20000) arriveAt(here.at, refreshScan); // landed somewhere new: work out the city, research its scams
-    if (first || !saved() || meters(saved().center, here.at) > 1500) here.places = await placesAround(here.at);
+    if (first || !saved() || meters(saved().center, here.at) > 1500) { here.places = await placesAround(here.at); keepHospitalDrive(); }
     if ($(".sheet") && first) home(); // redraw Home once with your real position; later moves don't reset the screen
   }, (err) => { if (err.code === 1) { here.denied = true; if ($(".sheet")) home(); } }, { enableHighAccuracy: true, maximumAge: 15000 });
+}
+
+// Texts her people by itself when she walks into an area marked dangerous (once per area an hour),
+// or stops for 5+ minutes on the way back from a trip (once per stop).
+let insideAreas = new Set(), stillTexted = false;
+const lastDangerText = {};
+function watchAlerts() {
+  if (!here.at || !store.contacts.length) return;
+  const at = [here.at.lat, here.at.lng], now = Date.now();
+  const e = entered(at, areasNow(city.name), insideAreas);
+  insideAreas = e.inside;
+  for (const a of e.entered) {
+    const k = a.id || a.name;
+    if (now - (lastDangerText[k] || 0) < 3600000) continue;
+    lastDangerText[k] = now;
+    sendText("danger", { place: a.name, lat: here.at.lat, lng: here.at.lng, police: police() });
+  }
+  const minutes = stoppedMinutes(trail(), now);
+  if (minutes < 5) stillTexted = false;
+  else if (shouldTextStill({ trip: savedTrip(), at, minutes, now, textedThisStop: stillTexted })) {
+    stillTexted = true;
+    sendText("still", { minutes, lat: here.at.lat, lng: here.at.lng, police: police() });
+  }
 }
 
 // ---------- Ask Beacon: answers from what's saved (numbers, nearby places, reported scams) ----------
@@ -143,7 +238,7 @@ function facts() {
   const n = numbers();
   return `Where: ${city.name ? `${city.name}, ${city.country}` : "not known yet"}.
 Emergency: police ${n.police}, ambulance ${n.ambulance}.${n.known ? "" : " (112 works from most mobile phones; this country's own numbers aren't saved.)"}
-Closest places to get help:
+${hospitalLine() ? `Drive to the nearest hospital: ${hospitalLine()}\n` : ""}Closest places to get help:
 ${near.map((p) => `- ${p.name} (${KIND_LABEL[p.kind]}), ${dist(p.meters)} away, open 24 hours`).join("\n") || "- (none saved yet)"}
 Scams travelers report here:
 ${scamsHere().map((s) => `- ${s.title} (${s.where}): ${s.whatHappens || ""} ${s.whatToDo}`).join("\n")}`;
@@ -154,7 +249,7 @@ function plainAnswer(question) {
   const pharmacy = where() && nearest(here.places, where(), ["pharmacy"]), hospital = where() && nearest(here.places, where(), ["hospital"]);
   const n = numbers();
   if (/follow|unsafe|scared|danger/.test(q)) return `Go into a busy shop, hotel lobby or restaurant now and stay where people are.${place ? ` ${place.name} is ${dist(place.meters)} away.` : ""} If you're in danger, call ${n.police}.`;
-  if (/hurt|hospital|doctor|bleed|sick/.test(q)) return `If it's serious, call ${n.ambulance}.${hospital ? ` The nearest hospital is ${hospital.name}, ${dist(hospital.meters)} away.` : ""}`;
+  if (/hurt|hospital|doctor|bleed|sick/.test(q)) return `If it's serious, call ${n.ambulance} for an ambulance now.${driveHere() ? ` ${hospitalLine()}` : hospital ? ` The nearest hospital is ${hospital.name}, ${dist(hospital.meters)} away.` : ""}`;
   if (/pharmac|medicine|drug ?store/.test(q)) return pharmacy ? `${pharmacy.name} is ${dist(pharmacy.meters)} away and open 24 hours.` : "I don't have a 24-hour pharmacy saved near you.";
   const scam = judge({ kind: "Other", text: q }, scamsHere());
   if (scam.warning) return `${scam.warning.title} is a known scam (${scam.warning.where}). ${scam.whatToDo}`;
@@ -170,7 +265,7 @@ function ask(question) {
     app.innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
       <div class="chat-top"><button class="back" id="back" aria-label="Back">${icon.back}</button><h2>Ask Beacon</h2></div>
       <div class="bubbles" id="bubbles">
-        ${chat.map((l) => `<div class="bubble ${l.you ? "you" : "beacon"}">${esc(l.text)}</div>${l.place ? `<button class="link left show" data-place="${esc(l.place)}">Show ${esc(l.place)} on the map</button>` : ""}`).join("")}
+        ${chat.map((l) => `<div class="bubble ${l.you ? "you" : "beacon"}">${esc(l.text)}</div>${l.place ? `<button class="link left show" data-place="${esc(l.place)}">Show ${esc(l.place)} on the map</button>` : ""}${l.way ? `<button class="link left show" data-way="1">Show the way back on the map</button>` : ""}${l.drive ? `<button class="link left show" data-drive="1">Show the drive to the hospital</button>${navigator.onLine && here.at ? `<a class="link left show" target="_blank" rel="noopener" href="${googleMapsLink([here.at.lat, here.at.lng], driveHere().at)}">Drive there in Google Maps</a>` : ""}` : ""}`).join("")}
         ${thinking ? '<div class="bubble beacon">…</div>' : ""}
         ${chat.length || thinking ? "" : `<div class="stack center">${["Where can I get help?", "Is a ticket seller in Battery Park legit?", "What's the emergency number?"].map((q) => `<button class="chip label" data-q="${q}">${q}</button>`).join("")}</div>`}
       </div>
@@ -180,6 +275,8 @@ function ask(question) {
     $("#form").onsubmit = (e) => { e.preventDefault(); send($("#box").value); };
     app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => send(b.dataset.q)));
     app.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => home(b.dataset.place)));
+    app.querySelectorAll("[data-drive]").forEach((b) => (b.onclick = () => { const d = driveHere(); if (!d) return; home(null, { route: { path: d.line, steps: [], metres: Math.round(d.km * 1000), minutes: d.minutes }, drive: d }); }));
+    app.querySelectorAll("[data-way]").forEach((b) => (b.onclick = () => home(null, where() ? wayBack([where().lat, where().lng]) : null)));
     const bubbles = $("#bubbles"); bubbles.scrollTop = bubbles.scrollHeight;
   };
   const send = async (text) => {
@@ -187,6 +284,29 @@ function ask(question) {
     if (!text || thinking) return;
     const pick = recommends(text) ? helpPlace() : null;
     chat.push({ you: true, text }); thinking = true; draw();
+    const said = (reply, extra = {}) => { chat.push({ you: false, text: reply, ...extra }); thinking = false; draw(); };
+    // "Way back to my hotel": from the saved trip, with no network.
+    if (/way back|back to (my |the )?(hotel|start)|get back/i.test(text) && savedTrip()) {
+      if (!where()) return said("Turn on location so Beacon knows where you are.");
+      const w = wayBack([where().lat, where().lng]);
+      return said(wayText(w), { way: !!w?.route || !!w?.partial });
+    }
+    if (/going out tonight/i.test(text)) return said("Where are you going? Tell me the place, like \"I'm going to Bar Palladio, then back to my hotel\".");
+    // "Tonight I'm going to X": save the streets, areas and both routes while online.
+    // Help comes first: only clear plans ("tonight I'm going to X, then back") become a saved trip.
+    const goingTo = isPlanning(text) ? placeFromPlan(text) : null;
+    if (goingTo) {
+      if (!where()) return said("Turn on location first, so Beacon can save the streets around you.");
+      if (!navigator.onLine) return said("Beacon needs a connection once to save the way there and back. Ask again when you're online.");
+      chat.push({ you: false, text: `Finding ${goingTo}…` }); draw();
+      const step = (t) => { chat[chat.length - 1].text = t; draw(); };
+      const place = await findPlace(goingTo, [where().lat, where().lng], city.name);
+      if (!place) { chat.pop(); return said(`I couldn't find ${goingTo} on the map. Try its full name.`); }
+      const trip = await planTrip({ from: [where().lat, where().lng], hotel: savedHotel(), place, city: city.name }, step);
+      chat.pop();
+      if (trip.error) return said(trip.error === "streets" ? "The map servers are busy. Try again in a minute; nothing was saved yet." : "I couldn't save a walking route for that trip. Try a place nearer by.");
+      return said(`Saved for no signal: the way to ${place.name} and back. Back: ${dist(trip.back.metres)}, ${trip.back.minutes} min on busy, lit streets.`, { way: true });
+    }
     const earlier = chat.slice(-5, -1).map((l) => `${l.you ? "Traveler" : "Beacon"}: ${l.text}`).join("\n") || "(nothing yet)";
     const reply = (await askAi(`You are Beacon, a calm safety helper for a traveler${inCity()}. Answer using ONLY the facts below. Copy names and numbers exactly.
 If the facts don't cover it, say "I don't have that saved. In an emergency, call ${police()}." At most 3 short steps, plain words.${pick ? `\nRecommend ${pick.name} first.` : ""}
@@ -195,7 +315,7 @@ ${facts()}
 EARLIER
 ${earlier}
 QUESTION: ${text}`))?.text ?? plainAnswer(text);
-    chat.push({ you: false, text: reply, place: pick?.name || null }); thinking = false; draw();
+    said(reply, { place: pick?.name || null, drive: /hurt|hospital|doctor|bleed|sick|ambulance/i.test(text) && !!driveHere() });
   };
   draw();
   if (question) send(question);
@@ -212,7 +332,7 @@ function sos(note = "", draft = "") {
     <p class="error" id="error"></p>
     ${draft ? `<div class="stack"><div class="label">Message to ${esc(joinNames(people.map((c) => c.name)))}</div><textarea class="field" id="draft" style="height:150px">${esc(draft)}</textarea></div>` : ""}
     <div class="grow"></div>
-    ${draft ? `<a class="btn red" id="send" style="display:grid;place-items:center;text-decoration:none" href="#">Open messages to send</a>` : `<button class="btn" id="write">Write the message</button>`}
+    ${draft ? `<button class="btn red" id="send">Send to ${esc(joinNames(people.map((c) => c.name)))}</button>` : `<button class="btn" id="write">Write the message</button>`}
     <a class="link center-self" href="tel:${police()}">Call ${police()} instead</a>
   </div>`;
   const noteBox = $("#note");
@@ -231,18 +351,22 @@ Note: "${text}"`);
       sos(text, (ai?.text ?? `${who} needs help${inCity()}: ${text}. Call ${who} now. If there is no answer, call ${police()}.`) + map);
     };
   } else {
-    const link = $("#send"), box = $("#draft");
-    const refresh = () => (link.href = smsLink(people.map((c) => c.phone), box.value));
-    box.oninput = refresh; refresh();
-    link.onclick = () => setTimeout(sent, 300); // let the messages app open first
+    // Sent by Beacon itself (a text message from Beacon's number). With no signal it waits and goes when it can.
+    $("#send").onclick = async () => {
+      $("#send").disabled = true; $("#send").textContent = "Sending…";
+      const text = $("#draft").value, message = text.replace(/\s*Where: https?:\/\/\S+/g, "").trim();
+      const status = await sendText("sos", { message, lat: here.at?.lat, lng: here.at?.lng });
+      sent(status, smsLink(people.map((c) => c.phone), text));
+    };
   }
 }
 
-function sent() {
-  const place = helpPlace();
+function sent(status = "sent", fallback = "") {
+  const place = helpPlace(), who = joinNames(store.contacts.map((c) => c.name));
   app.innerHTML = `<div class="screen center" style="text-align:center">
-    <h1>Press send in your messages app</h1>
-    <p class="small">Beacon filled in the message. It goes when you press send there.</p>
+    <h1>${status === "sent" ? `${esc(who)} got your SOS` : "Your SOS is waiting for signal"}</h1>
+    <p class="small">${status === "sent" ? "Beacon texted them your message and where you are." : "Beacon sends it by itself as soon as there's a connection. A normal text may get through sooner:"}</p>
+    ${status === "sent" ? "" : `<a class="btn quiet" href="${esc(fallback)}" style="display:grid;place-items:center;text-decoration:none">Send from my messages instead</a>`}
     <a class="btn red" href="tel:${police()}" style="display:grid;place-items:center;text-decoration:none">Call ${police()}</a>
     ${place ? `<button class="outline" id="go" style="width:100%;text-align:left"><i class="dot big" style="background:${KIND_COLOR[place.kind]}"></i><div><div class="label">Walk to ${esc(place.name)}</div><p class="small">${dist(place.meters)}, open 24 hours</p></div></button>` : ""}
     <div class="grow"></div><button class="link" id="back">Back to the map</button></div>`;
@@ -256,8 +380,24 @@ function refreshScan() { if (app.querySelector("h1")?.textContent === "Is this l
 // ---------- Start ----------
 if (new URLSearchParams(location.search).has("reset")) store.reset();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-watchGps();
+const devAt = ["localhost", "127.0.0.1"].includes(location.hostname) && new URLSearchParams(location.search).get("at");
+if (devAt) { const [lat, lng] = devAt.split(",").map(Number); here.at = { lat, lng }; recordTrail(here.at); arriveAt(here.at, refreshScan); placesAround(here.at).then((p) => { here.places = p; if ($(".sheet")) home(); }); }
+else if (store.setupDone) watchGps(); // new users are asked on the onboarding's location screen
 research(refreshScan); // the city from your last visit, if there was one; a new position starts it again
 // Until the phone says where you are, show places around the last saved spot (if any). Never a made-up city.
 if (!here.places.length && saved()?.center) placesAround(saved().center).then((p) => { if (here.places.length) return; here.places = p; if ($(".sheet")) home(); });
-store.setupDone && store.contacts.length ? home() : setup();
+// Answers "how is she?" while Beacon is open, once her people have their link.
+function answer() { if (store.trip) startAnswering(() => ({ city: city.name, areas: areasNow(city.name), wayBack: (at) => wayBack(at) })); }
+answer();
+const counts = () => {
+  const k = (kind) => here.places.filter((p) => p.kind === kind && (kind !== "pharmacy" || p.open24h)).length;
+  const h = where() && nearest(here.places, where(), ["hospital"]);
+  return { hospitals: k("hospital"), police: k("police"), pharmacies: k("pharmacy"), scams: scamsHere().length, researching: city.researching,
+    nearestHospital: h ? `${h.name}, ${dist(h.meters)}` : "", placesDone: !!here.places.length || (!!where() && !city.researching) };
+};
+const onPosition = async (pos) => {
+  here.at = { lat: pos.coords.latitude, lng: pos.coords.longitude }; recordTrail(here.at);
+  arriveAt(here.at, refreshScan); here.places = await placesAround(here.at); keepHospitalDrive();
+};
+if (store.setupDone && store.contacts.length) home();
+else onboarding(app, { city: () => ({ name: city.name, country: city.country }), counts, onPosition, done: () => { store.setupDone = true; watchGps(); answer(); home(); } });

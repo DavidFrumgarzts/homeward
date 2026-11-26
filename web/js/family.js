@@ -10,6 +10,8 @@ import { sourceLabel } from "./ai.js";
 import { createFamilyMap } from "./familymap.js";
 import { summaryTemplate, writeSummary } from "./summary.js";
 import { ageText, clockText, latestFix, timelineItems, trail, travelerName } from "./timeline.js";
+import { askHow, askerName, lastAnswerAt, travelerNameOf } from "./familyask.js";
+import { waitingText } from "./checkin.js";
 
 // Plain words for every state that has nothing to show yet.
 const NOTES = {
@@ -28,10 +30,11 @@ const MARK = {
 const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="#E07A2B" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>';
 const AI_GAP_MILLIS = 20_000; // the summary is rewritten on new events only, and never more often than this
 
-export function familyScreen(app, watch, { demo = false } = {}) {
+export function familyScreen(app, watch, { demo = false, shareId = null } = {}) {
   app.innerHTML = `<div class="screen">
     <header class="fam-head"><span class="small">Beacon${demo ? " demo" : ""}</span><div id="fam-title" class="fam-head"></div></header>
     ${demo ? '<div class="fam-demo"><div class="row-between"><span class="small" style="color:var(--ink)">A made-up incident in Lapa, Rio, replayed about 12 times faster. Nothing here is real.</span><button class="link small" id="fam-replay" style="flex:none">Play again</button></div><div class="bar"><i id="fam-bar"></i></div></div>' : ""}
+    ${shareId ? '<div id="fam-ask" class="card col"></div>' : ""}
     <div id="fam-note" class="card col"></div>
     <div class="stack" id="fam-grid" hidden style="gap:20px">
       <div class="card fam-where"><div id="fam-map" class="fam-map" role="img" aria-label="Map of the latest position and the trail"></div><div id="fam-last"></div></div>
@@ -106,6 +109,31 @@ export function familyScreen(app, watch, { demo = false } = {}) {
       });
     }
     map?.show(trail(updates));
+  }
+
+  // "Ask how {name} is": her phone answers by itself; the answer is locked for this browser only.
+  let who = "", ask = { status: "idle" }, stopAsk = () => {};
+  function drawAsk() {
+    if (!$("fam-ask")) return;
+    const asked = ask.status !== "idle";
+    const them = who || "them";
+    $("fam-ask").innerHTML = `<h2>${who ? `How is ${esc(who)}?` : "How are they?"}</h2>
+      ${ask.status === "answered" ? `<p class="fam-text">${esc(ask.text)}</p><p class="small">Answered ${esc(clockText(ask.answeredAt))} your time by ${who ? `${esc(who)}'s` : "their"} phone${ask.at ? ` · <a class="link" target="_blank" rel="noopener" href="https://maps.google.com/?q=${ask.at.lat.toFixed(5)},${ask.at.lng.toFixed(5)}">Open in Google Maps</a>` : ""}</p>` : ""}
+      ${ask.status === "waiting" || ask.status === "sending" ? `<p class="small" aria-live="polite">${esc(waitingText(who || "their", lastAnswerAt()).replace("their's", "their"))}</p>` : ""}
+      ${ask.status === "failed" ? '<p class="small">Couldn\'t send the question. Check this device\'s connection and try again.</p>' : ""}
+      ${!asked || ask.status === "answered" || ask.status === "failed" ? `<input class="field" id="fam-me" placeholder="Your name, so ${esc(them)} can see who asked" value="${esc(askerName())}">
+        <button class="btn" id="fam-asknow">${who ? `Ask how ${esc(who)} is` : "Ask how they are"}</button>
+        <p class="small">${who ? `${esc(who)}'s` : "Their"} phone answers by itself. Only you can read the answer.</p>` : ""}`;
+    $("fam-asknow")?.addEventListener("click", async () => {
+      const me = $("fam-me").value.trim() || "Someone";
+      stopAsk(); ask = { status: "sending" }; drawAsk();
+      stopAsk = await askHow(shareId, me, (next) => { ask = next; drawAsk(); });
+    });
+  }
+  if (shareId) {
+    travelerNameOf(shareId).then((n) => { if (n) { who = n; drawAsk(); } });
+    setInterval(() => { if (ask.status === "waiting") drawAsk(); }, 60_000); // "checking every minute"
+    drawAsk();
   }
 
   const source = watch((next) => { state = next; if ($("fam-grid")) draw(); });
