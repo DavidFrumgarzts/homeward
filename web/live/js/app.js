@@ -154,8 +154,8 @@ function drawMap(shown, way = null) {
   map = L.map($("#map"), { zoomControl: false, attributionControl: true });
   if (!at) map.setView([25, 0], 2); // no position yet: the world, until the phone says where you are
   else map.setView(shown ? [(at.lat + shown.lat) / 2, (at.lng + shown.lng) / 2] : [at.lat, at.lng], 16);
-  // OpenStreetMap tiles, tinted light grey in live.css to look like Beacon's drawn map. Credit required.
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap contributors" }).addTo(map);
+  // CARTO Voyager: sharp tiles on phone screens ({r} = @2x), OpenStreetMap data.
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 20, subdomains: "abcd", attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>' }).addTo(map);
   for (const p of here.places) {
     if (!p.open24h) continue;
     L.circleMarker([p.lat, p.lng], { radius: 7, color: "#fff", weight: 2, fillColor: KIND_COLOR[p.kind], fillOpacity: 1 }).bindTooltip(esc(p.name)).addTo(map); // OSM names are outside data: escaped

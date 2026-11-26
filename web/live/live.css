@@ -6,7 +6,7 @@
 button.card { width: 100%; text-align: left; }
 .chat-top h2 { margin: 0; }
 /* Grey streets like the drawn map: OSM's colors toned down. */
-.leaflet-tile-pane { filter: grayscale(1) brightness(1.06) contrast(.88); }
+.leaflet-tile-pane { filter: saturate(.8); }
 /* After 9 p.m.: safe places nearby blink yellow, slowly, all night. */
 .night-ring { fill: #E0A10F; fill-opacity: .25; stroke: #E0A10F; stroke-width: 3; animation: night-ring 1.2s ease-in-out infinite; }
 @keyframes night-ring { 50% { opacity: .25; } }
