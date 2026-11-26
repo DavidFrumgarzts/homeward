@@ -11,7 +11,8 @@ struct QuickPickChips: View {
             ForEach(options, id: \.self) { option in
                 Button { onPick(option) } label: {
                     Text(option).style(.small, color: BeaconColors.text)
-                        .padding(.horizontal, 14).frame(minHeight: 44)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 14).padding(.vertical, 6).frame(minHeight: BeaconSize.minTap)
                         .overlay(Capsule().stroke(BeaconColors.border, lineWidth: 1))
                         .contentShape(Capsule())
                 }
@@ -32,23 +33,25 @@ struct WrapLayout: Layout {
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         for row in arrange(subviews, width: bounds.width) {
-            for item in row.items { subviews[item.index].place(at: CGPoint(x: bounds.minX + item.x, y: bounds.minY + row.y), proposal: .unspecified) }
+            for item in row.items { subviews[item.index].place(at: CGPoint(x: bounds.minX + item.x, y: bounds.minY + row.y), proposal: ProposedViewSize(item.size)) }
         }
     }
 
-    private struct Row { var y: CGFloat; var height: CGFloat; var width: CGFloat; var items: [(index: Int, x: CGFloat)] }
+    private struct Row { var y: CGFloat; var height: CGFloat; var width: CGFloat; var items: [(index: Int, x: CGFloat, size: CGSize)] }
 
     private func arrange(_ subviews: Subviews, width: CGFloat) -> [Row] {
         var rows: [Row] = []
         var x: CGFloat = 0, y: CGFloat = 0
         for (index, view) in subviews.enumerated() {
-            let size = view.sizeThatFits(.unspecified)
+            // A choice wider than the row (very large text) wraps inside its pill instead of running off screen.
+            let ideal = view.sizeThatFits(.unspecified)
+            let size = ideal.width > width ? view.sizeThatFits(ProposedViewSize(width: width, height: nil)) : ideal
             if rows.isEmpty || x + size.width > width {
                 if let last = rows.last { y = last.y + last.height + spacing }
                 rows.append(Row(y: y, height: 0, width: 0, items: []))
                 x = 0
             }
-            rows[rows.count - 1].items.append((index, x))
+            rows[rows.count - 1].items.append((index, x, size))
             rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)
             rows[rows.count - 1].width = x + size.width
             x += size.width + spacing

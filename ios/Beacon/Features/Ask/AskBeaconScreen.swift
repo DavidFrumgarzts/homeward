@@ -21,6 +21,8 @@ struct AskBeaconScreen: View {
     @State private var lines: [ChatLine] = []
     @State private var typed = ""
     @State private var thinking = false
+    @State private var asked = 0          // haptic trigger: a question was sent
+    @FocusState private var typing: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,15 +52,18 @@ struct AskBeaconScreen: View {
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: lines) { withAnimation { proxy.scrollTo(lines.last?.id, anchor: .bottom) } }
+                // The keyboard pushes the box up (the screen keeps out of its way); keep the newest answer in sight.
+                .onChange(of: typing) { if typing, let last = lines.last?.id { withAnimation { proxy.scrollTo(last, anchor: .bottom) } } }
             }
             AskBox(icon: "arrow.up", iconLabel: "Send", action: { ask(typed) }) {
-                TextField(lines.isEmpty ? "Ask Beacon anything" : "Ask a follow-up", text: $typed).font(TextLook.body.font).foregroundStyle(BeaconColors.text)
-                    .submitLabel(.send).onSubmit { ask(typed) }
+                TextField(lines.isEmpty ? "Ask Beacon anything" : "Ask a follow-up", text: $typed).beaconFont(.body).foregroundStyle(BeaconColors.text)
+                    .submitLabel(.send).onSubmit { ask(typed) }.focused($typing)
             }
         }
         .padding(.horizontal, BeaconSpacing.sheet).padding(.vertical, 12)
         .background(BeaconColors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .sensoryFeedback(.impact(weight: .light), trigger: asked)
         .task { if !firstQuestion.isBlank && lines.isEmpty { ask(firstQuestion) } }
     }
 
@@ -70,6 +75,7 @@ struct AskBeaconScreen: View {
         var i = 0
         while i + 1 < lines.count { earlier.append((lines[i].text, lines[i + 1].text)); i += 2 }
         lines.append(ChatLine(fromYou: true, text: q))
+        asked += 1
         typed = ""
         thinking = true
         let pack = packs.pack, here = location.lastFix?.point

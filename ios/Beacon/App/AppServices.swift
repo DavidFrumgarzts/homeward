@@ -40,7 +40,10 @@ final class AppServices: ObservableObject {
     }
 
     // Opens the phone dialer with a number from the saved pack. iOS asks before it calls.
+    // In test mode it never dials: the screens show "Test mode: would call …" instead (TestMode.swift),
+    // and this guard makes sure nothing slips through.
     static func dial(_ number: String) {
+        guard !TestMode.isOn else { return }
         let digits = number.filter { $0.isNumber || $0 == "+" }
         if let url = URL(string: "tel:\(digits)") { UIApplication.shared.open(url) }
     }
@@ -49,6 +52,8 @@ final class AppServices: ObservableObject {
 // Debug-only launch options, so a tester (or a script) can reach a screen without tapping through setup:
 //   -resetBeacon YES     start again from the opening story
 //   -demoSetup YES       skip setup with a made-up traveler ("Noa") and three made-up contacts
+//                        (US 555-01xx numbers, which are reserved for fiction and never reach a real person)
+//   -realTexts YES       on a real iPhone, turn test mode off: open Messages and the dialer for real (TestMode.swift)
 @MainActor
 enum DebugLaunch {
     static func apply(to store: LocalStore) {
@@ -57,7 +62,7 @@ enum DebugLaunch {
         if args.bool(forKey: "resetBeacon") { store.reset() }
         if args.bool(forKey: "demoSetup") {
             store.profile = UserProfile(name: "Noa")
-            store.contacts = [TrustedContact(name: "Mom", phone: "+972501234567"), TrustedContact(name: "Dad", phone: "+972527654321"), TrustedContact(name: "Alwis", phone: "+6591234567")]
+            store.contacts = [TrustedContact(name: "Mom", phone: "+12025550101"), TrustedContact(name: "Dad", phone: "+12025550102"), TrustedContact(name: "Alwis", phone: "+12025550103")]
             store.onboardingDone = true
         }
         #endif

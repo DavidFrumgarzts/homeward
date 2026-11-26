@@ -18,6 +18,9 @@ struct RootView: View {
             if store.onboardingDone { main } else { OnboardingFlow() }
         }
         .background(BeaconColors.background.ignoresSafeArea())
+        // Text follows the size picked in Settings (Dynamic Type), up to the third accessibility size,
+        // where the SOS screens and Home's sheet still fit on a 6.1-inch iPhone.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
     }
 
     private var main: some View {

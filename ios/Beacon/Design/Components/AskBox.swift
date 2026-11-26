@@ -18,7 +18,7 @@ struct AskBox<Field: View>: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityAddTraits(.isButton)
         } else {
-            row(Button(action: action) { square }.buttonStyle(.plain).accessibilityLabel(iconLabel))
+            row(Button(action: action) { square.contentShape(Rectangle()) }.buttonStyle(.plain).accessibilityLabel(iconLabel))
         }
     }
 

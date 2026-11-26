@@ -77,6 +77,13 @@ xcrun simctl spawn booted log stream --info --predicate 'subsystem == "app.homew
 3. A free Apple ID signs an app for 7 days and cannot use TestFlight. TestFlight, and App Attest for release builds, need the paid Apple Developer Program.
 4. If Xcode says the bundle id `app.homeward` is not available for your team, the id is registered to someone else's team; use that team, or change the id here and add a matching iOS app in the Firebase console.
 
+**Safe demo.** A debug build on a phone starts in test mode, so it can't text your family or call the police by accident:
+- Messages never opens. The screen shows "Test mode: no real texts." and the text that would have gone out (SOS, I'm OK, and the "it's over" text).
+- "Police 190", "Call police" and "Call ambulance" don't dial. An alert shows "Test mode: would call 190" instead.
+- To try the real Messages sheet and dialer on purpose, add the launch argument `-realTexts YES` (Product > Scheme > Edit Scheme > Run > Arguments) and run again. Remove it to go back to test mode. Release builds have no test mode.
+- `-demoSetup YES` fills in three made-up contacts with US numbers +1 202-555-0101, -0102 and -0103. The 555-0100 to 555-0199 range is reserved for fiction, so these numbers belong to no one.
+- Firestore writes are the same in test mode: with `GoogleService-Info.plist` present, an SOS still writes the trip, incident and updates to the team's Firebase project. Without the file nothing is written.
+
 ## What is built
 
 - Setup: the two-part story on the drawn Lapa map, welcome, contacts (her name, how to refer to her, the iOS contact picker, typed numbers), location permission, "get ready" with the bundled Rio pack and an honest line about Apple Intelligence on this device.
@@ -88,7 +95,7 @@ xcrun simctl spawn booted log stream --info --predicate 'subsystem == "app.homew
 ## What is not built yet, and limits to know about
 
 - **An iPhone app cannot send a text by itself.** She presses send in Messages. iOS never tells an app that a text was delivered, so the screen says "Sent to …" at most, never "… knows".
-- **The simulator cannot open Messages.** Debug builds show "Test mode: Messages is not available in the simulator" with the text instead.
+- **The simulator cannot open Messages.** Debug builds show "Test mode: Messages is not available in the simulator" with the text instead (on a phone, "Test mode: no real texts."; see Safe demo above).
 - **The simulator cannot run Apple's on-device model.** It reports the model as available but refuses every request ("Simulator is not supported"), so on the simulator the pass is the "Cloud" badge (after the debug token is registered). "On device" needs a real iPhone with Apple Intelligence (iPhone 15 Pro or later).
 - **Location is "While Using the App" only.** Updates go out while Beacon is on screen during an SOS; background updates (and the Live Activity that goes with them) are a later phase.
 - Not built yet: Live Activity and Dynamic Island, Action Button and Control Center control, Siri shortcut, Safe Walk, listening and safety checks, home base, safe phrase, pack download by pairing code, building a pack on the phone (the cloud research model is wired but no screen calls it).

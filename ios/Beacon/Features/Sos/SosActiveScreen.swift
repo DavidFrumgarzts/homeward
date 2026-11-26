@@ -13,12 +13,16 @@ struct SosActiveScreen: View {
         let view = incident.view
         let ended = view.phase == .resolved
         let summary = SosPathWording.summarize(names: store.contacts.map(\.name), messages: incident.messages, link: sync.link)
+        // Test mode on a real iPhone (debug build): don't say "simulator". See TestMode.swift.
+        let deviceTest = incident.messages == .testMode && !TestMode.onSimulator && !store.contacts.isEmpty
+        let headline = deviceTest ? "Test mode: no real texts" : summary.headline
+        let lines = deviceTest ? ["Nothing was sent. Outside test mode, Messages opens here with this text ready for \(Names.join(store.contacts.map(\.name)))."] + summary.lines.dropFirst() : summary.lines
         ScrollView {
             VStack(spacing: 18) {
                 StatusMark(sent: summary.sent, ended: ended).padding(.top, 16)
-                Text(ended ? "SOS ended" : summary.headline).style(.display).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                Text(ended ? "SOS ended" : headline).style(.display).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                 VStack(spacing: 4) {
-                    ForEach(ended ? ["Location sharing has stopped."] : summary.lines, id: \.self) {
+                    ForEach(ended ? ["Location sharing has stopped."] : lines, id: \.self) {
                         Text($0).style(.small).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -28,7 +32,7 @@ struct SosActiveScreen: View {
                     // The "it's over" text for her contacts. On an iPhone she sends it herself, from Messages.
                     if let text = incident.endedText, view.alertSent {
                         WhiteCard {
-                            Text(view.testMode ? "Test mode: Messages is not available in the simulator. On a real iPhone this text opens ready to send:" : "Tell your contacts. This text is ready in Messages:").style(.small)
+                            Text(view.testMode ? "\(TestMode.noTexts) Outside test mode this text opens in Messages, ready to send:" : "Tell your contacts. This text is ready in Messages:").style(.small)
                             Text(text).style(.small, color: BeaconColors.text).padding(.top, 6).textSelection(.enabled)
                         }
                         if !view.testMode {

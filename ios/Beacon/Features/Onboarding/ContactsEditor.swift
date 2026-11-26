@@ -34,7 +34,7 @@ struct ContactsEditor: View {
             Text("or type one in").style(.small).padding(.top, 4)
             field("Their name, e.g. Mom", text: $name)
             field("Phone with country code, e.g. +972…", text: $phone).keyboardType(.phonePad)
-            if !phone.isEmpty && !phoneOk { Text("Use the full number with country code, like +972501234567.").style(.small, color: BeaconColors.red) }
+            if !phone.isEmpty && !phoneOk { Text("Use the full number with country code, like +12025550101.").style(.small, color: BeaconColors.red) }
             Button { add(name, phone); name = ""; phone = "" } label: {
                 Text("+ Add person").style(.label, color: canAdd ? BeaconColors.primary : BeaconColors.textMuted).frame(maxWidth: .infinity, minHeight: 52)
                     .overlay(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous).stroke(BeaconColors.border, lineWidth: 1.5))
@@ -50,7 +50,7 @@ struct ContactsEditor: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Done") { typing = false }.font(TextLook.label.font)
+                Button("Done") { typing = false }.beaconFont(.label)
             }
         }
         .sheet(isPresented: $picking) {
@@ -106,7 +106,7 @@ struct ContactsEditor: View {
                 Spacer(minLength: 0)
                 if showsRemove {
                     Button(action: remove) {
-                        Image(systemName: "xmark").foregroundStyle(BeaconColors.textMuted).frame(width: 44, height: 44)
+                        Image(systemName: "xmark").foregroundStyle(BeaconColors.textMuted).frame(width: BeaconSize.minTap, height: BeaconSize.minTap).contentShape(Rectangle())
                     }
                     .accessibilityLabel("Remove \(contact.name)")
                 } else {
@@ -120,7 +120,7 @@ struct ContactsEditor: View {
     }
 
     private func field(_ placeholder: String, text: Binding<String>) -> some View {
-        TextField(placeholder, text: text).font(TextLook.body.font).foregroundStyle(BeaconColors.text).autocorrectionDisabled().focused($typing)
+        TextField(placeholder, text: text).beaconFont(.body).foregroundStyle(BeaconColors.text).autocorrectionDisabled().focused($typing)
             .padding(.horizontal, 16).frame(minHeight: 52).background(BeaconColors.surface).clipShape(RoundedRectangle(cornerRadius: BeaconRadius.field, style: .continuous))
     }
 }

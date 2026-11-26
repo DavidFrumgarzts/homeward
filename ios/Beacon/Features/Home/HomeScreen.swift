@@ -15,6 +15,8 @@ struct HomeScreen: View {
     @State private var sheetHeight: CGFloat = 0
     @State private var popup: String?
     @State private var checkIn: ComposeRequest?
+    @State private var zoneBuzz = 0      // haptic triggers
+    @State private var okTaps = 0
 
     var body: some View {
         let pack = packs.pack
@@ -23,27 +25,32 @@ struct HomeScreen: View {
         let redZone = here.flatMap { ZoneChecker.redZoneAhead($0, zones: pack.zones, hour: hour) }
         let place = here.flatMap { SafePlacePicker.pick(here: $0, places: pack.safePlaces, hour: hour) }
 
-        ZStack(alignment: .bottom) {
-            HomeMap(pack: pack, you: here, bottomCovered: sheetHeight).ignoresSafeArea()
+        // The map runs edge to edge (under the Dynamic Island and the home indicator); everything else
+        // stays inside the safe area. The map is told how much of it is covered, so "you" stay in view.
+        GeometryReader { geo in
+            ZStack(alignment: .bottom) {
+                HomeMap(pack: pack, you: here, topCovered: geo.safeAreaInsets.top, bottomCovered: sheetHeight + geo.safeAreaInsets.bottom).ignoresSafeArea()
 
-            VStack {
-                if let redZone, let here {
-                    RedZoneBanner(zone: redZone, meters: Int(ZoneChecker.distanceToZone(here, redZone))) {
-                        popup = ([redZone.reasons.map { "• \($0)" }.joined(separator: "\n")] + (place.map { ["Go to: \($0.reason)"] } ?? [])).joined(separator: "\n\n")
+                VStack {
+                    if let redZone, let here {
+                        RedZoneBanner(zone: redZone, meters: Int(ZoneChecker.distanceToZone(here, redZone))) {
+                            popup = ([redZone.reasons.map { "• \($0)" }.joined(separator: "\n")] + (place.map { ["Go to: \($0.reason)"] } ?? [])).joined(separator: "\n\n")
+                        }
+                        .padding(16)
                     }
-                    .padding(16)
+                    Spacer()
                 }
-                Spacer()
-            }
 
-            HomeSheet(pack: pack, contactNames: Names.join(store.contacts.map(\.name)), place: place,
-                      onAsk: onAsk,
-                      onPlace: { popup = place?.reason ?? "No open place to get help is saved nearby." },
-                      onImOk: imOk,
-                      onPolice: { AppServices.dial(pack.police) },
-                      onSos: { incident.startSos(method: .sosButton) },
-                      onEditContacts: onEditContacts)
-                .background(GeometryReader { geo in Color.clear.onAppear { sheetHeight = geo.size.height }.onChange(of: geo.size.height) { sheetHeight = geo.size.height } })
+                HomeSheet(pack: pack, contactNames: Names.join(store.contacts.map(\.name)), place: place,
+                          onAsk: onAsk,
+                          onPlace: { popup = place?.reason ?? "No open place to get help is saved nearby." },
+                          onImOk: imOk,
+                          onPolice: { if TestMode.isOn { popup = TestMode.wouldCall(pack.police) } else { AppServices.dial(pack.police) } },
+                          onSos: { incident.startSos(method: .sosButton) },
+                          onEditContacts: onEditContacts,
+                          maxHeight: geo.size.height * 0.68)
+                    .onGeometryChange(for: CGFloat.self, of: { $0.size.height }, action: { sheetHeight = $0 })
+            }
         }
         .onAppear { location.start(for: "home") }
         .onDisappear { location.stop(for: "home") }
@@ -51,20 +58,23 @@ struct HomeScreen: View {
         .onChange(of: location.lastFix) {
             guard let fix = location.lastFix else { return }
             if detector.update(here: fix.point, zones: pack.zones, hour: Clock.hour, nowMillis: Clock.nowMillis) != nil {
-                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                zoneBuzz += 1
             }
         }
+        .sensoryFeedback(.warning, trigger: zoneBuzz)
+        .sensoryFeedback(.success, trigger: okTaps)
         .alert("Beacon", isPresented: .constant(popup != nil), actions: { Button("OK") { popup = nil } }, message: { Text(popup ?? "") })
         .sheet(item: $checkIn) { request in
             MessageComposer(request: request) { _ in checkIn = nil }.ignoresSafeArea()
         }
     }
 
-    // "I'm OK": opens Messages with the calm text for every contact. On the simulator, shows the text instead.
+    // "I'm OK": opens Messages with the calm text for every contact. In test mode, shows the text instead.
     private func imOk() {
         guard !store.contacts.isEmpty else { popup = "Add someone first (Edit)."; return }
         let request = CheckIn.request(store: store, pack: packs.pack, here: location.lastFix?.point)
-        if incident.testMode { popup = "Test mode: Messages is not available in the simulator. The text would be:\n\n\(request.body)" }
+        okTaps += 1
+        if incident.testMode { popup = "\(TestMode.noTexts) The text would be:\n\n\(request.body)" }
         else if incident.canSendText() { checkIn = request }
         else { popup = "This device can't send texts." }
     }

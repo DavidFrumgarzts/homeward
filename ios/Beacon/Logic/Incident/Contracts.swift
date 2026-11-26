@@ -70,7 +70,7 @@ struct IncidentViewState: Equatable, Sendable {
     var alertSent: Bool = false                 // she pressed Send, or the automatic alert went out
     var lastUpdateSentAtMillis: Millis? = nil   // last location update that left the phone
     var pointsWaiting: Int = 0                  // location points recorded while there was no connection
-    var testMode: Bool = false                  // debug builds on the simulator: Messages cannot open
+    var testMode: Bool = false                  // debug builds (see TestMode.swift): Messages is not opened, nothing is dialed
 }
 
 // Decoding by hand so a missing optional field takes its default instead of failing.

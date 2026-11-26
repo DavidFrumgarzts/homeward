@@ -31,11 +31,12 @@ enum BeaconSize {
     static let askBox: CGFloat = 60
     static let send: CGFloat = 48
     static let iconTile: CGFloat = 44
+    static let minTap: CGFloat = 44      // Apple's smallest comfortable tap target
 }
 
 extension TextLook {
     // The "DONE" / "64%" tags on the Get ready step (Figma shows them in a monospaced face).
-    static let status = TextLook(font: .system(size: 13, weight: .bold, design: .monospaced), color: BeaconColors.green, tracking: 0.6)
+    static let status = TextLook(face: .mono, size: 13, weight: 700, scale: .footnote, color: BeaconColors.green, tracking: 0.6)
 }
 
 // David's Android names for the same components, so code reads the same on both platforms.
