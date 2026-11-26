@@ -21,6 +21,9 @@ import { pickSituation } from "./situation.js";
 import { scanScreen } from "./scan.js";
 import { recommends } from "./scams.js";
 
+// Phone-frame demo only (web/phone/): ?frame=phone adds the iPhone safe areas and stops texts and calls.
+if (new URLSearchParams(location.search).get("frame") === "phone") await import("/phone/frame.js");
+
 const app = document.getElementById("app");
 const $ = (selector) => app.querySelector(selector);
 
