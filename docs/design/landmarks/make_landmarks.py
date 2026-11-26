@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Draws Beacon's map pictures and saves each one twice:
   - an .svg file here (paste into Figma, components "Landmark/...")
-  - an Android picture in app/src/main/res/drawable/landmark_<name>.xml
+  - an Android picture in android/app/src/main/res/drawable/landmark_<name>.xml
 Change a shape here, run `python3 docs/design/landmarks/make_landmarks.py` from the repo root,
 and both stay in sync. Only simple shapes are used (path, rect, circle) so the conversion to Android is exact.
 
@@ -63,7 +63,7 @@ ALL = {"police": (police, "Police: blue badge with a shield."), "hospital": (hos
        "hostel": (hostel, "Hostel: blue badge with a bed.")}
 
 if __name__ == "__main__":
-    here = os.path.dirname(os.path.abspath(__file__)); res = os.path.join(here, "..", "..", "..", "app", "src", "main", "res", "drawable")
+    here = os.path.dirname(os.path.abspath(__file__)); res = os.path.join(here, "..", "..", "..", "android", "app", "src", "main", "res", "drawable")
     for name, (draw, note) in ALL.items():
         w, h, shapes = draw()
         open(os.path.join(here, f"{name}.svg"), "w").write(f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg">' + "".join(shapes) + "</svg>\n")

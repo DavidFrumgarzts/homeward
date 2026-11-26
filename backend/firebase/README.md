@@ -1,4 +1,4 @@
-# firebase
+# backend/firebase
 
 Beacon's backend: the database rules, and the tests that prove them. The data layout (paths, fields, how a family link grants access) is described in `shared/schema/README.md`.
 
@@ -12,7 +12,7 @@ Beacon's backend: the database rules, and the tests that prove them. The data la
 ## Test the rules
 
 ```
-cd firebase
+cd backend/firebase
 npm install        # once
 npm test           # starts the Firestore emulator and runs the tests
 ```

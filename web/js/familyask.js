@@ -1,6 +1,6 @@
 // The family page's "Ask how {name} is". This browser makes a key pair once (kept here only), sends the
 // public half with the question, and opens the locked answer when her phone sends it. Firestore layout:
-// trips/{tripId}/checkins/{id} (rules in firebase/firestore.rules). The page must have opened the link first
+// trips/{tripId}/checkins/{id} (rules in backend/firebase/firestore.rules). The page must have opened the link first
 // (js/familydata.js writes the viewer document), or the rules refuse the question.
 import { firestore, signedIn } from "./firebase.js";
 import { makeKeys, unseal } from "./seal.js";

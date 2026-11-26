@@ -14,10 +14,10 @@ The design in code (change these, not copies):
 
 | What | Android | Web |
 |---|---|---|
-| Colors | `app/src/main/java/app/homeward/design/Colors.kt` | `web/styles.css` |
-| Type | `app/src/main/java/app/homeward/design/Type.kt` | `web/styles.css` |
-| Map | `app/.../features/lapamap/LapaMapDrawing.kt`, `LapaIllustratedMap.kt` | `web/js/map.js` |
-| Cop | `app/.../features/ask/BeaconCop.kt` | `web/js/cop.js` |
+| Colors | `android/app/src/main/java/app/homeward/design/Colors.kt` | `web/styles.css` |
+| Type | `android/app/src/main/java/app/homeward/design/Type.kt` | `web/styles.css` |
+| Map | `android/app/.../features/lapamap/LapaMapDrawing.kt`, `LapaIllustratedMap.kt` | `web/js/map.js` |
+| Cop | `android/app/.../features/ask/BeaconCop.kt` | `web/js/cop.js` |
 
 ## Rules David set (do not undo these)
 - No "AI look": no uppercase tag chips ("OFFLINE READY"), no glows, no gradients, no dark navy screens.

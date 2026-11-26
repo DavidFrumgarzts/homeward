@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "vitest run",
-    "test:e2e": "cd ../firebase && firebase emulators:exec --only auth,firestore,hosting --project demo-beacon \"npm --prefix ../web run test:e2e:run\"",
+    "test:e2e": "cd ../backend/firebase && firebase emulators:exec --only auth,firestore,hosting --project demo-beacon \"npm --prefix ../../web run test:e2e:run\"",
     "test:e2e:run": "playwright test"
   },
   "devDependencies": {
