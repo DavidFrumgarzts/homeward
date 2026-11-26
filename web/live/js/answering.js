@@ -7,11 +7,11 @@ import { firebase, firestore, signedIn } from "../../js/firebase.js";
 import { store } from "../../js/store.js";
 import { familyLink } from "../../js/incident.js";
 import { seal } from "../../js/seal.js";
-import { answerText, answerPrompt } from "../../js/checkin.js";
+import { answerText, answerPrompt, decide } from "../../js/checkin.js";
 import { inside } from "../../js/walkroute.js";
 import { askAi } from "../../js/ai.js";
 
-const LOG = "beacon.checkinLog", PAUSED = "beacon.checkinPaused", TRAIL = "beacon.trail";
+const LOG = "beacon.checkinLog", PAUSED = "beacon.checkinPaused", TRAIL = "beacon.trail", LAST_BY = "beacon.lastAnswerBy";
 const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* full */ } };
 const hex = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -70,23 +70,31 @@ async function facts(ctx) {
   };
 }
 
-let stop = null, timer = null;
+let stop = null, timer = null, starting = false;
 // Starts answering while the page is open. getCtx() returns the current { city, areas, wayBack }.
 export async function startAnswering(getCtx, onLog = () => {}) {
   const trip = store.trip;
-  if (!trip || stop) return;
+  if (!trip || stop || starting) return;
+  starting = true;
   const [fs, uid] = await Promise.all([firestore(), signedIn()]);
-  if (!fs || !uid) return;
+  if (!fs || !uid) { starting = false; return; }
   const { db, f } = fs;
+  const bad = new Set(); // questions whose key can't be used: never retried
   const answer = async (snap) => {
     const q = snap.data();
+    if (bad.has(snap.id)) return;
+    let key; try { key = JSON.parse(q.askerKey); await crypto.subtle.importKey("jwk", key, { name: "ECDH", namedCurve: "P-256" }, false, []); } catch { bad.add(snap.id); return; }
+    const lastBy = read(LAST_BY, {}), verdict = decide(q, { now: Date.now(), lastByViewer: lastBy });
     let text, at = null;
     if (paused()) text = `${store.name || "She"} has paused check-ins for now.`;
+    else if (verdict === "too-old") text = `This question is more than an hour old. Ask again to see where ${store.name || "she"} is now.`;
+    else if (verdict === "too-often") text = "You asked a few minutes ago. Beacon answers with a new location every 5 minutes.";
     else {
+      write(LAST_BY, { ...lastBy, [q.viewerUid]: Date.now() });
       const fx = await facts(getCtx()); at = fx.at || null;
       text = (await askAi(answerPrompt(fx)))?.text?.trim() || answerText(fx);
     }
-    const sealed = await seal(JSON.parse(q.askerKey), JSON.stringify({ text, at: at && { lat: at.lat, lng: at.lng, t: at.t } }));
+    const sealed = await seal(key, JSON.stringify({ text, at: at && { lat: at.lat, lng: at.lng, t: at.t } }));
     await f.updateDoc(snap.ref, { answer: sealed, answeredAtMillis: Date.now() }).catch(() => {});
     const log = [{ who: q.askerName || "Someone", askedAt: q.askedAtMillis, answeredAt: Date.now(), text }, ...answersSent()].slice(0, 30);
     write(LOG, log); onLog(log);
@@ -98,7 +106,18 @@ export async function startAnswering(getCtx, onLog = () => {}) {
       for (const d of got.docs) if (!handling.has(d.id)) { handling.add(d.id); answer(d).finally(() => handling.delete(d.id)); }
     }, () => { stop = null; }); // dropped (offline or refused): the minute check restarts it
   };
-  listen();
+  // Only one open tab answers; another tab takes over when that one closes.
+  if (navigator.locks) await new Promise((started) => navigator.locks.request("beacon-answering", () => { listen(); started(); return new Promise(() => {}); }));
+  else listen();
+  starting = false;
   timer ??= setInterval(() => { if (!stop && navigator.onLine) listen(); }, 60000);
   addEventListener("online", () => { if (!stop) listen(); });
+}
+
+// "Turn off their link": the old link stops working for everyone (the rules refuse it), and the next
+// "Send them their check-in link" makes a new trip and link.
+export async function turnOffLink() {
+  const trip = store.trip, [fs, uid] = await Promise.all([firestore(), signedIn()]);
+  if (trip?.created && fs && uid) await fs.f.updateDoc(fs.f.doc(fs.db, "shares", trip.shareId), { revoked: true }).catch(() => {});
+  stop?.(); stop = null; store.trip = null;
 }

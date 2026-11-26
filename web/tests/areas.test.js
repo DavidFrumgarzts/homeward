@@ -38,3 +38,9 @@ describe("dangerous areas", () => {
     expect(areasFor("Jaipur", 23).every((a) => TEAM_AREAS.find((t) => t.name === a.name)?.reviewed)).toBe(true);
   });
 });
+
+describe("areas for routing a whole evening", () => {
+  it("with no hour, returns every reviewed area of the city, whatever its hours", () => {
+    expect(areasFor("Jaipur", null, [], list).map((a) => a.name)).toEqual(["Checked area"]);
+  });
+});

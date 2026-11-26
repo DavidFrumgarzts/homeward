@@ -45,3 +45,18 @@ describe("check-in answers", () => {
     expect(waitingText("Julia", null)).toBe("Waiting for Julia's phone · checking every minute");
   });
 });
+
+import { decide } from "../js/checkin.js";
+describe("which questions get a location", () => {
+  const now = 1_000_000_000;
+  it("answers a fresh question once", () => {
+    expect(decide({ askedAtMillis: now - 1000, viewerUid: "mom" }, { now, lastByViewer: {} })).toBe("answer");
+  });
+  it("doesn't send a location twice within 5 minutes to the same person", () => {
+    expect(decide({ askedAtMillis: now - 1000, viewerUid: "mom" }, { now, lastByViewer: { mom: now - 60_000 } })).toBe("too-often");
+    expect(decide({ askedAtMillis: now - 1000, viewerUid: "mom" }, { now, lastByViewer: { mom: now - 6 * 60_000 } })).toBe("answer");
+  });
+  it("doesn't answer questions older than an hour with today's location", () => {
+    expect(decide({ askedAtMillis: now - 2 * 3600_000, viewerUid: "mom" }, { now, lastByViewer: {} })).toBe("too-old");
+  });
+});

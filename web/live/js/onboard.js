@@ -15,7 +15,7 @@ const TINTS = [["var(--blue-tint)", "var(--blue)"], ["var(--amber-tint)", "var(-
 //        onPosition(pos), done() }
 export function onboarding(app, ctx) {
   const $ = (s) => app.querySelector(s);
-  let step = "night", booking = { state: "idle" }, note = "";
+  let step = "night", booking = { state: "idle" }, note = "", readyTimer = null;
   const go = (s) => { step = s; note = ""; draw(); window.scrollTo(0, 0); };
   const next = () => { const n = nextStep(step, { contacts: store.contacts.length }); n === null ? ctx.done() : go(n); };
   const top = (left = "") => `<div class="onb-top"><span class="small">${left}</span><button class="link small" id="skip" style="color:var(--muted)">Skip</button></div>`;
@@ -35,8 +35,8 @@ export function onboarding(app, ctx) {
         return `${top("With Beacon, before the trip")}<div class="onb-pad stack">
           ${card("Found your booking", esc(`${b.hotel}${b.checkIn ? `, ${b.checkIn} to ${b.checkOut}` : ""}`), "var(--blue-tint)", "var(--blue)", "✉")}
           <div class="card" style="${w.warn ? "" : ""}"><div class="tile" style="background:${w.warn ? "var(--amber-tint)" : "var(--green-tint)"};color:${w.warn ? "var(--amber)" : "var(--green)"};width:36px;height:36px;border-radius:12px">${w.warn ? "!" : "✓"}</div>
-            <div><div class="label">${esc(w.text)}</div><p class="small">${r.hospitals.length} hospitals within 60 km${r.nearest ? ` · <a class="link" target="_blank" rel="noopener" href="${googleMapsLink(r.at, r.nearest.at)}">Drive there in Google Maps</a>` : ""}</p></div></div>
-          <p class="small">Saved on this phone, with the drive to the nearest hospital, so it works with no signal. Hospitals and roads © OpenStreetMap contributors.</p>
+            <div><div class="label">${esc(w.text)}</div><p class="small">${r.hospitals ? `${r.hospitals.length} hospitals within 60 km` : "Hospitals not checked yet"}${r.nearest ? ` · <a class="link" target="_blank" rel="noopener" href="${googleMapsLink(r.at, r.nearest.at)}">Drive there in Google Maps</a>` : ""}</p></div></div>
+          <p class="small">${r.sample ? "This was the sample, so nothing was saved." : "Saved on this phone, with the drive to the nearest hospital, so it works with no signal."} Hospitals and roads © OpenStreetMap contributors.</p>
           <div class="grow"></div><button class="btn" id="go">Next</button></div>`;
       }
       return `${top("With Beacon, before the trip")}
@@ -130,7 +130,7 @@ export function onboarding(app, ctx) {
     },
     location: () => $("#allow").addEventListener("click", () => {
       if (!navigator.geolocation) return next();
-      navigator.geolocation.getCurrentPosition((pos) => { ctx.onPosition(pos); next(); }, () => { note = "Location is off. You can turn it on later in your browser's settings."; draw(); setTimeout(next, 1800); }, { enableHighAccuracy: true, timeout: 15000 });
+      navigator.geolocation.getCurrentPosition((pos) => { ctx.onPosition(pos); next(); }, () => { note = "Location is off. You can turn it on later in your browser's settings."; draw(); setTimeout(() => step === "location" && next(), 1800); }, { enableHighAccuracy: true, timeout: 15000 });
     }),
     people: () => {
       const add = () => {
@@ -157,9 +157,10 @@ export function onboarding(app, ctx) {
     },
     scan: () => $("#allow").addEventListener("click", async () => {
       try { const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }); s.getTracks().forEach((t) => t.stop()); next(); }
-      catch { note = "Camera is off. You can still pick a photo from your gallery when you scan."; draw(); setTimeout(next, 1800); }
+      catch { note = "Camera is off. You can still pick a photo from your gallery when you scan."; draw(); setTimeout(() => step === "scan" && next(), 1800); }
     }),
-    ready: () => { const t = setInterval(() => { if (step !== "ready" || !app.querySelector(".onb")) return clearInterval(t); draw(); }, 2000); },
+    // One timer for the whole screen (draw() runs wire.ready again on every tick).
+    ready: () => { readyTimer ??= setInterval(() => { if (step !== "ready" || !app.querySelector(".onb")) { clearInterval(readyTimer); readyTimer = null; return; } draw(); }, 2000); },
   };
 
   gmailAvailable().then((ok) => { booking.gmail = ok; if (step === "booking") draw(); });

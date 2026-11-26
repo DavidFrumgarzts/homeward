@@ -12,11 +12,11 @@ import { placesAround, nearest, saved, meters } from "./places.js";
 import { city, scamsHere, savedAt, fromMemory, arriveAt, research, numbers } from "./city.js";
 import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow } from "./trips.js";
 import { drawExtras } from "./routemap.js";
-import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused } from "./answering.js";
+import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused, turnOffLink } from "./answering.js";
 import { onboarding } from "./onboard.js";
 import { hospitalsAround, saveHospitalDrive, savedHospitalDrive } from "./drive.js";
 import { driveText, googleMapsLink } from "../../js/trip.js";
-import { placeFromPlan, placePrompt, readPlace } from "../../js/trip.js";
+import { placeFromPlan, isPlanning } from "../../js/trip.js";
 
 const app = document.getElementById("app");
 const $ = (s) => app.querySelector(s);
@@ -35,8 +35,14 @@ const icon = {
   camera: '<svg viewBox="0 0 24 24" fill="none" stroke="#2F6BFF" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   phone: '<svg viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg>',
 };
-const savedHotel = () => { try { return JSON.parse(localStorage.getItem("beacon.booking"))?.at || null; } catch { return null; } };
-const homeName = () => (savedTrip()?.homeIsHotel || savedHotel() ? "your hotel" : "where you started");
+const savedHotel = () => {
+  let b = null; try { b = JSON.parse(localStorage.getItem("beacon.booking")); } catch { /* none */ }
+  if (!b?.at || b.sample || !where()) return null;
+  return meters(where(), { lat: b.at[0], lng: b.at[1] }) < 30000 ? b.at : null; // only a hotel in the city she's in
+};
+// The saved hospital drive, only when it was worked out near where she is now (never another city's).
+const driveHere = () => { const d = savedHospitalDrive(); return d && where() && meters(where(), { lat: d.from[0], lng: d.from[1] }) < 5000 ? d : null; };
+const homeName = () => (savedTrip()?.homeIsHotel ? "your hotel" : "where you started");
 const compassWord = { N: "north", NE: "north-east", E: "east", SE: "south-east", S: "south", SW: "south-west", W: "west", NW: "north-west" };
 // The way back as words: "2.9 km · 36 min on busy, lit streets" or, off the saved streets, direction and distance.
 function wayText(w) {
@@ -44,7 +50,8 @@ function wayText(w) {
   if (w.arrived) return `You're at ${homeName()}.`;
   if (w.partial) return `You're outside the streets Beacon saved. ${homeName()[0].toUpperCase() + homeName().slice(1)} is ${dist(w.direction.metres)} to the ${compassWord[w.direction.compass]}. This is a direction, not a full route.`;
   const r = w.route, f = w.fastest, extra = f && r.minutes > f.minutes ? ` ${r.minutes - f.minutes} min longer than the fastest way, and it stays on busier streets.` : "";
-  return `${dist(r.metres)} · ${r.minutes} min on busy, lit streets.${extra}${r.dangerMetres ? "" : f?.dangerMetres ? " It goes around the areas to avoid." : ""}`;
+  if (r.dangerMetres) return `${dist(r.metres)} · ${r.minutes} min. There's no way around it: this route goes through an area to avoid for ${dist(r.dangerMetres)}. Stay on the main road and keep your phone ready.`;
+  return `${dist(r.metres)} · ${r.minutes} min on busy, lit streets.${extra}${f?.dangerMetres ? " It goes around the areas to avoid." : ""}`;
 }
 let avoiding = null; // corners tapped while marking an area to avoid
 const helpPlace = () => (where() ? nearest(here.places, where(), ["police", "hospital"]) || nearest(here.places, where()) : null);
@@ -65,7 +72,8 @@ function setup() {
       <p class="small">Beacon answers by itself with where you are, your route and your plans, locked so only they can read it. You see every answer here.</p>
       <a class="btn quiet" id="sendlink" href="#">Send them their check-in link</a>
       <label class="row small"><input type="checkbox" id="pause" ${paused() ? "checked" : ""}> Pause answers for now</label>
-      ${answersSent().slice(0, 5).map((a) => `<p class="small">${esc(a.who)} asked at ${new Date(a.askedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Beacon answered</p>`).join("")}</div>` : ""}
+      ${answersSent().slice(0, 5).map((a) => `<p class="small">${esc(a.who)} asked at ${new Date(a.askedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Beacon answered: “${esc(a.text)}”</p>`).join("")}
+      ${store.trip ? '<button class="link left small" id="linkoff">Turn off their link (they\'ll need a new one)</button>' : ""}</div>` : ""}
     <div class="grow"></div>
     <button class="btn" id="done">Start</button>
   </div>`;
@@ -77,6 +85,7 @@ function setup() {
   };
   $("#add").onclick = () => add() && setup();
   $("#pause")?.addEventListener("change", (e) => setPaused(e.target.checked));
+  $("#linkoff")?.addEventListener("click", async () => { await turnOffLink(); setup(); });
   $("#sendlink")?.addEventListener("click", async (e) => {
     e.preventDefault(); store.name = $("#name").value;
     const link = await checkinLink({ city: city.name, country: city.country });
@@ -173,10 +182,12 @@ function drawMap(shown, way = null) {
 async function keepHospitalDrive() {
   const d = savedHospitalDrive();
   if (!here.at || !navigator.onLine || (d && meters({ lat: d.from[0], lng: d.from[1] }, here.at) < 1500)) return;
+  // (if the router is down nothing is saved, and driveHere() keeps ignoring any drive worked out elsewhere)
   const near = here.places.filter((p) => p.kind === "hospital").map((p) => ({ ...p, airM: meters(here.at, p) })).sort((a, b) => a.airM - b.airM);
-  await saveHospitalDrive(here.at, near.length ? near : await hospitalsAround(here.at, 30000));
+  const list = near.length ? near : await hospitalsAround(here.at, 30000);
+  if (list?.length) await saveHospitalDrive(here.at, list);
 }
-const hospitalLine = () => { const d = savedHospitalDrive(); return d ? `The nearest hospital is ${driveText(d)}; the drive is saved on this phone.` : ""; };
+const hospitalLine = () => { const d = driveHere(); return d ? `The nearest hospital is ${driveText(d)}; the drive is saved on this phone.` : ""; };
 
 // Follows your position. The first fix (and any move of more than 1.5 km) loads places to get help around you.
 let watching = false;
@@ -210,7 +221,7 @@ function plainAnswer(question) {
   const pharmacy = where() && nearest(here.places, where(), ["pharmacy"]), hospital = where() && nearest(here.places, where(), ["hospital"]);
   const n = numbers();
   if (/follow|unsafe|scared|danger/.test(q)) return `Go into a busy shop, hotel lobby or restaurant now and stay where people are.${place ? ` ${place.name} is ${dist(place.meters)} away.` : ""} If you're in danger, call ${n.police}.`;
-  if (/hurt|hospital|doctor|bleed|sick/.test(q)) return `If it's serious, call ${n.ambulance} for an ambulance now.${savedHospitalDrive() ? ` ${hospitalLine()}` : hospital ? ` The nearest hospital is ${hospital.name}, ${dist(hospital.meters)} away.` : ""}`;
+  if (/hurt|hospital|doctor|bleed|sick/.test(q)) return `If it's serious, call ${n.ambulance} for an ambulance now.${driveHere() ? ` ${hospitalLine()}` : hospital ? ` The nearest hospital is ${hospital.name}, ${dist(hospital.meters)} away.` : ""}`;
   if (/pharmac|medicine|drug ?store/.test(q)) return pharmacy ? `${pharmacy.name} is ${dist(pharmacy.meters)} away and open 24 hours.` : "I don't have a 24-hour pharmacy saved near you.";
   const scam = judge({ kind: "Other", text: q }, scamsHere());
   if (scam.warning) return `${scam.warning.title} is a known scam (${scam.warning.where}). ${scam.whatToDo}`;
@@ -226,7 +237,7 @@ function ask(question) {
     app.innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
       <div class="chat-top"><button class="back" id="back" aria-label="Back">${icon.back}</button><h2>Ask Beacon</h2></div>
       <div class="bubbles" id="bubbles">
-        ${chat.map((l) => `<div class="bubble ${l.you ? "you" : "beacon"}">${esc(l.text)}</div>${l.place ? `<button class="link left show" data-place="${esc(l.place)}">Show ${esc(l.place)} on the map</button>` : ""}${l.way ? `<button class="link left show" data-way="1">Show the way back on the map</button>` : ""}${l.drive ? `<button class="link left show" data-drive="1">Show the drive to the hospital</button>${navigator.onLine && here.at ? `<a class="link left show" target="_blank" rel="noopener" href="${googleMapsLink([here.at.lat, here.at.lng], savedHospitalDrive().at)}">Drive there in Google Maps</a>` : ""}` : ""}`).join("")}
+        ${chat.map((l) => `<div class="bubble ${l.you ? "you" : "beacon"}">${esc(l.text)}</div>${l.place ? `<button class="link left show" data-place="${esc(l.place)}">Show ${esc(l.place)} on the map</button>` : ""}${l.way ? `<button class="link left show" data-way="1">Show the way back on the map</button>` : ""}${l.drive ? `<button class="link left show" data-drive="1">Show the drive to the hospital</button>${navigator.onLine && here.at ? `<a class="link left show" target="_blank" rel="noopener" href="${googleMapsLink([here.at.lat, here.at.lng], driveHere().at)}">Drive there in Google Maps</a>` : ""}` : ""}`).join("")}
         ${thinking ? '<div class="bubble beacon">…</div>' : ""}
         ${chat.length || thinking ? "" : `<div class="stack center">${["Where can I get help?", "Is a ticket seller in Battery Park legit?", "What's the emergency number?"].map((q) => `<button class="chip label" data-q="${q}">${q}</button>`).join("")}</div>`}
       </div>
@@ -236,7 +247,7 @@ function ask(question) {
     $("#form").onsubmit = (e) => { e.preventDefault(); send($("#box").value); };
     app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => send(b.dataset.q)));
     app.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => home(b.dataset.place)));
-    app.querySelectorAll("[data-drive]").forEach((b) => (b.onclick = () => { const d = savedHospitalDrive(); home(null, { route: { path: d.line, steps: [], metres: Math.round(d.km * 1000), minutes: d.minutes }, drive: d }); }));
+    app.querySelectorAll("[data-drive]").forEach((b) => (b.onclick = () => { const d = driveHere(); if (!d) return; home(null, { route: { path: d.line, steps: [], metres: Math.round(d.km * 1000), minutes: d.minutes }, drive: d }); }));
     app.querySelectorAll("[data-way]").forEach((b) => (b.onclick = () => home(null, where() ? wayBack([where().lat, where().lng]) : null)));
     const bubbles = $("#bubbles"); bubbles.scrollTop = bubbles.scrollHeight;
   };
@@ -254,8 +265,8 @@ function ask(question) {
     }
     if (/going out tonight/i.test(text)) return said("Where are you going? Tell me the place, like \"I'm going to Bar Palladio, then back to my hotel\".");
     // "Tonight I'm going to X": save the streets, areas and both routes while online.
-    let goingTo = placeFromPlan(text);
-    if (!goingTo && /\b(going|go|heading|visit)\b/i.test(text)) goingTo = readPlace((await askAi(placePrompt(text)))?.text);
+    // Help comes first: only clear plans ("tonight I'm going to X, then back") become a saved trip.
+    const goingTo = isPlanning(text) ? placeFromPlan(text) : null;
     if (goingTo) {
       if (!where()) return said("Turn on location first, so Beacon can save the streets around you.");
       if (!navigator.onLine) return said("Beacon needs a connection once to save the way there and back. Ask again when you're online.");
@@ -276,7 +287,7 @@ ${facts()}
 EARLIER
 ${earlier}
 QUESTION: ${text}`))?.text ?? plainAnswer(text);
-    said(reply, { place: pick?.name || null, drive: /hurt|hospital|doctor|bleed|sick|ambulance/i.test(text) && !!savedHospitalDrive() });
+    said(reply, { place: pick?.name || null, drive: /hurt|hospital|doctor|bleed|sick|ambulance/i.test(text) && !!driveHere() });
   };
   draw();
   if (question) send(question);

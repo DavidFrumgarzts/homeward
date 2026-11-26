@@ -29,8 +29,11 @@ export function readBooking(aiText) {
 }
 
 const time = (min) => { const h = Math.floor(min / 60), m = Math.round(min % 60); return h ? `${h} h${m ? ` ${m}` : ""}` : `${m} min`; };
-// nearest: {name, minutes} by car, or null when no hospital was found within 60 km.
-export function hospitalWarning(nearest) {
+// nearest: {name, minutes} by car, or null. check: {failed} when the hospital search itself failed (servers busy),
+// {found: n} when hospitals were found but no drive time came back. Never says "no hospital" unless that's true.
+export function hospitalWarning(nearest, check = {}) {
+  if (check.failed) return { warn: false, unknown: true, text: "Couldn't check hospitals right now. Beacon tries again when you're online." };
+  if (!nearest && check.found) return { warn: false, unknown: true, text: `${check.found} hospitals within 60 km. Drive times couldn't be checked right now.` };
   if (!nearest) return { warn: true, text: "No hospital found within 60 km. Save the ambulance number and plan how you'd get help." };
   if (nearest.minutes > 30) return { warn: true, text: `No hospital within a 30-min drive. Nearest: ${nearest.name}, ${time(nearest.minutes)} by car.` };
   return { warn: false, text: `Nearest hospital: ${nearest.name}, ${time(nearest.minutes)} by car.` };
@@ -47,4 +50,20 @@ export function plainText(html) {
     .replace(/<[^>]+>/g, "")
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
     .replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+}
+
+// Without AI: the sample, or a simple confirmation where the hotel line comes before an address line
+// ("Street, Town, Country"). Returns the same shape as readBooking, or null.
+export function readBookingPlain(text) {
+  const lines = String(text).split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const addrIx = lines.findIndex((l) => l.split(",").length >= 3 && !/check-?in|check-?out|guest|booking/i.test(l));
+  if (addrIx < 1) return null;
+  const hotel = lines.slice(0, addrIx).reverse().find((l) => !/confirm|booking|reservation/i.test(l) || /sample/i.test(l) && /camp|hotel|inn|hostel/i.test(l));
+  if (!hotel) return null;
+  const parts = lines[addrIx].split(",").map((p) => p.trim());
+  const country = parts[parts.length - 1].replace(/\d+/g, "").trim();
+  const city = parts.slice(0, -1).reverse().map((p) => p.replace(/\b[A-Z][a-z]+ \d{5,6}$/, "").replace(/\d+/g, "").trim()).find((p) => p && !/rajasthan|state|province/i.test(p) && p.split(" ").length <= 3 && !/road|street|travessa|avenue|rua|lane/i.test(p)) || "";
+  if (!city) return null;
+  const date = (re) => (text.match(re)?.[1] || "").trim();
+  return { hotel: hotel.replace(/^your stay at\s+/i, ""), address: lines[addrIx], city, country, checkIn: date(/check-?in:\s*([^\n]+)/i), checkOut: date(/check-?out:\s*([^\n]+)/i) };
 }

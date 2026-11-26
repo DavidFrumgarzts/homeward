@@ -39,3 +39,16 @@ describe("booking", () => {
     expect(plainText("<p>Check-in: <b>3 Dec</b></p><style>x{}</style>")).toBe("Check-in: 3 Dec");
   });
 });
+
+import { readBookingPlain, SAMPLE_BOOKING as SB } from "../js/booking.js";
+describe("booking review fixes", () => {
+  it("says when hospitals couldn't be checked, instead of 'no hospital'", () => {
+    expect(hospitalWarning(undefined, { failed: true })).toEqual({ warn: false, unknown: true, text: "Couldn't check hospitals right now. Beacon tries again when you're online." });
+    expect(hospitalWarning(null, { found: 12 })).toEqual({ warn: false, unknown: true, text: "12 hospitals within 60 km. Drive times couldn't be checked right now." });
+  });
+  it("reads the sample and simple pasted bookings without AI", () => {
+    expect(readBookingPlain(SB)).toMatchObject({ hotel: "Thar Stars Desert Camp (sample)", city: "Jaisalmer", country: "India" });
+    expect(readBookingPlain("Your stay at Hotel Lisboa Plaza\nTravessa do Salitre 7, Lisbon, Portugal\nCheck-in: 2026-12-03")).toMatchObject({ hotel: "Hotel Lisboa Plaza", city: "Lisbon", country: "Portugal" });
+    expect(readBookingPlain("hello")).toBeNull();
+  });
+});

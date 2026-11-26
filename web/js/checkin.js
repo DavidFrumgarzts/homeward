@@ -23,3 +23,12 @@ const hhmm = (t) => new Date(t).toLocaleTimeString("en-GB", { hour: "2-digit", m
 export function waitingText(name, lastAnswerAt) {
   return `Waiting for ${name}'s phone · checking every minute${lastAnswerAt ? ` · last answer at ${hhmm(lastAnswerAt)}` : ""}`;
 }
+
+// Whether a question gets her location: at most once every 5 minutes per person, and never for a question
+// older than an hour (it would be answered with today's position long after it was asked).
+export function decide(q, { now, lastByViewer }) {
+  if (now - (q.askedAtMillis || 0) > 3600_000) return "too-old";
+  const last = lastByViewer[q.viewerUid];
+  if (last && now - last < 5 * 60_000) return "too-often";
+  return "answer";
+}

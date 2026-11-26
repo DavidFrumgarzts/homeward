@@ -10,7 +10,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const savedHospitalDrive = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
 
-// Hospitals within `radiusM` of at ({lat,lng}), nearest first by air. [] when none or the servers are busy.
+// Hospitals within `radiusM` of at ({lat,lng}), nearest first by air. [] when there are none; null when no server answered.
 export async function hospitalsAround(at, radiusM = 60000) {
   const q = `[out:json][timeout:40];nwr["amenity"="hospital"](around:${radiusM},${at.lat},${at.lng});out center 300;`;
   for (const url of OVERPASS) {
@@ -24,12 +24,12 @@ export async function hospitalsAround(at, radiusM = 60000) {
         .sort((a, b) => a.airM - b.airM);
     } catch { /* next server */ }
   }
-  return [];
+  return null;
 }
 
 // Drives to the 3 nearest hospitals by air; keeps and saves the quickest: {name, at:[lat,lng], minutes, line, from}.
 // null when none can be reached (no hospital, or the router is down).
-export async function saveHospitalDrive(from, hospitals) {
+export async function saveHospitalDrive(from, hospitals, { save = true } = {}) {
   let best = null;
   for (const h of hospitals.slice(0, 3)) {
     try {
@@ -41,6 +41,6 @@ export async function saveHospitalDrive(from, hospitals) {
     } catch { /* skip this one */ }
     await pause(1100);
   }
-  if (best) try { localStorage.setItem(KEY, JSON.stringify({ ...best, savedAt: Date.now() })); } catch { /* full */ }
+  if (best && save) try { localStorage.setItem(KEY, JSON.stringify({ ...best, savedAt: Date.now() })); } catch { /* full */ }
   return best;
 }

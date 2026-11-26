@@ -46,3 +46,12 @@ export function cleanCity(name) {
     .replace(/^(Município de|Município do|Municipio de|Municipality of|City of)\s+/i, "")
     .trim();
 }
+
+// Questions about help come first: "I want to go to a hospital" is not a trip to plan.
+export const isEmergency = (text) => /\b(hurt|hospital|sick|ill|doctor|bleed\w*|ambulance|follow\w*|danger\w*|unsafe|scared|robbed|attack\w*|police|help)\b/i.test(text);
+// A trip is planned only on clear planning words: going/heading/visiting somewhere, now or later.
+export function isPlanning(text) {
+  if (isEmergency(text)) return false;
+  return /\b(tonight|later|this (evening|afternoon|morning)|tomorrow|then back|and back)\b/i.test(text) && !!placeFromPlan(text)
+    || /\b(i'?m|i am|we'?re|we are)\s+(going|heading)\s+to\b/i.test(text) && !!placeFromPlan(text);
+}

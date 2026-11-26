@@ -58,3 +58,17 @@ describe("city names", () => {
     expect(cleanCity("Lisbon")).toBe("Lisbon");
   });
 });
+
+import { isPlanning, isEmergency } from "../js/trip.js";
+describe("planning vs asking for help", () => {
+  it("only plans a trip on clear planning words", () => {
+    expect(isPlanning("Tonight I'm going to Bar Palladio, then back to my hotel.")).toBe(true);
+    expect(isPlanning("I'm heading to Hawa Mahal later")).toBe(true);
+    expect(isPlanning("Where should I go to get help?")).toBe(false);
+    expect(isPlanning("I want to go to a hospital")).toBe(false);
+  });
+  it("puts emergencies first", () => {
+    expect(isEmergency("I'm going to the hospital, I feel sick")).toBe(true);
+    expect(isEmergency("Tonight I'm going to Bar Palladio")).toBe(false);
+  });
+});

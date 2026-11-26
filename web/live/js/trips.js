@@ -13,6 +13,8 @@ const write = (k, v) => { try { localStorage.setItem(k, typeof v === "string" ? 
 export const savedTrip = () => read(TRIP);
 export const myAreas = () => read(MINE) || [];
 const ringsNow = (city) => areasFor(city, new Date().getHours(), myAreas());
+// Routes are walked later than they're planned, so they avoid every area of the night, whatever its hours.
+const ringsAllNight = (city) => areasFor(city, null, myAreas());
 let graph = null;
 const savedGraph = () => (graph ??= (() => { const s = localStorage.getItem(GRAPH); try { return s ? unpack(s) : null; } catch { return null; } })());
 
@@ -44,7 +46,7 @@ export async function planTrip({ from, hotel, place, city }, onStep = () => {}) 
   onStep(`Saving the streets between ${hotel ? "your hotel" : "here"} and ${place.name}…`);
   const ways = await streets(boxFor(home, place.at));
   if (!ways) return { error: "streets" };
-  const g = buildGraph(ways, ringsNow(city).map((a) => a.ring));
+  const g = buildGraph(ways, ringsAllNight(city).map((a) => a.ring));
   const there = route(g, home, place.at, "safe"), back = route(g, place.at, home, "safe");
   if (!there || !back) return { error: "route" };
   const trip = { place, home, homeIsHotel: !!hotel, city, there, back, fastestBack: route(g, place.at, home, "fastest"), savedAt: Date.now() };
@@ -76,7 +78,7 @@ export function addMyArea(ring) {
   write(MINE, mine);
   const trip = savedTrip(), g = savedGraph();
   if (trip && g) {
-    markDanger(g, ringsNow(trip.city).map((a) => a.ring));
+    markDanger(g, ringsAllNight(trip.city).map((a) => a.ring));
     const updated = { ...trip, there: route(g, trip.home, trip.place.at, "safe") || trip.there, back: route(g, trip.place.at, trip.home, "safe") || trip.back, fastestBack: route(g, trip.place.at, trip.home, "fastest") };
     write(GRAPH, pack(g)); write(TRIP, updated);
   }

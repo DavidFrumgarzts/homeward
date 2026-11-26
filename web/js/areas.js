@@ -33,10 +33,11 @@ export function activeAt(area, hour) {
   return a < b ? hour >= a && hour < b : hour >= a || hour < b;
 }
 
-// The areas that apply in this city at this hour, plus the ones she marked (always).
+// The areas that apply in this city at this hour (hour null = all of them, for routes walked later that night),
+// plus the ones she marked (always).
 export function areasFor(city, hour, mine = [], list = TEAM_AREAS) {
   const c = String(city || "").toLowerCase();
-  const team = list.filter((a) => a.reviewed && a.city.toLowerCase() === c && activeAt(a, hour))
+  const team = list.filter((a) => a.reviewed && a.city.toLowerCase() === c && (hour == null || activeAt(a, hour)))
     .map((a) => ({ name: a.name, ring: a.ring, why: a.why, source: a.source, origin: "Beacon's list" }));
   return [...team, ...mine.map((m) => ({ name: m.name || "Marked by you", ring: m.ring, origin: "Marked by you" }))];
 }
