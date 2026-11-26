@@ -6,10 +6,10 @@
 const CDN = "https://unpkg.com/maplibre-gl@5.24.1/dist";
 const STYLE = {
   version: 8,
-  sources: { osm: { type: "raster", tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 19,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' } },
-  // Softened toward the drawn Lapa map: mostly grey, a little lighter, so the blue trail and green dot stand out.
-  layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.75, "raster-contrast": -0.15, "raster-brightness-min": 0.12 } }],
+  // CARTO Voyager, @2x so it's sharp on phone screens; OpenStreetMap data. Same map as the live app.
+  sources: { osm: { type: "raster", tiles: ["a", "b", "c", "d"].map((s) => `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png`), tileSize: 256, maxzoom: 20,
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' } },
+  layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.2 } }],
 };
 
 let library = null;

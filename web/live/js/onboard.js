@@ -29,7 +29,11 @@ export function onboarding(app, ctx) {
       <button class="btn" id="go">See it with Beacon</button></div>`,
 
     booking: () => {
-      if (booking.state === "busy") return `${top("With Beacon, before the trip")}<div class="onb-pad stack"><h1>Checking your booking</h1><p class="small" aria-live="polite">${esc(booking.step)}</p></div>`;
+      if (booking.state === "busy") return `${top("With Beacon, before the trip")}
+        <div class="onb-scan"><img class="onb-img" src="img/onb-booking.png" alt=""><span class="onb-ping"></span><span class="onb-ping late"></span></div>
+        <div class="onb-pad stack"><h1>Checking your booking</h1>${stepList()}
+          <p class="small">About half a minute. You can keep going: Beacon tells you when it's ready.</p>
+          <div class="grow"></div><button class="btn" id="later">Keep going</button></div>`;
       if (booking.state === "done") {
         const r = booking.result, b = r.booking, w = r.warning;
         return `${top("With Beacon, before the trip")}<div class="onb-pad stack">
@@ -103,18 +107,56 @@ export function onboarding(app, ctx) {
     },
   };
 
+  // The booking check keeps running while she goes on. Its 4 stages, shown as a list that ticks off.
+  const STAGES = ["Reading your booking", "Finding your hotel on the map", "Looking for hospitals around it", "Checking the drive to the nearest one"];
+  const stepList = () => `<ol class="onb-steps" aria-live="polite">${STAGES.map((t, i) => {
+    const label = i === 1 && booking.hotel ? `Finding ${esc(booking.hotel)} on the map` : t;
+    return `<li class="${i < booking.stage ? "done" : i === booking.stage ? "now" : ""}"><i></i>${label}</li>`; }).join("")}</ol>`;
+  // On the other screens: a small card while it runs, then "Your booking is checked" with a way to see it.
+  // Painted on its own, so progress never redraws (and empties) a screen she's typing in.
+  function paintBanner() {
+    const el = $("#bk"); if (!el) return;
+    let html = "";
+    if (step !== "booking" && step !== "night") {
+      if (booking.state === "busy") html = `<div class="card onb-note"><span class="onb-spin"></span><div class="grow"><div class="label">Checking your booking</div><p class="small">${esc(STAGES[booking.stage] || "")}…</p></div></div>`;
+      else if (booking.state === "done" && !booking.seen) { const w = booking.result.warning; html = `<button class="card onb-note" id="seebk"><div class="tile" style="background:${w.warn ? "var(--amber-tint)" : "var(--green-tint)"};color:${w.warn ? "var(--amber)" : "var(--green)"};width:36px;height:36px;border-radius:12px">${w.warn ? "!" : "✓"}</div><div class="grow"><div class="label">Your booking is checked</div><p class="small">${esc(w.text)}</p></div><span class="link small">See</span></button>`; }
+      else if (booking.failed) html = `<button class="card onb-note" id="seebk"><div class="grow"><div class="label">Couldn't check your booking</div><p class="small">${esc(booking.failed)}</p></div><span class="link small">Try again</span></button>`;
+    }
+    el.innerHTML = html;
+    el.querySelector("#seebk")?.addEventListener("click", () => {
+      const msg = booking.failed; booking = { ...booking, seen: true, failed: null, returnTo: step }; go("booking");
+      if (msg) { note = msg; draw(); }
+    });
+  }
+
   function draw() {
-    app.innerHTML = `<div class="onb">${screens[step]()}</div>`;
+    app.innerHTML = `<div class="onb"><div id="bk" class="onb-pad"></div>${screens[step]()}</div>`;
+    paintBanner();
+    $("#later")?.addEventListener("click", next);
     $("#skip")?.addEventListener("click", () => go(skipTo(step)));
-    $("#go")?.addEventListener("click", () => { if (step === "people") savePeople(); next(); });
+    $("#go")?.addEventListener("click", () => {
+      if (step === "people") savePeople();
+      if (step === "booking" && booking.returnTo) { const back = booking.returnTo; booking.returnTo = null; return go(back); } // back to where she was
+      next();
+    });
     wire[step]?.();
   }
 
   const runBooking = async (text) => {
-    booking = { ...booking, state: "busy", step: "Reading the booking…" }; draw();
-    const r = await checkBooking(text, (s) => { booking.step = s; if (step === "booking") draw(); });
-    if (r.error) { booking = { ...booking, state: "idle" }; note = { "no-ai": "Beacon's AI isn't available right now. Try again in a moment.", unreadable: "Beacon couldn't find a hotel and town in that text.", "not-found": "Beacon couldn't find that hotel on the map." }[r.error]; return draw(); }
-    booking = { ...booking, state: "done", result: r }; draw();
+    booking = { ...booking, state: "busy", stage: 0, hotel: null, seen: false, failed: null }; draw();
+    const r = await checkBooking(text, (s, stage) => {
+      booking.stage = stage;
+      if (stage === 1) booking.hotel = s.replace(/^Finding /, "").replace(/ on the map…$/, "");
+      step === "booking" ? draw() : paintBanner();
+    });
+    if (r.error) {
+      const msg = { "no-ai": "Beacon's AI isn't available right now. Try again in a moment.", unreadable: "Beacon couldn't find a hotel and town in that text.", "not-found": "Beacon couldn't find that hotel on the map." }[r.error];
+      booking = { ...booking, state: "idle" };
+      if (step === "booking") { note = msg; return draw(); }
+      booking.failed = msg; return paintBanner();
+    }
+    booking = { ...booking, state: "done", result: r, stage: 4, seen: step === "booking" };
+    step === "booking" ? draw() : paintBanner();
   };
   const savePeople = () => { store.name = $("#me")?.value || store.name; };
   const wire = {

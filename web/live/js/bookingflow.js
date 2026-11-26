@@ -15,21 +15,21 @@ async function geocode(q) {
   } catch { return null; }
 }
 
-// onStep(text) reports progress. Returns {booking, at, hospitals, nearest, warning} or {error: "no-ai"|"unreadable"|"not-found"}.
+// onStep(text, stage) reports progress; stage 0 reading, 1 map, 2 hospitals, 3 drive. Returns {booking, at, hospitals, nearest, warning} or {error: "no-ai"|"unreadable"|"not-found"}.
 export async function checkBooking(text, onStep = () => {}) {
-  onStep("Reading the booking…");
+  onStep("Reading the booking…", 0);
   // The sample is only a demo: it is never saved as her hotel, and its hospital drive isn't kept.
   const sample = text === SAMPLE_BOOKING;
   const ai = await askAi(bookingPrompt(text));
   const booking = (ai && readBooking(ai.text)) || readBookingPlain(text); // without AI: a plain reading
   if (!booking) return { error: ai ? "unreadable" : "no-ai" };
-  onStep(`Finding ${booking.hotel} on the map…`);
+  onStep(`Finding ${booking.hotel} on the map…`, 1);
   const place = [booking.address, booking.city, booking.country].filter(Boolean).join(", ");
   const at = (await geocode(place)) || (await geocode(`${booking.city}, ${booking.country}`));
   if (!at) return { error: "not-found", booking };
-  onStep("Looking for hospitals around it…");
+  onStep("Looking for hospitals around it…", 2);
   const hospitals = await hospitalsAround(at);
-  onStep(hospitals?.length ? "Checking the drive to the nearest hospitals…" : "Finishing up…");
+  onStep(hospitals?.length ? "Checking the drive to the nearest hospitals…" : "Finishing up…", 3);
   const nearest = hospitals?.length ? await saveHospitalDrive(at, hospitals, { save: !sample }) : null;
   const warning = hospitalWarning(nearest && { name: nearest.name, minutes: nearest.minutes }, { failed: hospitals === null, found: hospitals?.length || 0 });
   const result = { booking, at: [at.lat, at.lng], hospitals: hospitals ? hospitals.slice(0, 20) : null, nearest, warning, aiSource: ai?.source || null, sample, savedAt: Date.now() };

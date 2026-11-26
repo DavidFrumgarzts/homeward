@@ -32,3 +32,23 @@ button.card { width: 100%; text-align: left; }
 .onb-photo span { padding: 0 8px; }
 .onb .tile { flex: none; display: grid; place-items: center; font-weight: 600; }
 .center-text { text-align: center; }
+
+/* Checking a booking: a ring spreads from the hotel, and the 4 stages tick off. */
+.onb-scan { position: relative; overflow: hidden; }
+.onb-ping { position: absolute; left: 46%; top: 50%; width: 28px; height: 28px; margin: -14px; border: 2px solid var(--blue); border-radius: 50%; opacity: 0; animation: onb-ping 2.4s ease-out infinite; }
+.onb-ping.late { animation-delay: 1.2s; }
+@keyframes onb-ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(9); opacity: 0; } }
+.onb-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.onb-steps li { display: flex; align-items: center; gap: 12px; color: var(--muted); transition: color .3s; }
+.onb-steps li i, .onb-spin { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); box-sizing: border-box; display: grid; place-items: center; font: normal 600 11px/1 var(--body); }
+.onb-steps li.now { color: var(--ink); }
+.onb-steps li.now i, .onb-spin { border-color: var(--blue); border-top-color: transparent; animation: onb-spin .8s linear infinite; }
+.onb-steps li.done { color: var(--ink); }
+.onb-steps li.done i { background: var(--green); border-color: var(--green); color: #fff; animation: onb-pop .25s ease-out; }
+.onb-steps li.done i::after { content: "✓"; }
+@keyframes onb-spin { to { transform: rotate(360deg); } }
+@keyframes onb-pop { from { transform: scale(.6); } }
+#bk:empty { display: none; }
+#bk { padding-top: 12px; }
+.onb-note { width: 100%; border: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; box-shadow: 0 1px 0 var(--line); }
+@media (prefers-reduced-motion: reduce) { .onb-ping, .onb-steps li.now i, .onb-spin, .onb-steps li.done i { animation: none; } }

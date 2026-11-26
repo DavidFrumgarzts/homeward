@@ -2,7 +2,7 @@
 // Only the files listed here are kept. Map tiles, fonts and Firebase always go to the network:
 // the map provider does not allow saving tiles in bulk, and live data must not be served stale.
 // tests/files.test.js fails if a file in js/ or fixtures/ is missing from this list.
-const CACHE = "beacon-v4";
+const CACHE = "beacon-v5";
 const FILES = ["/", "/index.html", "/styles.css",
   "/js/app.js", "/js/map.js", "/js/cop.js", "/js/ai.js", "/js/ask.js", "/js/sos.js", "/js/pack.js", "/js/store.js",
   "/js/firebase.js", "/js/messages.js", "/js/situation.js", "/js/incident.js", "/js/html.js", "/js/router.js", "/js/walkroute.js", "/js/areas.js",
