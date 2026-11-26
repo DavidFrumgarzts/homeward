@@ -3,7 +3,7 @@ rules_version = '2';
 // Who may read and write what in Beacon's database. The layout is described in shared/schema/README.md.
 // Everyone signs in anonymously. "Owner" is the traveler's phone or browser.
 // A trusted contact gets in with a family link: knowing the share id is the permission.
-// Tested in firebase/tests/rules.test.js. Anything not allowed below is refused.
+// Tested in backend/firebase/tests/rules.test.js. Anything not allowed below is refused.
 service cloud.firestore {
   match /databases/{database}/documents {
 

@@ -1,6 +1,6 @@
 # shared/schema
 
-The data every Beacon app (Android, iOS, web) reads and writes. If a field changes here, change all three apps, the rules in `firebase/` and the fixtures in `shared/fixtures/` in the same commit.
+The data every Beacon app (Android, iOS, web) reads and writes. If a field changes here, change all three apps, the rules in `backend/firebase/` and the fixtures in `shared/fixtures/` in the same commit.
 
 - `safety-pack.schema.json`: the saved city pack (same shape as Android's `SafetyPack`).
 - `trip.schema.json`, `incident.schema.json`, `location-update.schema.json`, `share.schema.json`, `pairing.schema.json`: the Firestore documents below.

@@ -1,5 +1,5 @@
 // Texts her trusted people by itself (no tap): SOS, walked into an area marked dangerous, stopped on the way
-// back, and "you've been added". Sent as SMS by the sendText function (functions/index.js, Twilio).
+// back, and "you've been added". Sent as SMS by the sendText function (backend/functions/index.js, Twilio).
 // With no signal the text waits on this phone and goes as soon as there's a connection (checked every
 // minute and when the phone comes back online). She sees every text that went out.
 import { firebase, signedIn, SDK } from "../../js/firebase.js";
@@ -49,7 +49,7 @@ function log(item, status) {
   dispatchEvent(new CustomEvent("beacon-texts"));
 }
 
-// kind: "sos" | "danger" | "still" | "invite"; data: fields for functions/texts.js (without `to`).
+// kind: "sos" | "danger" | "still" | "invite"; data: fields for backend/functions/texts.js (without `to`).
 // Danger and stopped texts respect "Pause". Returns "sent" | "waiting" (no signal yet) | "nobody".
 export async function sendText(kind, data = {}) {
   const people = store.contacts;

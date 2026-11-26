@@ -17,7 +17,7 @@ python3 web/serve.py
 Then open http://localhost:4173. Add `?reset` to start over. The family view is at `/demo` and `/f/<shareId>`.
 
 - `serve.py` answers `/f/...` and `/demo` with the app, the way Firebase Hosting does. The plainer `python3 -m http.server 4173 --directory web` also works, with two limits: it cannot serve those two addresses (use `?demo` and `?f=<shareId>` instead, which work everywhere), and on a busy computer it sometimes drops some of the page's files.
-- Against the Firebase emulators instead of the real project: from `firebase/` run `firebase emulators:start --only auth,firestore,hosting --project demo-beacon`, then open http://127.0.0.1:5005/?emu. `?emu` only works on localhost, uses a made-up project and keeps AI off. `node tests/seed-emulator.js` (from `web/`) puts the demo incident in the emulator and prints a family link.
+- Against the Firebase emulators instead of the real project: from `backend/firebase/` run `firebase emulators:start --only auth,firestore,hosting --project demo-beacon`, then open http://127.0.0.1:5005/?emu. `?emu` only works on localhost, uses a made-up project and keeps AI off. `node tests/seed-emulator.js` (from `web/`) puts the demo incident in the emulator and prints a family link.
 
 ## Files
 
@@ -98,7 +98,7 @@ the night in Rajasthan → **booking** (Gmail, a sample, or paste) → **locatio
 - **Areas to avoid** (`js/areas.js`): Beacon's list for the demo cities (each with hours, why and a source; shown only once reviewed) plus areas you mark yourself on the map ("Avoid an area").
 - **At night** (9 p.m.–6 a.m.) nearby 24-hour places blink yellow on the map.
 - **Hospital drive** (`live/js/drive.js`): saved when places load; "I feel very sick" answers with the ambulance number and the saved drive, with "Drive there in Google Maps" when online (a link, not Google's Routes API, whose terms forbid our map and offline storage).
-- **Trusted people can ask how you are** (`live/js/answering.js`, `js/familyask.js`, `js/seal.js`): their link opens the family page; "Ask how Julia is" sends a question with their public key; her phone answers by itself (where she is, the last hour, her plans, whether she's in an area to avoid), locked with WebCrypto (ECDH P-256 + AES-GCM) so only the asker's browser can read it. She sees every answer and can pause. With no signal her phone keeps the question and answers when signal is back; the asker's page says "checking every minute". Firestore: `trips/{tripId}/checkins` (rules + tests in `firebase/`).
+- **Trusted people can ask how you are** (`live/js/answering.js`, `js/familyask.js`, `js/seal.js`): their link opens the family page; "Ask how Julia is" sends a question with their public key; her phone answers by itself (where she is, the last hour, her plans, whether she's in an area to avoid), locked with WebCrypto (ECDH P-256 + AES-GCM) so only the asker's browser can read it. She sees every answer and can pause. With no signal her phone keeps the question and answers when signal is back; the asker's page says "checking every minute". Firestore: `trips/{tripId}/checkins` (rules + tests in `backend/firebase/`).
 - **Scan** ("Is this legit?"): a photo matched to the scams saved for your city.
 
 ### Gmail (testing mode)

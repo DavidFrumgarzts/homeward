@@ -1,7 +1,7 @@
 # Build output
 .gradle/
 build/
-app/build/
+android/app/build/
 *.apk
 *.aab
 # Android Studio
@@ -11,7 +11,7 @@ local.properties
 captures/
 .cxx/
 # Secrets: never commit these (hackathon rule: no keys in the repo)
-app/google-services.json
+android/app/google-services.json
 *.keystore
 *.jks
 .env
