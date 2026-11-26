@@ -11,6 +11,7 @@ import { createFamilyMap } from "./familymap.js";
 import { summaryTemplate, writeSummary } from "./summary.js";
 import { ageText, clockText, latestFix, timelineItems, trail, travelerName } from "./timeline.js";
 import { askHow, askerName, lastAnswerAt, travelerNameOf } from "./familyask.js";
+import { alertsState, turnOnAlerts } from "./familyalerts.js";
 import { waitingText } from "./checkin.js";
 
 // Plain words for every state that has nothing to show yet.
@@ -34,7 +35,7 @@ export function familyScreen(app, watch, { demo = false, shareId = null } = {}) 
   app.innerHTML = `<div class="screen">
     <header class="fam-head"><span class="small">Beacon${demo ? " demo" : ""}</span><div id="fam-title" class="fam-head"></div></header>
     ${demo ? '<div class="fam-demo"><div class="row-between"><span class="small" style="color:var(--ink)">A made-up incident in Lapa, Rio, replayed about 12 times faster. Nothing here is real.</span><button class="link small" id="fam-replay" style="flex:none">Play again</button></div><div class="bar"><i id="fam-bar"></i></div></div>' : ""}
-    ${shareId ? '<div id="fam-ask" class="card col"></div>' : ""}
+    ${shareId ? '<div id="fam-ask" class="card col"></div><div id="fam-alerts" class="card col"></div>' : ""}
     <div id="fam-note" class="card col"></div>
     <div class="stack" id="fam-grid" hidden style="gap:20px">
       <div class="card fam-where"><div id="fam-map" class="fam-map" role="img" aria-label="Map of the latest position and the trail"></div><div id="fam-last"></div></div>
@@ -130,8 +131,29 @@ export function familyScreen(app, watch, { demo = false, shareId = null } = {}) 
       stopAsk = await askHow(shareId, me, (next) => { ask = next; drawAsk(); });
     });
   }
+  // "Get alerts on this phone": a notification by itself when something is off. No app to install.
+  let alerts = shareId ? alertsState(shareId) : "unsupported";
+  function drawAlerts() {
+    if (!$("fam-alerts")) return;
+    const her = who || "they", Her = who || "They";
+    const body = {
+      on: `<p class="small">Alerts are on. This phone tells you by itself if ${esc(her)} sends an SOS, walks into an area marked dangerous, or stops for 5 minutes on the way back.</p>`,
+      off: `<p class="small">Get a notification by itself if ${esc(her)} sends an SOS, walks into an area marked dangerous, or stops for 5 minutes on the way back.</p><button class="btn" id="fam-alerton">Get alerts on this phone</button>`,
+      failed: `<p class="small">Couldn't turn alerts on. Check this phone's connection and try again.</p><button class="btn" id="fam-alerton">Try again</button>`,
+      blocked: '<p class="small">Notifications are blocked for this page. Turn them on in this browser\'s settings for this site, then reload.</p>',
+      "home-screen": `<p class="small">On iPhone, alerts need this page on your Home Screen: tap the Share button <span aria-hidden="true">⬆︎</span>, then <b>Add to Home Screen</b>. Open Beacon from there and tap "Get alerts".</p>`,
+      unsupported: '<p class="small">This browser can\'t show alerts. Try Chrome or Safari on your phone.</p>',
+    }[alerts];
+    $("fam-alerts").innerHTML = `<h2>Alerts</h2>${body}`;
+    $("fam-alerton")?.addEventListener("click", async () => {
+      $("fam-alerton").disabled = true; $("fam-alerton").textContent = "Turning on…";
+      alerts = await turnOnAlerts(shareId); drawAlerts();
+    });
+  }
+
   if (shareId) {
-    travelerNameOf(shareId).then((n) => { if (n) { who = n; drawAsk(); } });
+    travelerNameOf(shareId).then((n) => { if (n) { who = n; drawAsk(); drawAlerts(); } });
+    drawAlerts();
     setInterval(() => { if (ask.status === "waiting") drawAsk(); }, 60_000); // "checking every minute"
     drawAsk();
   }

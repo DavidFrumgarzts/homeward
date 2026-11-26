@@ -186,3 +186,23 @@ describe("check-ins (trusted people asking how she is)", () => {
     await assertFails(setDoc(doc(as("mom"), "trips/trip1/checkins/q1"), ask()));
   });
 });
+
+// "Get alerts on this phone": Mom's browser saves its push token; only the server (admin) reads tokens.
+const watcher = (shareId = SHARE) => ({ token: "fcm-token-abc", shareId, createdAtMillis: 7 });
+describe("alert watchers (push notifications to trusted people)", () => {
+  test("a contact who opened a live link saves only their own token", async () => {
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/watchers/mom"), watcher()));
+    await claim();
+    await assertSucceeds(setDoc(doc(as("mom"), "trips/trip1/watchers/mom"), watcher()));
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/watchers/dad"), watcher()));
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/watchers/mom"), { ...watcher(), extra: 1 }));
+    await assertFails(setDoc(doc(as("mom"), "trips/trip1/watchers/mom"), watcher(OTHER_SHARE)));
+  });
+  test("nobody reads tokens but their own browser; the owner can't list them", async () => {
+    await claim(); await setDoc(doc(as("mom"), "trips/trip1/watchers/mom"), watcher());
+    await assertSucceeds(getDoc(doc(as("mom"), "trips/trip1/watchers/mom")));
+    await assertFails(getDoc(doc(as("noa"), "trips/trip1/watchers/mom")));
+    await assertFails(getDocs(collection(as("noa"), "trips/trip1/watchers")));
+    await assertSucceeds(deleteDoc(doc(as("mom"), "trips/trip1/watchers/mom")));
+  });
+});

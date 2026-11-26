@@ -102,6 +102,16 @@ service cloud.firestore {
         allow delete: if ownsTrip(tripId) || (signedIn() && resource.data.viewerUid == uid());
       }
 
+      // "Get alerts on this phone": a contact's browser saves its push token, with the live share it opened.
+      // Only that browser reads it back; the alertFamily function (server) sends with it. Not even the owner reads tokens.
+      match /watchers/{viewerUid} {
+        allow get, delete: if signedIn() && viewerUid == uid();
+        allow create, update: if signedIn() && viewerUid == uid() && canView(tripId)
+          && request.resource.data.keys().hasOnly(['token', 'shareId', 'createdAtMillis'])
+          && text(request.resource.data.token, 600) && request.resource.data.createdAtMillis is number
+          && liveShare(request.resource.data.shareId, tripId);
+      }
+
       // "I opened a family link for this trip." Each visitor writes only their own, and only with a
       // share id that points at this trip and is still on. It is the one thing a contact may write.
       match /viewers/{viewerUid} {

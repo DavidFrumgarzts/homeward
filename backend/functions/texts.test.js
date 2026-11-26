@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildText, LIMIT_PER_DAY } from "./texts.js";
+import { buildText, buildPush, LIMIT_PER_DAY } from "./texts.js";
 
 const base = { to: ["+972501234567"], name: "Julia", lat: 26.91234, lng: 75.78765 };
 
@@ -49,3 +49,11 @@ test("no position: says so instead of a broken link", () => {
 });
 
 test("a daily cap per traveler", () => { assert.equal(LIMIT_PER_DAY, 40); });
+
+test("push: a short title, the same fixed wording, no invites", () => {
+  const p = buildPush("danger", { name: "Julia", place: "Nahargarh Fort road", lat: 26.93, lng: 75.814, police: "112" });
+  assert.equal(p.title, "Julia walked into an area marked dangerous");
+  assert.match(p.body, /^Julia just walked into an area marked dangerous at night \(Nahargarh Fort road\)/);
+  assert.equal(buildPush("sos", { name: "Julia", message: "Julia needs help." }).title, "SOS from Julia");
+  assert.equal(buildPush("invite", { name: "Julia" }).error, "kind");
+});

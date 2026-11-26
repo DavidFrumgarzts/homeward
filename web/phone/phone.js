@@ -1,5 +1,5 @@
 // The phone-frame demo page: picks the app and the position, scales the phone to the window, and shows
-// what the phone would have texted or called (phone/frame.js and live/js/texts.js post it here).
+// what the phone would have texted or called (phone/frame.js and live/js/notify.js post it here).
 import { APPS, PLACES, SCREEN, frameSrc, fitScale } from "./links.js";
 
 const $ = (s) => document.querySelector(s);
@@ -48,11 +48,11 @@ setInterval(tick, 10000);
 function describe(m) {
   if (m.kind === "sms") return { cls: "sms", what: `Would text ${m.to.join(", ") || "nobody"}`, body: m.body || "(empty message)" };
   if (m.kind === "tel") return { cls: "tel", what: `Would call ${m.to.join(", ")}`, body: "" };
-  if (m.kind === "text") {
+  if (m.kind === "alert") {
     const f = m.fields || {};
-    const body = f.message || f.link || (f.place ? `Entered ${f.place}` : "") || (f.minutes ? `Stopped for ${f.minutes} min` : "");
+    const body = f.message || (f.place ? `Entered ${f.place}` : "") || (f.minutes ? `Stopped for ${f.minutes} min` : "");
     const where = Number.isFinite(f.lat) ? `\nAt ${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}` : "";
-    return { cls: "sms", what: `Beacon would text ${(m.names || []).join(", ")} (${m.what})`, body: `${body}${where}\nTo: ${(m.to || []).join(", ")}` };
+    return { cls: "sms", what: `Beacon would alert ${(m.names || []).join(", ")} (${m.what})`, body: `${body}${where}` };
   }
   if (m.kind === "camera") return { cls: "sms", what: "Camera allowed (test mode)", body: "No camera is used. Scan takes an uploaded photo." };
   return null;

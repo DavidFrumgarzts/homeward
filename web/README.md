@@ -23,7 +23,7 @@ Then open http://localhost:4173. Add `?reset` to start over. The family view is 
 
 With `serve.py` running, open http://localhost:4173/phone/ to use the apps inside an iPhone 18 Pro frame (402 x 874, Dynamic Island, home indicator), scaled down to fit shorter windows. The side panel switches between Beacon live (`/live/`), Rio Beacon (`/`) and the family view (`/demo`), starts over (`?reset`), and can pretend the phone is in Jaipur, Times Square or Lapa (`?at=lat,lng`); by default Chrome asks for this computer's real location.
 
-The app gets `?frame=phone`, which loads `phone/frame.js` inside it: content starts below the Dynamic Island (62 px) and ends above the home indicator (34 px), and it is test mode. Nothing texts or calls anyone: `sms:` and `tel:` links and Beacon live's automatic texts (`live/js/texts.js`, which skips the `sendText` function) show up on the demo page instead. The camera step is skipped with an empty stream; Scan takes an uploaded photo. Without `?frame=phone` the apps are unchanged.
+The app gets `?frame=phone`, which loads `phone/frame.js` inside it: content starts below the Dynamic Island (62 px) and ends above the home indicator (34 px), and it is test mode. Nothing texts or calls anyone: `sms:` and `tel:` links and Beacon live's automatic alerts (`live/js/notify.js`, which skips the `alertFamily` function) show up on the demo page instead. The camera step is skipped with an empty stream; Scan takes an uploaded photo. Without `?frame=phone` the apps are unchanged.
 
 ## Files
 

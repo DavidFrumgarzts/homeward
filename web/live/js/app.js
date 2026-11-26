@@ -14,7 +14,7 @@ import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow } from "./
 import { drawExtras } from "./routemap.js";
 import { addBaseMap, loadVectorMap } from "./basemap.js";
 import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused, turnOffLink, trail } from "./answering.js";
-import { sendText, textsSent } from "./texts.js";
+import { sendAlert, alertsSent } from "./notify.js";
 import { entered, stoppedMinutes, shouldTextStill } from "../../js/alerts.js";
 import { onboarding } from "./onboard.js";
 import { hospitalsAround, saveHospitalDrive, savedHospitalDrive } from "./drive.js";
@@ -82,9 +82,9 @@ function setup() {
     <button class="link left" id="add">Add this person</button>
     ${store.contacts.length ? `<div class="card col"><div class="label">They can ask how you are, any time</div>
       <p class="small">Beacon answers by itself with where you are, your route and your plans, locked so only they can read it. You see every answer here.</p>
-      <a class="btn quiet" id="sendlink" href="#">Text them their check-in link</a>
+      <a class="btn quiet" id="sendlink" href="#">Send them their check-in link</a>
       <label class="row small"><input type="checkbox" id="pause" ${paused() ? "checked" : ""}> Pause answers for now</label>
-      ${textsSent().slice(0, 5).map((t) => `<p class="small">Texted ${esc(joinNames(t.to))} at ${new Date(t.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}: ${esc(t.what)}${t.status === "sent" ? "" : ` (${esc(t.status)})`}</p>`).join("")}
+      ${alertsSent().slice(0, 5).map((t) => `<p class="small">Alert at ${new Date(t.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}: ${esc(t.what)} (${esc(t.status)})</p>`).join("")}
       ${answersSent().slice(0, 5).map((a) => `<p class="small">${esc(a.who)} asked at ${new Date(a.askedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · Beacon answered: “${esc(a.text)}”</p>`).join("")}
       ${store.trip ? '<button class="link left small" id="linkoff">Turn off their link (they\'ll need a new one)</button>' : ""}</div>` : ""}
     <div class="grow"></div>
@@ -101,12 +101,10 @@ function setup() {
   $("#linkoff")?.addEventListener("click", async () => { await turnOffLink(); setup(); });
   $("#sendlink")?.addEventListener("click", async (e) => {
     e.preventDefault(); store.name = $("#name").value;
-    e.target.textContent = "Sending…";
     const link = await checkinLink({ city: city.name, country: city.country });
-    if (!link) { e.target.textContent = "Text them their check-in link"; return ($("#error").textContent = "Beacon needs a connection once to make the link."); }
-    const r = await sendText("invite", { link });
-    answer(); setup();
-    if (r === "waiting") $("#error").textContent = "No signal: Beacon sends it as soon as there's a connection.";
+    if (!link) return ($("#error").textContent = "Beacon needs a connection once to make the link.");
+    location.href = smsLink(store.contacts.map((c) => c.phone), `${store.name || "I"} added you to Beacon. Open this to see how ${store.name || "I"} ${store.name ? "is" : "am"} any time, and tap "Get alerts on this phone": ${link}`);
+    answer();
   });
   app.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => { store.removeContact(+b.dataset.del); setup(); }));
   $("#done").onclick = () => {
@@ -252,7 +250,7 @@ function watchGps() {
   }, (err) => { if (err.code === 1) { here.denied = true; if ($(".sheet")) home(); } }, { enableHighAccuracy: true, maximumAge: 15000 });
 }
 
-// Texts her people by itself when she walks into an area marked dangerous (once per area an hour),
+// Alerts her people by itself when she walks into an area marked dangerous (once per area an hour),
 // or stops for 5+ minutes on the way back from a trip (once per stop).
 let insideAreas = new Set(), stillTexted = false;
 const lastDangerText = {};
@@ -265,13 +263,13 @@ function watchAlerts() {
     const k = a.id || a.name;
     if (now - (lastDangerText[k] || 0) < 3600000) continue;
     lastDangerText[k] = now;
-    sendText("danger", { place: a.name, lat: here.at.lat, lng: here.at.lng, police: police() });
+    sendAlert("danger", { place: a.name, lat: here.at.lat, lng: here.at.lng, police: police() });
   }
   const minutes = stoppedMinutes(trail(), now);
   if (minutes < 5) stillTexted = false;
   else if (shouldTextStill({ trip: savedTrip(), at, minutes, now, textedThisStop: stillTexted })) {
     stillTexted = true;
-    sendText("still", { minutes, lat: here.at.lat, lng: here.at.lng, police: police() });
+    sendAlert("still", { minutes, lat: here.at.lat, lng: here.at.lng, police: police() });
   }
 }
 
@@ -398,18 +396,18 @@ Note: "${text}"`);
     $("#send").onclick = async () => {
       $("#send").disabled = true; $("#send").textContent = "Sending…";
       const text = $("#draft").value, message = text.replace(/\s*Where: https?:\/\/\S+/g, "").trim();
-      const status = await sendText("sos", { message, lat: here.at?.lat, lng: here.at?.lng });
-      sent(status, smsLink(people.map((c) => c.phone), text));
+      const r = await sendAlert("sos", { message, lat: here.at?.lat, lng: here.at?.lng });
+      sent(r, smsLink(people.map((c) => c.phone), text));
     };
   }
 }
 
-function sent(status = "sent", fallback = "") {
-  const place = helpPlace(), who = joinNames(store.contacts.map((c) => c.name));
+function sent({ status, count } = {}, fallback = "") {
+  const place = helpPlace(), reached = status === "sent" && count > 0;
   app.innerHTML = `<div class="screen center" style="text-align:center">
-    <h1>${status === "sent" ? `${esc(who)} got your SOS` : "Your SOS is waiting for signal"}</h1>
-    <p class="small">${status === "sent" ? "Beacon texted them your message and where you are." : "Beacon sends it by itself as soon as there's a connection. A normal text may get through sooner:"}</p>
-    ${status === "sent" ? "" : `<a class="btn quiet" href="${esc(fallback)}" style="display:grid;place-items:center;text-decoration:none">Send from my messages instead</a>`}
+    <h1>${reached ? `Your SOS reached ${count === 1 ? "1 person" : `${count} people`}` : status === "waiting" ? "Your SOS is waiting for signal" : "Send your SOS as a text"}</h1>
+    <p class="small">${reached ? "Their phones showed your message and where you are." : status === "waiting" ? "Beacon sends the alert by itself as soon as there's a connection. A text may get through sooner:" : "Nobody has turned on Beacon alerts yet, so send it as a text:"}</p>
+    <a class="btn ${reached ? "quiet" : ""}" href="${esc(fallback)}" style="display:grid;place-items:center;text-decoration:none">${reached ? "Also send as a text" : "Send as a text"}</a>
     <a class="btn red" href="tel:${police()}" style="display:grid;place-items:center;text-decoration:none">Call ${police()}</a>
     ${place ? `<button class="outline" id="go" style="width:100%;text-align:left"><i class="dot big" style="background:${KIND_COLOR[place.kind]}"></i><div><div class="label">Walk to ${esc(place.name)}</div><p class="small">${dist(place.meters)}, open 24 hours</p></div></button>` : ""}
     <div class="grow"></div><button class="link" id="back">Back to the map</button></div>`;
