@@ -10,7 +10,7 @@ enum PhoneNumber {
         return trimmed.hasPrefix("+") ? "+\(digits)" : digits
     }
 
-    // E.164: "+" then 8 to 15 digits, e.g. +972501234567 or +12035551234.
+    // E.164: "+" then 8 to 15 digits, e.g. +12025550101 or +12035551234.
     static func isValid(_ raw: String) -> Bool {
         let c = clean(raw)
         return c.hasPrefix("+") && (8...15).contains(c.count - 1)

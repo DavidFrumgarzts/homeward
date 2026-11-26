@@ -35,14 +35,9 @@ final class IncidentEngine: ObservableObject {
         self.store = store; self.packs = packs; self.location = location; self.network = network; self.sync = sync
     }
 
-    // Debug builds on the simulator cannot open Messages; the screen says so and shows the text instead.
-    var testMode: Bool {
-        #if DEBUG && targetEnvironment(simulator)
-        true
-        #else
-        false
-        #endif
-    }
+    // Test mode (debug builds: always on the simulator, and on a real iPhone unless launched with
+    // -realTexts YES): Messages is not opened; the screen says so and shows the text instead. See TestMode.swift.
+    var testMode: Bool { TestMode.isOn }
 
     // ---- Intents: the small set of things screens and triggers may ask for ----
     func startSos(method: ActivationMethod, description: String = "", reasons: [String] = []) {

@@ -11,6 +11,7 @@ struct SosFlow: View {
             if incident.view.phase == .sosActive && !incident.view.alertSent { SosComposeScreen() } else { SosActiveScreen() }
         }
         .background(BeaconColors.background.ignoresSafeArea())
+        .sensoryFeedback(.impact(weight: .heavy), trigger: incident.view.alertSent) { _, sent in sent } // Send pressed
         .sheet(item: $incident.compose) { request in
             MessageComposer(request: request) { outcome in incident.composeFinished(request, outcome) }.ignoresSafeArea()
         }

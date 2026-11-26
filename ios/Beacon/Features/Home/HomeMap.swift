@@ -7,7 +7,8 @@ import SwiftUI
 struct HomeMap: View {
     var pack: SafetyPack
     var you: GeoPoint?
-    var bottomCovered: CGFloat          // height hidden by the bottom sheet, so "you" stay in view
+    var topCovered: CGFloat = 0         // status bar / Dynamic Island: the map runs under it, edge to edge
+    var bottomCovered: CGFloat          // height hidden by the bottom sheet and home indicator, so "you" stay in view
     @State private var camera: MapCameraPosition = .automatic
     @State private var followed = false
 
@@ -22,13 +23,18 @@ struct HomeMap: View {
                 Annotation("", coordinate: center(of: zone)) { ZonePill(zone: zone) }
             }
             ForEach(Array(pack.safePlaces.enumerated()), id: \.offset) { _, place in
-                Annotation(place.name, coordinate: CLLocationCoordinate2D(latitude: place.lat, longitude: place.lng)) { PlaceBadge(kind: place.kind, size: 28) }
+                Annotation(place.name, coordinate: CLLocationCoordinate2D(latitude: place.lat, longitude: place.lng)) {
+                    PlaceBadge(kind: place.kind, size: 28)
+                        .accessibilityLabel("\(place.name), \(place.kind)")
+                        .accessibilityAddTraits(.isImage)
+                }
             }
             if let you {
-                Annotation("You", coordinate: CLLocationCoordinate2D(latitude: you.lat, longitude: you.lng)) { YouDot() }
+                Annotation("You", coordinate: CLLocationCoordinate2D(latitude: you.lat, longitude: you.lng)) { YouDot().accessibilityLabel("Your location") }
             }
         }
         .mapStyle(.standard(pointsOfInterest: .excludingAll))
+        .safeAreaPadding(.top, topCovered)
         .safeAreaPadding(.bottom, bottomCovered)
         .onAppear { recenter() }
         .onChange(of: you) { if !followed { recenter() } }
@@ -61,9 +67,11 @@ private struct ZonePill: View {
         let hours = zone.riskyFromHour == 0 && zone.riskyToHour == 24 ? "" : " · after \(NearbyFeed.clock(zone.riskyFromHour))"
         HStack(spacing: 6) {
             Circle().fill(zone.level == .avoid ? BeaconColors.red : BeaconColors.yellow).frame(width: 8, height: 8)
-            Text(zone.name.replacingOccurrences(of: "Rua ", with: "R. ") + hours).font(BeaconFonts.inter(11, weight: 600)).foregroundStyle(BeaconColors.text)
+            Text(zone.name.replacingOccurrences(of: "Rua ", with: "R. ") + hours).beaconFont(.inter(11, 600, .caption2)).foregroundStyle(BeaconColors.text)
         }
         .padding(.horizontal, 8).padding(.vertical, 5).background(.white).clipShape(Capsule()).shadow(color: .black.opacity(0.15), radius: 2, y: 1)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(zone.level == .avoid ? "Red zone" : "Careful zone"): \(zone.name)\(hours)")
     }
 }
 

@@ -19,6 +19,12 @@ Then open http://localhost:4173. Add `?reset` to start over. The family view is 
 - `serve.py` answers `/f/...` and `/demo` with the app, the way Firebase Hosting does. The plainer `python3 -m http.server 4173 --directory web` also works, with two limits: it cannot serve those two addresses (use `?demo` and `?f=<shareId>` instead, which work everywhere), and on a busy computer it sometimes drops some of the page's files.
 - Against the Firebase emulators instead of the real project: from `firebase/` run `firebase emulators:start --only auth,firestore,hosting --project demo-beacon`, then open http://127.0.0.1:5005/?emu. `?emu` only works on localhost, uses a made-up project and keeps AI off. `node tests/seed-emulator.js` (from `web/`) puts the demo incident in the emulator and prints a family link.
 
+## Phone demo in Chrome
+
+With `serve.py` running, open http://localhost:4173/phone/ to use the apps inside an iPhone 18 Pro frame (402 x 874, Dynamic Island, home indicator), scaled down to fit shorter windows. The side panel switches between Beacon live (`/live/`), Rio Beacon (`/`) and the family view (`/demo`), starts over (`?reset`), and can pretend the phone is in Jaipur, Times Square or Lapa (`?at=lat,lng`); by default Chrome asks for this computer's real location.
+
+The app gets `?frame=phone`, which loads `phone/frame.js` inside it: content starts below the Dynamic Island (62 px) and ends above the home indicator (34 px), and it is test mode. Nothing texts or calls anyone: `sms:` and `tel:` links and Beacon live's automatic texts (`live/js/texts.js`, which skips the `sendText` function) show up on the demo page instead. The camera step is skipped with an empty stream; Scan takes an uploaded photo. Without `?frame=phone` the apps are unchanged.
+
 ## Files
 
 - `index.html`: the empty page; `js/app.js` draws every screen into it.
@@ -40,6 +46,7 @@ Then open http://localhost:4173. Add `?reset` to start over. The family view is 
 - `js/demo.js`: replays `fixtures/demo-incident.json` for `/demo`.
 - `js/html.js`: text made safe for HTML, and the AI badge. `js/cop.js`: the cartoon cop in the chat. `js/store.js`: remembers your name, contacts and trip in the browser.
 - `fixtures/`: copies of `shared/fixtures/` (hosting only serves `web/`). A test fails when they differ; refresh with `cp shared/fixtures/*.json web/fixtures/`.
+- `phone/`: the phone-frame demo page above (`links.js` is pure logic, tested in `tests/phone.test.js`). Development only.
 - `sw.js`: keeps a copy of the app's own files so the page opens with no signal. A test fails if a file in `js/` is missing from its list. It never saves map tiles.
 - `firebase-config.example.js`, `appcheck-config.example.js`: how to make the two local settings files.
 - `tests/`, `package.json`, `vitest.config.js`, `playwright.config.js`: tests only. Nothing they install is shipped or imported by the page.
@@ -92,6 +99,7 @@ Eight screens, each showing Beacon solve a problem and then asking for one thing
 the night in Rajasthan → **booking** (Gmail, a sample, or paste) → **location** → no signal (the saved hospital drive) → **trusted people** (+ their check-in link) → late-night safe places → **camera** (scam check) → "Getting {city} ready" with real counts.
 
 ### What it does
+- **The map** (`live/js/basemap.js`, `live/map-style.json`): David's map colors drawn by MapLibre GL from OpenFreeMap vector tiles (free, no key or sign-up; credit "OpenFreeMap © OpenMapTiles Data from OpenStreetMap" always shown, tiles never saved), under Leaflet's layers via maplibre-gl-leaflet; CARTO Voyager pictures if WebGL or OpenFreeMap fails.
 - **City, numbers, places, scams:** your city from GPS (Nominatim), emergency numbers by country (`js/emergency.js`; India 112 / ambulance 108), police, hospitals and 24-hour pharmacies from OpenStreetMap saved for offline, scams reported in your city (`js/cityscams.js`, Gemini with Google Search).
 - **Booking check** (`live/js/bookingflow.js`, `js/booking.js`): the AI reads the booking, the hotel goes on the map, hospitals within 60 km, the drive to the nearest (FOSSGIS OSRM car router), and "No hospital within a 30-min drive" when that's true. Saved in the browser only.
 - **Beacon's own walking router** (`js/walkroute.js`): street data from OpenStreetMap, main and lit streets cost less, alleys and unlit streets more, areas to avoid 25×; shortest path on the phone, so it works with no signal. Say "Tonight I'm going to Bar Palladio, then back to my hotel" in Ask Beacon: it saves the streets, the areas and both routes (`live/js/trips.js`). "Way back to my hotel" then works offline; off the saved streets it gives direction and distance.

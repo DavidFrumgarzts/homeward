@@ -48,7 +48,7 @@ struct SosComposeScreen: View {
             .scrollDismissesKeyboard(.interactively)
             VStack(spacing: 8) {
                 PrimaryButton(label: names.isEmpty ? "Add a contact first" : "Send to \(names)", color: BeaconColors.red, enabled: !names.isEmpty && !view.contactMessage.isBlank, height: BeaconSize.holdButton) { incident.send() }
-                Text(view.testMode ? "Test mode: Messages is not available in the simulator. No text is sent; the live link is still saved." : "Opens Messages with everything filled in. You press send.").style(.small)
+                Text(view.testMode ? "\(TestMode.noTexts) No text is sent; the live link is still saved." : "Opens Messages with everything filled in. You press send.").style(.small)
             }
             .padding(.horizontal, BeaconSpacing.sheet).padding(.vertical, 12)
         }

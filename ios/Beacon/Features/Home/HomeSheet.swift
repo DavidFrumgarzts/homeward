@@ -12,10 +12,21 @@ struct HomeSheet: View {
     var onPolice: () -> Void
     var onSos: () -> Void
     var onEditContacts: () -> Void
+    var maxHeight: CGFloat = .infinity   // with very large text the sheet scrolls instead of covering the whole map
 
     var body: some View {
+        // Normally the sheet is exactly as tall as its content; only when that is too tall does it scroll.
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView { content }.scrollIndicators(.hidden).scrollBounceBehavior(.basedOnSize)
+        }
+        .frame(maxHeight: maxHeight)
+        .background(BeaconColors.background.clipShape(UnevenRoundedRectangle(topLeadingRadius: BeaconRadius.sheet, topTrailingRadius: BeaconRadius.sheet, style: .continuous)).ignoresSafeArea(edges: .bottom))
+    }
+
+    private var content: some View {
         VStack(spacing: BeaconSpacing.stack) {
-            Capsule().fill(BeaconColors.border).frame(width: 40, height: 5)
+            Capsule().fill(BeaconColors.border).frame(width: 40, height: 5).accessibilityHidden(true)
 
             AskBox(icon: "arrow.right", iconLabel: "Ask Beacon", wholeBoxTaps: true, action: { onAsk("") }) {
                 Text("Ask Beacon anything").style(.body, color: BeaconColors.textMuted)
@@ -29,7 +40,7 @@ struct HomeSheet: View {
                         HStack(spacing: 12) {
                             PlaceBadge(kind: place.place.kind, size: 30).frame(width: 44, height: 44).background(BeaconColors.surfaceAlt).clipShape(RoundedRectangle(cornerRadius: BeaconRadius.smallTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("\(place.place.name) · \(NearbyFeed.distance(place.meters))").style(.label).lineLimit(1)
+                                Text("\(place.place.name) · \(NearbyFeed.distance(place.meters))").style(.label).lineLimit(2).monospacedDigit()
                                 Text(place.place.open24h ? "Open 24 hours" : "Open now").style(.small)
                             }
                             Spacer(minLength: 0)
@@ -42,12 +53,12 @@ struct HomeSheet: View {
             }
 
             HStack(spacing: BeaconSpacing.cards) {
-                quick("I'm OK", "checkmark", BeaconColors.green, onImOk)
-                quick("Police \(pack.police)", "phone", BeaconColors.red, onPolice)
+                quick("I'm OK", "checkmark", BeaconColors.green, hint: "Texts your contacts that you're OK", onImOk)
+                quick("Police \(pack.police)", "phone", BeaconColors.red, hint: "Calls the police on \(pack.police)", onPolice)
             }
 
             // SOS: the biggest thing on the sheet, and the only red one.
-            HoldButton(label: "Hold for SOS · works with no signal", action: onSos)
+            HoldButton(label: "Hold for SOS · works with no signal", voiceOverLabel: "Hold for SOS. Works with no signal", action: onSos)
 
             // Who gets the SOS, with a way to change it.
             Button(action: onEditContacts) {
@@ -56,19 +67,20 @@ struct HomeSheet: View {
                     Spacer()
                     Text(contactNames.isEmpty ? "Add" : "Edit").style(.small, color: BeaconColors.primary)
                 }
-                .frame(minHeight: 32)
+                .frame(minHeight: BeaconSize.minTap)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityHint(contactNames.isEmpty ? "Add who gets your SOS" : "Change who gets your SOS")
         }
         .padding(.horizontal, BeaconSpacing.sheet).padding(.top, 12).padding(.bottom, 8)
-        .background(BeaconColors.background.clipShape(UnevenRoundedRectangle(topLeadingRadius: BeaconRadius.sheet, topTrailingRadius: BeaconRadius.sheet, style: .continuous)).ignoresSafeArea(edges: .bottom))
     }
 
-    private func quick(_ label: String, _ icon: String, _ tint: Color, _ action: @escaping () -> Void) -> some View {
+    private func quick(_ label: String, _ icon: String, _ tint: Color, hint: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(tint).accessibilityHidden(true)
-                Text(label).style(.label).lineLimit(1).minimumScaleFactor(0.85)
+                Text(label).style(.label).lineLimit(1).minimumScaleFactor(0.7).monospacedDigit()
             }
             .frame(maxWidth: .infinity, minHeight: BeaconSize.quickAction)
             .background(BeaconColors.surface)
@@ -76,5 +88,6 @@ struct HomeSheet: View {
             .contentShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityHint(hint)
     }
 }

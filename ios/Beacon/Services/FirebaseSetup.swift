@@ -12,6 +12,13 @@ enum FirebaseSetup {
 
     static func start() {
         guard !started else { return }
+        // No GoogleService-Info.plist (it is git-ignored and only the team has it): run without Firebase.
+        // FirebaseApp.configure() would crash at launch. Ask Beacon and the SOS sentence then use Apple's
+        // on-device model directly (AiModels), or the saved answers; no family link is written.
+        guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
+            SyncLog.note("no GoogleService-Info.plist: Firebase is off (no cloud AI, no family link)")
+            return
+        }
         #if DEBUG
         // Debug builds: the debug provider. Its token is printed once (below); paste it into the
         // Firebase console > App Check > Apps > Beacon iOS > Manage debug tokens. Until then every

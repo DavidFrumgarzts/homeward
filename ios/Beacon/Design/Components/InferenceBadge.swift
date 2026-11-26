@@ -14,7 +14,7 @@ struct InferenceBadge: View {
         case .none: (noAiLabel, "doc.text", BeaconColors.textMuted, BeaconColors.surfaceAlt)
         }
         Label(text, systemImage: icon)
-            .font(BeaconFonts.inter(12, weight: 600))
+            .beaconFont(.inter(12, 600, .caption))
             .foregroundStyle(tint)
             .padding(.horizontal, 10).padding(.vertical, 5)
             .background(back)

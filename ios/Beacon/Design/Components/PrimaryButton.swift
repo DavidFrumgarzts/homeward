@@ -11,10 +11,15 @@ struct PrimaryButton: View {
 
     var body: some View {
         Button(action: action) {
+            // At the default text size this is exactly `height` tall; with larger text it grows
+            // (and wraps onto a second line) instead of clipping the label.
             Text(label).style(.label, color: .white)
-                .frame(maxWidth: .infinity).frame(height: height)
+                .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .frame(maxWidth: .infinity).frame(minHeight: height)
                 .background(enabled ? color : BeaconColors.border)
                 .clipShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: BeaconRadius.button, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

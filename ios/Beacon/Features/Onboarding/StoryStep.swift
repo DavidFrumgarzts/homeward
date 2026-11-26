@@ -12,7 +12,7 @@ struct StoryStep: View {
             HStack {
                 Text(withBeacon ? "The same night, with Beacon" : "").style(.small)
                 Spacer()
-                Button("Skip", action: onNext).font(TextLook.label.font).foregroundStyle(BeaconColors.textMuted).frame(minWidth: 44, minHeight: 44)
+                Button("Skip", action: onNext).beaconFont(.label).foregroundStyle(BeaconColors.textMuted).frame(minWidth: 44, minHeight: 44)
             }
             .padding(.horizontal, BeaconSpacing.screen)
             Text(withBeacon ? "01:56 · 200 M BEFORE THE TURN" : "01:58 · LAPA, RIO DE JANEIRO").style(.mapLabel, color: BeaconColors.text).padding(.horizontal, BeaconSpacing.screen).padding(.bottom, 10)

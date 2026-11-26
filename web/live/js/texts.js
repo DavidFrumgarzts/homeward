@@ -10,6 +10,8 @@ const QUEUE = "beacon.textQueue", LOG = "beacon.textLog";
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
 const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* full */ } };
 export const textsSent = () => read(LOG);
+// Phone-frame demo (web/phone/, ?frame=phone): nothing is texted; the demo page shows what would have gone.
+const TEST_MODE = new URLSearchParams(location.search).get("frame") === "phone";
 const WHAT = { sos: "SOS", danger: "Walked into an area marked dangerous", still: "Hasn't moved for 5 minutes", invite: "Their check-in link" };
 
 let call = null;
@@ -27,6 +29,15 @@ export function flush() {
   flushing ??= (async () => {
     try {
       if (!navigator.onLine) return;
+      if (TEST_MODE) {
+        await null; // stay async, so `flushing` is cleared after it is set
+        for (const item of read(QUEUE)) {
+          const { to, ...fields } = item.data;
+          if (parent !== window) parent.postMessage({ beaconPhone: true, kind: "text", what: WHAT[item.kind], to, names: item.names, fields }, location.origin);
+          log(item, "test mode: not sent");
+        }
+        return write(QUEUE, []);
+      }
       const send = await callable();
       if (!send) return;
       for (const item of read(QUEUE)) {

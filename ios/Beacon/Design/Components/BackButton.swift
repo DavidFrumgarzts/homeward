@@ -8,7 +8,7 @@ struct BackButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: "arrow.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(BeaconColors.text)
-                .frame(width: 44, height: 44, alignment: .leading)
+                .frame(width: BeaconSize.minTap, height: BeaconSize.minTap, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
