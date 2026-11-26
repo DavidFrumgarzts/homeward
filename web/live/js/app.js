@@ -12,6 +12,7 @@ import { placesAround, nearest, saved, meters } from "./places.js";
 import { city, scamsHere, savedAt, fromMemory, arriveAt, research, numbers } from "./city.js";
 import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow } from "./trips.js";
 import { drawExtras } from "./routemap.js";
+import { addBaseMap, loadVectorMap } from "./basemap.js";
 import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused, turnOffLink, trail } from "./answering.js";
 import { sendText, textsSent } from "./texts.js";
 import { entered, stoppedMinutes, shouldTextStill } from "../../js/alerts.js";
@@ -19,6 +20,9 @@ import { onboarding } from "./onboard.js";
 import { hospitalsAround, saveHospitalDrive, savedHospitalDrive } from "./drive.js";
 import { driveText, googleMapsLink } from "../../js/trip.js";
 import { placeFromPlan, isPlanning } from "../../js/trip.js";
+
+// Phone-frame demo only (web/phone/): ?frame=phone adds the iPhone safe areas and stops texts and calls.
+if (new URLSearchParams(location.search).get("frame") === "phone") await import("../../phone/frame.js");
 
 const app = document.getElementById("app");
 const $ = (s) => app.querySelector(s);
@@ -30,6 +34,12 @@ const inCity = () => (city.name ? ` in ${city.name}` : "");
 const dist = (m) => (m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`);
 const KIND_LABEL = { police: "Police station", hospital: "Hospital", pharmacy: "24-hour pharmacy" };
 const KIND_COLOR = { police: "#2F6BFF", hospital: "#E5484D", pharmacy: "#22A06B" };
+// White symbols inside the map badges (docs/design/landmarks): shield, cross, pill.
+const BADGE = {
+  police: '<svg viewBox="0 0 26 26"><path d="M13,6.3 l5,2 v3.7 c0,3.3 -2.2,5.5 -5,6.6 c-2.8,-1.1 -5,-3.3 -5,-6.6 v-3.7 z" fill="#fff"/></svg>',
+  hospital: '<svg viewBox="0 0 26 26"><rect x="11.2" y="7" width="3.6" height="12" rx="1" fill="#fff"/><rect x="7" y="11.2" width="12" height="3.6" rx="1" fill="#fff"/></svg>',
+  pharmacy: '<svg viewBox="0 0 26 26"><g transform="rotate(-45 13 13)"><rect x="7" y="10" width="12" height="6" rx="3" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M13 10v6" stroke="#fff" stroke-width="1.8"/><path d="M13.9 10.9h3.1a2.1 2.1 0 010 4.2h-3.1z" fill="#fff"/></g></svg>',
+};
 const icon = {
   arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
@@ -156,14 +166,18 @@ function drawMap(shown, way = null) {
   if (!window.L) { $("#map").innerHTML = '<p class="small" style="padding:16px">The map needs a connection. Everything else works offline.</p>'; return; }
   map?.remove();
   const at = where();
-  map = L.map($("#map"), { zoomControl: false, attributionControl: true });
+  map = L.map($("#map"), { zoomControl: false, attributionControl: true, minZoom: 2, maxZoom: 19 });
   if (!at) map.setView([25, 0], 2); // no position yet: the world, until the phone says where you are
   else map.setView(shown ? [(at.lat + shown.lat) / 2, (at.lng + shown.lng) / 2] : [at.lat, at.lng], 16);
-  // CARTO Voyager: sharp tiles on phone screens ({r} = @2x), OpenStreetMap data.
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 20, subdomains: "abcd", attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>' }).addTo(map);
+  addBaseMap(map); // David's map colors from OpenFreeMap vector tiles; CARTO's pictures if that can't load (basemap.js)
+  // Places as small round badges (police, hospital, 24-hour pharmacy) with the name to the right in the badge's
+  // color, like the onboarding art; a name shows only where it doesn't run into another badge or name (nameBadges).
+  const badges = [];
   for (const p of here.places) {
     if (!p.open24h) continue;
-    L.circleMarker([p.lat, p.lng], { radius: 7, color: "#fff", weight: 2, fillColor: KIND_COLOR[p.kind], fillOpacity: 1 }).bindTooltip(esc(p.name)).addTo(map); // OSM names are outside data: escaped
+    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: `place-badge ${p.kind}`, html: `<i>${BADGE[p.kind] || ""}</i><b>${esc(p.name)}</b>`, iconSize: [24, 24] }), keyboard: false })
+      .bindTooltip(esc(p.name)).addTo(map); // OSM names are outside data: escaped
+    badges.push({ p, m });
   }
   if (shown) {
     L.circleMarker([shown.lat, shown.lng], { radius: 20, className: "go-here" }).addTo(map);
@@ -177,10 +191,37 @@ function drawMap(shown, way = null) {
     if (avoiding.length < 4) { $("#avoid").textContent = `Tap corner ${avoiding.length + 1} of 4`; L.circleMarker(e.latlng, { radius: 4, color: "#E5484D" }).addTo(map); return; }
     addMyArea(avoiding); avoiding = null; home(null, savedTrip() && where() ? wayBack([where().lat, where().lng]) : null);
   });
-  if (here.at) {
-    L.circleMarker([here.at.lat, here.at.lng], { radius: 16, stroke: false, fillColor: "#22A06B", fillOpacity: 0.18 }).addTo(map);
-    L.circleMarker([here.at.lat, here.at.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#22A06B", fillOpacity: 1 }).addTo(map);
+  me = here.at ? L.marker([here.at.lat, here.at.lng], { icon: meIcon(), interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(map) : null;
+  nameBadges(map, badges);
+  map.on("zoomend", () => nameBadges(map, badges));
+}
+// Shows place names, closest places first, only where the name's box overlaps no badge, no other name and not you.
+function nameBadges(map, badges) {
+  const size = map.getSize(), at = where(), taken = [];
+  const all = badges.map((b) => ({ ...b, pt: map.latLngToContainerPoint([b.p.lat, b.p.lng]) }));
+  for (const { pt } of all) taken.push([pt.x - 13, pt.y - 13, pt.x + 13, pt.y + 13]);
+  if (at) { const u = map.latLngToContainerPoint([at.lat, at.lng]); taken.push([u.x - 20, u.y - 20, u.x + 20, u.y + 20]); all.sort((a, b) => meters(at, a.p) - meters(at, b.p)); }
+  for (const { p, m, pt } of all) {
+    const box = [pt.x + 15, pt.y - 8, pt.x + 17 + Math.min(150, p.name.length * 6.2), pt.y + 8];
+    const fits = box[2] < size.x && pt.y > 8 && pt.y < size.y - 8 && !taken.some((t) => t[0] < box[2] && box[0] < t[2] && t[1] < box[3] && box[1] < t[3]);
+    if (fits) taken.push(box);
+    m.getElement()?.classList.toggle("named", fits);
   }
+}
+// You: the onboarding art's green circle, with a white arrow pointing where you're walking (the phone's heading,
+// or your last two positions), or a white dot while standing still or when the direction isn't known.
+let me = null;
+const meIcon = () => L.divIcon({ className: "me-dot", iconSize: [34, 34],
+  html: here.heading == null ? '<i class="still"></i>' : `<svg viewBox="0 0 34 34" style="transform:rotate(${Math.round(here.heading)}deg)"><path d="M17 8.5 L24 25 L17 21 L10 25 Z"/></svg>` });
+function moveMe() { if (me && here.at && map?.hasLayer(me)) { me.setLatLng([here.at.lat, here.at.lng]); me.setIcon(meIcon()); } }
+function headingFrom(pos, before) {
+  const { heading, speed } = pos.coords;
+  if (speed != null && speed < 0.5) return null; // standing still
+  if (heading != null && !Number.isNaN(heading)) return heading;
+  if (!before || meters(before, here.at) < 8) return here.heading ?? null; // GPS jitter: keep the last direction
+  const r = Math.PI / 180, y = Math.sin((here.at.lng - before.lng) * r) * Math.cos(here.at.lat * r);
+  const x = Math.cos(before.lat * r) * Math.sin(here.at.lat * r) - Math.sin(before.lat * r) * Math.cos(here.at.lat * r) * Math.cos((here.at.lng - before.lng) * r);
+  return (Math.atan2(y, x) / r + 360) % 360;
 }
 
 // The drive to the nearest hospital, saved for no signal (OpenStreetMap car router). Once per 1.5 km move, online only.
@@ -202,10 +243,12 @@ function watchGps() {
   navigator.geolocation.watchPosition(async (pos) => {
     const first = !here.at, before = here.at;
     here.at = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    here.heading = headingFrom(pos, before); moveMe();
     recordTrail(here.at); watchAlerts();
     if (first || meters(before, here.at) > 20000) arriveAt(here.at, refreshScan); // landed somewhere new: work out the city, research its scams
+    if ($(".sheet") && first) home(); // the map jumps to you at once, without waiting for places (Overpass can be slow)
     if (first || !saved() || meters(saved().center, here.at) > 1500) { here.places = await placesAround(here.at); keepHospitalDrive(); }
-    if ($(".sheet") && first) home(); // redraw Home once with your real position; later moves don't reset the screen
+    if ($(".sheet") && first) home(); // redraw Home once more with the places; later moves only move your dot (moveMe)
   }, (err) => { if (err.code === 1) { here.denied = true; if ($(".sheet")) home(); } }, { enableHighAccuracy: true, maximumAge: 15000 });
 }
 
@@ -379,6 +422,7 @@ function refreshScan() { if (app.querySelector("h1")?.textContent === "Is this l
 
 // ---------- Start ----------
 if (new URLSearchParams(location.search).has("reset")) store.reset();
+loadVectorMap(); // starts fetching the map library while the first screen shows
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 const devAt = ["localhost", "127.0.0.1"].includes(location.hostname) && new URLSearchParams(location.search).get("at");
 if (devAt) { const [lat, lng] = devAt.split(",").map(Number); here.at = { lat, lng }; recordTrail(here.at); arriveAt(here.at, refreshScan); placesAround(here.at).then((p) => { here.places = p; if ($(".sheet")) home(); }); }

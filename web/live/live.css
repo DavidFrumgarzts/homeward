@@ -1,12 +1,27 @@
 /* Beacon live (any city): only what differs from ../styles.css (the real street map instead of the drawing). */
 #map { position: absolute; inset: 0; background: #E9EBEE; }
 .mapwrap .hint { z-index: 500; }
-.leaflet-control-attribution { font-size: 10px; }
+.leaflet-control-attribution { font-size: 9px; line-height: 1.4; }
+.leaflet-container .leaflet-control-attribution { background: rgba(255,255,255,.7); color: #5E6880; padding: 0 5px; }
+.leaflet-container { background: #E9EBEE; font-family: var(--body); }
 .dot.big { width: 14px; height: 14px; }
 button.card { width: 100%; text-align: left; }
 .chat-top h2 { margin: 0; }
-/* Grey streets like the drawn map: OSM's colors toned down. */
-.leaflet-tile-pane { filter: saturate(.8); }
+/* The fallback pictures (CARTO, basemap.js): toned down toward the drawn map's greys. The vector map needs nothing. */
+.leaflet-tile-pane .carto { filter: saturate(.8); }
+/* Places on the map, as in the onboarding art: 24 x 24 round badges with a white edge and white symbol, the name to
+   the right in the badge's color (shown by nameBadges() in app.js only where it has room). */
+.place-badge { --c: #2F6BFF; } .place-badge.hospital { --c: #E5484D; } .place-badge.pharmacy { --c: #22A06B; }
+.place-badge i { display: block; width: 24px; height: 24px; border-radius: 50%; background: var(--c); border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 2px rgba(16,26,51,.18); }
+.place-badge i svg { display: block; width: 100%; height: 100%; }
+.place-badge b { display: none; position: absolute; left: 29px; top: 50%; transform: translateY(-50%); white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis;
+  font: 500 11px/14px Inter, system-ui, sans-serif; color: var(--c); text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+.place-badge.named b { display: block; }
+/* You, as in the onboarding art: a green circle with a white arrow toward where you're walking (a white dot when still). */
+.me-dot { pointer-events: none; border-radius: 50%; background: #22A06B; border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px rgba(16,26,51,.3); }
+.me-dot svg { display: block; width: 100%; height: 100%; }
+.me-dot path { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linejoin: round; }
+.me-dot .still { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%; background: #fff; }
 /* After 9 p.m.: safe places nearby blink yellow, slowly, all night. */
 .night-ring { fill: #E0A10F; fill-opacity: .25; stroke: #E0A10F; stroke-width: 3; animation: night-ring 1.2s ease-in-out infinite; }
 @keyframes night-ring { 50% { opacity: .25; } }
