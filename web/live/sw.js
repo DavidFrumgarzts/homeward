@@ -1,8 +1,8 @@
 // Keeps a copy of Beacon (any city) on the phone, so it opens with no signal.
 // Map tiles are NOT saved here (the tile providers don't allow bulk saving). Places to get help are saved by places.js.
 const CACHE = "beacon-live-v5";
-const FILES = ["./", "index.html", "live.css", "manifest.webmanifest", "js/app.js", "js/nypack.js", "js/places.js", "js/city.js", "js/scan.js", "js/trips.js", "js/drive.js", "js/bookingflow.js", "js/gmail.js", "js/routemap.js", "js/answering.js", "js/onboard.js", "img/onb-night.png", "img/onb-booking.png", "img/onb-way.png", "img/onb-nosignal.png", "img/onb-late.png", "img/onb-atm.jpg",
-  "../styles.css", "../js/store.js", "../js/ai.js", "../js/scan.js", "../js/scams.js", "../js/cityscams.js", "../js/emergency.js", "../js/walkroute.js", "../js/areas.js", "../js/trip.js", "../js/booking.js", "../js/seal.js", "../js/checkin.js", "../js/incident.js", "../js/onboarding.js", "../js/sos.js", "../js/pack.js",
+const FILES = ["./", "index.html", "live.css", "manifest.webmanifest", "js/app.js", "js/nypack.js", "js/places.js", "js/city.js", "js/scan.js", "js/trips.js", "js/drive.js", "js/bookingflow.js", "js/gmail.js", "js/routemap.js", "js/answering.js", "js/texts.js", "js/onboard.js", "img/onb-night.png", "img/onb-booking.png", "img/onb-way.png", "img/onb-nosignal.png", "img/onb-late.png", "img/onb-atm.jpg",
+  "../styles.css", "../js/store.js", "../js/ai.js", "../js/scan.js", "../js/scams.js", "../js/cityscams.js", "../js/emergency.js", "../js/walkroute.js", "../js/areas.js", "../js/alerts.js", "../js/trip.js", "../js/booking.js", "../js/seal.js", "../js/checkin.js", "../js/incident.js", "../js/onboarding.js", "../js/sos.js", "../js/pack.js",
   "../js/firebase.js", "../js/messages.js", "../js/timeline.js", "../js/prompts.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css", "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"];
 

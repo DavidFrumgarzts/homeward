@@ -27,7 +27,7 @@ export function recordTrail(at) {
   if (last && now - last.t < 120000 && moved < 30) return;
   write(TRAIL, [...t.filter((p) => now - p.t < 86400000), { lat: at.lat, lng: at.lng, t: now }]);
 }
-const trail = () => read(TRAIL, []);
+export const trail = () => read(TRAIL, []);
 
 // Her trip and one family link, created once (online). Returns the link, or null without Firebase / connection.
 export async function checkinLink({ city, country }) {
@@ -115,7 +115,7 @@ export async function startAnswering(getCtx, onLog = () => {}) {
 }
 
 // "Turn off their link": the old link stops working for everyone (the rules refuse it), and the next
-// "Send them their check-in link" makes a new trip and link.
+// "Text them their check-in link" makes a new trip and link.
 export async function turnOffLink() {
   const trip = store.trip, [fs, uid] = await Promise.all([firestore(), signedIn()]);
   if (trip?.created && fs && uid) await fs.f.updateDoc(fs.f.doc(fs.db, "shares", trip.shareId), { revoked: true }).catch(() => {});
