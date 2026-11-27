@@ -1,16 +1,12 @@
 // The real-street map in the family view: her trail as a blue line, where the SOS started (small blue dot)
 // and her latest position (green dot, like the "you" dot in the app).
-// Uses MapLibre GL JS from a CDN with standard OpenStreetMap tiles, viewed normally (nothing is saved or
+// Uses MapLibre GL JS from a CDN with OpenFreeMap vector tiles, viewed normally (nothing is saved or
 // downloaded in bulk), and the OpenStreetMap credit always showing, as their tile policy asks.
 // If the map library cannot load, createFamilyMap returns null and the page shows a map link instead.
 const CDN = "https://unpkg.com/maplibre-gl@5.24.1/dist";
-const STYLE = {
-  version: 8,
-  // CARTO Voyager, @2x so it's sharp on phone screens; OpenStreetMap data. Same map as the live app.
-  sources: { osm: { type: "raster", tiles: ["a", "b", "c", "d"].map((s) => `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png`), tileSize: 256, maxzoom: 20,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' } },
-  layers: [{ id: "osm", type: "raster", source: "osm", paint: { "raster-saturation": -0.2 } }],
-};
+// David's map style on OpenFreeMap vector tiles (free, no key), the same style as Beacon live's map.
+// CARTO's raster tiles now answer "API KEY REQUIRED", so they are no longer used.
+const STYLE = "/live/map-style.json";
 
 let library = null;
 function loadLibrary() {

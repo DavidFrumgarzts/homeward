@@ -47,6 +47,17 @@ const icon = {
 };
 const CHECK = '<svg class="check" viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="64" fill="none" stroke="#22A06B" stroke-opacity=".18" stroke-width="3"/><circle cx="66" cy="66" r="46" fill="#E4F4EC"/><path d="M48 67l12 12 24-26" stroke="#22A06B" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const progress = (step) => `<div class="progress">${[1, 2, 3].map((i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("")}</div>`;
+// Desktop layout (styles.css, "Desktop layout"): setup screens show the drawn map as art beside them (hidden on phones),
+// and from 900 px wide Ask and Scan take over Home's side panel while the map stays.
+const deskArt = () => `<div class="desk-art" aria-hidden="true">${mapSvg({ you: here.you, heading: here.heading })}</div>`;
+const wide = matchMedia("(min-width: 900px)");
+function panel() {
+  const side = wide.matches && app.querySelector(":scope > .sheet, :scope > .side");
+  if (!side) return app;
+  side.className = "side"; // no longer Home's sheet, so GPS updates don't redraw Home over the chat
+  return side;
+}
+wide.addEventListener("change", () => { if (app.querySelector(":scope > .side")) home(); });
 
 // ---------- Story: one night in Lapa, without and then with Beacon ----------
 function story(withBeacon = false) {
@@ -105,7 +116,7 @@ const HERO = `<svg class="hero" viewBox="0 0 345 190" aria-hidden="true"><rect w
   <circle cx="272" cy="52" r="6" fill="#E07A2B"/><circle cx="66" cy="140" r="5" fill="#22A06B"/></svg>`;
 function welcome() {
   const row = (ico, color, tint, title, detail) => `<div class="card"><div class="tile" style="background:${tint};color:${color}">${ico}</div><div><div class="label">${title}</div><p class="small">${detail}</p></div></div>`;
-  app.innerHTML = `<div class="screen">${progress(1)}
+  app.innerHTML = `<div class="screen duo">${deskArt()}${progress(1)}
     ${HERO}
     <h1>Go anywhere.<br>Beacon has your back, even with no signal.</h1>
     <div class="stack">
@@ -127,7 +138,7 @@ function contacts(editing, typing = false) {
     return `<div class="card"><div class="tile avatar" style="background:${tint};color:${color}">${esc(c.name.slice(0, 1).toUpperCase())}</div>
       <div style="flex:1;min-width:0"><div class="label">${esc(c.name)}</div><p class="small">${esc(shortPhone(c.phone))}</p></div>
       ${editing ? `<button class="link small" data-remove="${i}">Remove</button>` : `<span class="tick">${icon.check}</span>`}</div>`; };
-  app.innerHTML = `<div class="screen">${editing ? "" : progress(2)}
+  app.innerHTML = `<div class="screen duo">${deskArt()}${editing ? "" : progress(2)}
     <h1>Who should hear from you?</h1>
     <input class="field" id="me" placeholder="Your first name" value="${esc(store.name)}" autocomplete="given-name" aria-label="Your first name">
     ${list.length ? `<div class="stack">${list.map(person).join("")}</div>` : ""}
@@ -176,7 +187,7 @@ async function ready() {
   const city = pack.city.replace(" de Janeiro", "");
   const draw = (ai) => {
     const loading = ai && aiLoaded != null && aiLoaded < 1, pct = Math.round((aiLoaded || 0) * 100);
-    app.innerHTML = `<div class="screen">${progress(3)}
+    app.innerHTML = `<div class="screen duo">${deskArt()}${progress(3)}
       <h1>Getting ${city} ready for when you're offline</h1>
       <div class="stack">
         ${row(icon.warn, "var(--red-tint)", "var(--red)", "1 red zone mapped", `${pack.zone.name}, ${clock(pack.zone.fromHour)} to ${clock(pack.zone.toHour)}`)}
@@ -209,7 +220,7 @@ function home(highlight = null) {
         <div><div class="label">${closeness === "inside" ? "You're in a red zone" : "Red zone ahead"}</div><p class="small">${z.name} · ${risky ? "avoid now" : `risky after ${clock(z.fromHour)}`}. Take ${z.saferStreet}.</p></div></div>`}
       ${here.demo ? '<div class="hint small">Demo: tap the map to walk</div>' : ""}
     </div>
-    <div class="sheet"><div class="grab"></div>
+    <div class="sheet"><div class="grab"></div><div class="side-head"><span class="brand">Beacon</span><span class="small">Lapa, ${pack.city}</span></div>
       <div class="askbar"><button id="ask">Ask Beacon anything</button><button class="sq" id="talk" aria-label="Ask by voice">${icon.mic}</button></div>
       <div class="chips"><button class="chip" data-q="Is this area OK now?">Is this area OK now?</button><button class="chip" data-q="Where's a safe place?">Where's a safe place?</button></div>
       <div class="card"><div class="tile" style="width:40px;height:40px;border-radius:12px;background:${place.kind === "hospital" ? "var(--red-tint)" : "var(--blue-tint)"}">${badge(place.kind, 28)}</div><div><div class="label">${place.name} · ${place.meters} m</div><p class="small">Open 24 hours</p></div></div>
@@ -225,7 +236,7 @@ function home(highlight = null) {
   app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => ask(b.dataset.q)));
   $("#ok").href = smsLink(store.contacts.map((c) => c.phone), checkInText(store.name, store.shareLocation ? here.real : null));
   holdToStart($("#sos"), () => sos());
-  $("#scan").onclick = () => scanScreen(app, { back: () => home(), showPlace: (name) => home(name), backIcon: icon.back });
+  $("#scan").onclick = () => scanScreen(panel(), { back: () => home(), showPlace: (name) => home(name), backIcon: icon.back });
   $("#edit").onclick = () => contacts(true);
   watchGps();
 }
@@ -266,7 +277,7 @@ const chat = []; // [{you, text, source, place}]: source = where an AI answer ra
 async function ask(question, listen = false) {
   let thinking = false, talking = false;
   const draw = () => {
-    app.innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
+    panel().innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
       <div class="chat-top"><button class="back" id="back" aria-label="Back">${icon.back}</button>${copSvg(talking)}</div>
       <div class="bubbles" id="bubbles">
         ${chat.map((line) => `<div class="bubble ${line.you ? "you" : "beacon"}">${esc(line.text)}</div>${line.you ? "" : aiBadge(sourceLabel(line.source))}${line.place && !talking ? `<button class="link left show" data-place="${esc(line.place)}">Show ${esc(line.place)} on the map</button>` : ""}`).join("")}
@@ -315,7 +326,7 @@ async function ask(question, listen = false) {
 // source = where AI rewrote her words (null = plain sentence), ids = the family page's ids (null = no Firebase).
 function sos(note = "", draft = null) {
   const people = store.contacts;
-  app.innerHTML = `<div class="screen">
+  app.innerHTML = `<div class="screen focus">
     <button class="back" id="back" style="position:static;transform:none" aria-label="Back">${icon.back}</button>
     <h1>What's happening?</h1>
     <textarea class="field" id="note" placeholder="A few words are enough">${esc(note)}</textarea>
@@ -360,7 +371,7 @@ function sent(message, note, ids) {
     failed: "Family page could not be updated. Your text still has your message.",
     off: "",
   };
-  app.innerHTML = `<div class="screen center" style="text-align:center">
+  app.innerHTML = `<div class="screen center focus wide" style="text-align:center">
     ${CHECK}
     <h1>Press send so ${esc(joinNames(people.map((c) => c.name)))} ${people.length > 1 ? "know" : "knows"}</h1>
     <p class="small" id="sync" aria-live="polite">${ids ? SYNC.saving : ""}</p>
@@ -391,7 +402,7 @@ function sent(message, note, ids) {
   const end = () => {
     if (ids) endIncident(ids, here.real);
     const over = endedText(store.name);
-    app.innerHTML = `<div class="screen center" style="text-align:center">${CHECK}<h1>SOS ended</h1>
+    app.innerHTML = `<div class="screen center focus" style="text-align:center">${CHECK}<h1>SOS ended</h1>
       <p class="small">Press send in your messages app so they know.</p>
       <div class="card" style="width:100%;text-align:left"><p class="small" style="color:var(--ink);white-space:pre-wrap">${esc(over)}</p></div>
       <a class="btn" style="display:grid;place-items:center;text-decoration:none" href="${esc(smsLink(people.map((c) => c.phone), over))}">Open messages to send</a>

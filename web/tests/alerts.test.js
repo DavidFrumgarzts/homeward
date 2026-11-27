@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { entered, stoppedMinutes, shouldTextStill } from "../js/alerts.js";
+import { entered, stoppedMinutes, shouldTextStill, dangerTexts, textableAreas } from "../js/alerts.js";
+import { areasFor } from "../js/areas.js";
+import { hotspots, inZone } from "../js/unsafe.js";
 
 const ring = [[26.9262, 75.8118], [26.9262, 75.8142], [26.938, 75.817], [26.938, 75.814]];
 const area = { id: "jaipur-nahargarh-road", name: "Nahargarh Fort road", ring };
@@ -42,5 +44,34 @@ describe("when to text that she stopped", () => {
     expect(shouldTextStill({ trip, at: [26.9001, 75.7801], minutes: 30, now: T })).toBe(false);
     expect(shouldTextStill({ trip: null, at, minutes: 30, now: T })).toBe(false);
     expect(shouldTextStill({ trip: { ...trip, savedAt: T - 20 * 3600000 }, at, minutes: 30, now: T })).toBe(false);
+  });
+});
+
+// The automatic "danger" text costs money (Twilio) and alarms her family: only David's reviewed list and her own
+// marks may send it. Red zones from police data and OpenStreetMap notes never do.
+describe("who can trigger the automatic danger text", () => {
+  const at = [26.93, 75.814];
+  const police = hotspots(Array.from({ length: 30 }, (_, i) => ({ lat: 26.93 + (i % 5) * 0.0001, lng: 75.814 + Math.floor(i / 5) * 0.0001, kind: "robbery" })),
+    { origin: "Police data", period: "last 12 months", night: true })[0];
+  const team = { ...area, origin: "Beacon's list" }, mine = { name: "Marked by you", ring, origin: "Marked by you" };
+  it("the police-data zone really is where she is (so the test means something)", () => {
+    expect(inZone(at, police)).toBe(true);
+  });
+  it("walking into a police-data zone texts no one", () => {
+    expect(dangerTexts(at, [police], new Set(), {}, T).text).toEqual([]);
+    expect(dangerTexts(at, [{ ...area, origin: "Quiet after dark" }], new Set(), {}, T).text).toEqual([]);
+    expect(dangerTexts(at, [{ ...area }], new Set(), {}, T).text).toEqual([]); // no origin: not allowed either
+  });
+  it("Beacon's list and her own marks do, once an hour per area", () => {
+    const last = {};
+    expect(dangerTexts(at, [police, team], new Set(), last, T).text.map((a) => a.origin)).toEqual(["Beacon's list"]);
+    expect(dangerTexts(at, [team], new Set(), last, T + 10 * MIN).text).toEqual([]);
+    expect(dangerTexts(at, [team], new Set(), last, T + 61 * MIN).text).toHaveLength(1);
+    expect(dangerTexts(at, [mine], new Set(), {}, T).text).toHaveLength(1);
+  });
+  it("Beacon's list still needs David's review", () => {
+    const list = [{ id: "x", city: "Jaipur", name: "Unreviewed", ring, fromHour: 0, toHour: 24, reviewed: false }];
+    expect(textableAreas(areasFor("Jaipur", null, [], list))).toEqual([]);
+    expect(textableAreas(areasFor("Jaipur", null, [], [{ ...list[0], reviewed: true }]))).toHaveLength(1);
   });
 });

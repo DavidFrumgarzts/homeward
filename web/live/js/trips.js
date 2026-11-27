@@ -5,6 +5,8 @@ import { buildGraph, markDanger, route, pack, unpack, directionTo } from "../../
 import { boxFor } from "../../js/trip.js";
 import { areasFor } from "../../js/areas.js";
 import { OVERPASS } from "./places.js";
+import { loadZones, zonesAround } from "./unsafezones.js";
+import { ringsOf } from "../../js/unsafe.js";
 
 const TRIP = "beacon.trip", GRAPH = "beacon.trip.graph", MINE = "beacon.myAreas";
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
@@ -13,8 +15,9 @@ const write = (k, v) => { try { localStorage.setItem(k, typeof v === "string" ? 
 export const savedTrip = () => read(TRIP);
 export const myAreas = () => read(MINE) || [];
 const ringsNow = (city) => areasFor(city, new Date().getHours(), myAreas());
-// Routes are walked later than they're planned, so they avoid every area of the night, whatever its hours.
-const ringsAllNight = (city) => areasFor(city, null, myAreas());
+// Routes are walked later than they're planned, so they avoid every area of the night, whatever its hours,
+// and the red zones from police data around the places on the route (unsafezones.js).
+const ringsAllNight = (city, near = []) => [...areasFor(city, null, myAreas()), ...near.flatMap((p) => zonesAround(p))];
 let graph = null;
 const savedGraph = () => (graph ??= (() => { const s = localStorage.getItem(GRAPH); try { return s ? unpack(s) : null; } catch { return null; } })());
 
@@ -29,7 +32,8 @@ export async function findPlace(name, near, city = "") {
 }
 
 async function streets(box) {
-  const q = `[out:json][timeout:60];way["highway"](${box.join(",")});out geom tags;`;
+  // Streets, plus parks and big lawns for the "quiet after dark" note (walkroute.js quietBits).
+  const b = box.join(","), q = `[out:json][timeout:60];(way["highway"](${b});way["leisure"="park"](${b});way["landuse"="grass"](${b}););out geom tags;`;
   for (const url of OVERPASS) {
     try {
       const r = await fetch(url, { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "Content-Type": "application/x-www-form-urlencoded" }, signal: AbortSignal.timeout(70000) });
@@ -41,12 +45,12 @@ async function streets(box) {
 
 // Saves a trip: home = her hotel if known, else where she is now. onStep(text) reports progress in plain words.
 // Returns the saved trip, or {error: "place" | "streets" | "route" | "storage"}.
-export async function planTrip({ from, hotel, place, city }, onStep = () => {}) {
+export async function planTrip({ from, hotel, place, city, countryCode = "" }, onStep = () => {}) {
   const home = hotel || from;
   onStep(`Saving the streets between ${hotel ? "your hotel" : "here"} and ${place.name}…`);
-  const ways = await streets(boxFor(home, place.at));
+  const [ways] = await Promise.all([streets(boxFor(home, place.at)), loadZones(home, countryCode), loadZones(place.at, countryCode)]);
   if (!ways) return { error: "streets" };
-  const g = buildGraph(ways, ringsAllNight(city).map((a) => a.ring));
+  const g = buildGraph(ways, ringsAllNight(city, [home, place.at]).flatMap(ringsOf));
   const there = route(g, home, place.at, "safe"), back = route(g, place.at, home, "safe");
   if (!there || !back) return { error: "route" };
   const trip = { place, home, homeIsHotel: !!hotel, city, there, back, fastestBack: route(g, place.at, home, "fastest"), savedAt: Date.now() };
@@ -76,12 +80,18 @@ function nearestStreetM(g, at) {
 export function addMyArea(ring) {
   const mine = [...myAreas(), { name: "Marked by you", ring }];
   write(MINE, mine);
+  rerouteTrip();
+  return mine;
+}
+// Works the saved routes out again around the current areas (after she marks one, or new police data arrives).
+export function rerouteTrip() {
   const trip = savedTrip(), g = savedGraph();
   if (trip && g) {
-    markDanger(g, ringsAllNight(trip.city).map((a) => a.ring));
+    markDanger(g, ringsAllNight(trip.city, [trip.home, trip.place.at]).flatMap(ringsOf));
     const updated = { ...trip, there: route(g, trip.home, trip.place.at, "safe") || trip.there, back: route(g, trip.place.at, trip.home, "safe") || trip.back, fastestBack: route(g, trip.place.at, trip.home, "fastest") };
     write(GRAPH, pack(g)); write(TRIP, updated);
   }
-  return mine;
 }
+// The areas that can text her people (Beacon's list + hers). Police-data zones are separate: zonesAround().
 export const areasNow = (city) => ringsNow(city);
+export const tripGraph = () => savedGraph();

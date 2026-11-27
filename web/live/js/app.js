@@ -10,12 +10,14 @@ import { recommends, judge } from "../../js/scams.js";
 import { smsLink } from "../../js/sos.js";
 import { placesAround, nearest, saved, meters } from "./places.js";
 import { city, scamsHere, savedAt, fromMemory, arriveAt, research, numbers } from "./city.js";
-import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow } from "./trips.js";
-import { drawExtras } from "./routemap.js";
+import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow, tripGraph, rerouteTrip } from "./trips.js";
+import { drawExtras, drawAreas } from "./routemap.js";
+import { loadZones, zonesAround } from "./unsafezones.js";
+import { zonesToShow, zoneLine, quietNote } from "../../js/unsafe.js";
 import { addBaseMap, loadVectorMap } from "./basemap.js";
 import { recordTrail, startAnswering, checkinLink, answersSent, paused, setPaused, turnOffLink, trail } from "./answering.js";
 import { sendAlert, alertsSent } from "./notify.js";
-import { entered, stoppedMinutes, shouldTextStill } from "../../js/alerts.js";
+import { dangerTexts, stoppedMinutes, shouldTextStill } from "../../js/alerts.js";
 import { onboarding } from "./onboard.js";
 import { hospitalsAround, saveHospitalDrive, savedHospitalDrive } from "./drive.js";
 import { driveText, googleMapsLink } from "../../js/trip.js";
@@ -67,10 +69,20 @@ function wayText(w) {
 }
 let avoiding = null; // corners tapped while marking an area to avoid
 const helpPlace = () => (where() ? nearest(here.places, where(), ["police", "hospital"]) || nearest(here.places, where()) : null);
+// Desktop layout (../styles.css, "Desktop layout"): from 900 px wide Ask and Scan take over Home's side panel
+// while the map stays. Under 900 px they fill the screen, as on the phone.
+const wide = matchMedia("(min-width: 900px)");
+function panel() {
+  const side = wide.matches && app.querySelector(":scope > .sheet, :scope > .side");
+  if (!side) return app;
+  side.className = "side"; // no longer Home's sheet, so GPS updates don't redraw Home over the chat
+  return side;
+}
+wide.addEventListener("change", () => { if (app.querySelector(":scope > .side")) home(); });
 
 // ---------- Setup: your name and who gets your SOS ----------
 function setup() {
-  app.innerHTML = `<div class="screen">
+  app.innerHTML = `<div class="screen settings">
     <h1>Beacon</h1>
     <p>If something goes wrong, Beacon writes a clear message for the people you trust, with where you are. Point the camera at a deal or a stranger's offer and it tells you if travelers report it as a scam where you are.</p>
     <input class="field" id="name" placeholder="Your first name" value="${esc(store.name)}" autocomplete="given-name">
@@ -123,11 +135,11 @@ function home(highlight = null, way = null) {
     <div class="mapwrap" style="min-height:320px"><div id="map"></div>
       <div class="map-tools"><button id="avoid">${avoiding ? `Tap corner ${avoiding.length + 1} of 4` : "Avoid an area"}</button></div>
       ${here.at ? "" : `<div class="hint small">${here.denied ? "Turn on location so Beacon knows which city you're in." : "Finding where you are…"}</div>`}</div>
-    <div class="sheet"><div class="grab"></div>
+    <div class="sheet"><div class="grab"></div>${city.name ? `<div class="side-head"><span class="brand">Beacon</span><span class="small">${esc(`${city.name}${city.country ? `, ${city.country}` : ""}`)}</span></div>` : '<div class="side-head"><span class="brand">Beacon</span></div>'}
       <button class="askbar" id="ask"><span>Ask Beacon anything</span><i class="sq">${icon.arrow}</i></button>
       <div class="chips">${[savedTrip() ? (savedTrip().homeIsHotel ? "Way back to my hotel" : "Way back to where I started") : "I'm going out tonight", "Where can I get help?", "I think I'm being followed"].map((q) => `<button class="chip" data-q="${q}">${q}</button>`).join("")}</div>
       ${way?.drive ? `<div class="card route-card"><div class="label">Drive to ${esc(way.drive.name)}</div><p class="small">${esc(driveText(way.drive))} · saved for no signal · route © OpenStreetMap contributors</p></div>` : ""}
-      ${way && !way.drive ? `<div class="card route-card"><div class="label">Back to ${homeName()}</div><p class="small">${esc(wayText(way))}</p>${way.route ? `<p class="small">${esc(way.route.steps.slice(0, 4).map((x) => `${x.name} ${dist(x.m)}`).join(" → "))}</p><p class="small">Saved for no signal · route © OpenStreetMap contributors</p>` : ""}</div>` : ""}
+      ${way && !way.drive ? `<div class="card route-card"><div class="label">Back to ${homeName()}</div><p class="small">${esc(wayText(way))}</p>${routeNotes(way)}${way.route ? `<p class="small">${esc(way.route.steps.slice(0, 4).map((x) => `${x.name} ${dist(x.m)}`).join(" → "))}</p><p class="small">Saved for no signal · route © OpenStreetMap contributors</p>` : ""}</div>` : ""}
       ${card ? `<button class="card" id="place"><i class="dot big" style="background:${KIND_COLOR[card.kind]}"></i><div><div class="label">${esc(card.name)} · ${dist(card.meters)}</div><p class="small">${KIND_LABEL[card.kind]} · open 24 hours</p></div></button>`
              : `<div class="card"><p class="small">${!where() ? "Places to get help show up once Beacon knows where you are." : navigator.onLine ? "Looking for police stations and hospitals near you…" : "Go online once to save places near you."}</p></div>`}
       <div class="two"><a id="ok" href="#">${icon.check}I'm OK</a><button id="scan">${icon.camera}Scan</button><a href="tel:${police()}">${icon.phone}${police()}</a></div>
@@ -155,7 +167,7 @@ function scanStatus() {
   return fromMemory() ? `Some added ${day} from what AI knows, not checked. Works with no signal.` : `Updated from the web ${day}. Works with no signal.`;
 }
 function openScan() {
-  scanScreen(app, { back: () => home(), backIcon: icon.back, city: city.name, scams: scamsHere(), status: scanStatus() });
+  scanScreen(panel(), { back: () => home(), backIcon: icon.back, city: city.name, scams: scamsHere(), status: scanStatus() });
 }
 
 // The street map (OpenStreetMap through Leaflet): you as a green dot, places to get help, and a yellow ring
@@ -165,6 +177,8 @@ function drawMap(shown, way = null) {
   map?.remove();
   const at = where();
   map = L.map($("#map"), { zoomControl: false, attributionControl: true, minZoom: 2, maxZoom: 19 });
+  L.control.zoom({ position: "bottomright" }).addTo(map); // shown on desktop only (live.css)
+  new ResizeObserver(() => map?.invalidateSize()).observe($("#map")); // the layout changes size at 900 px
   if (!at) map.setView([25, 0], 2); // no position yet: the world, until the phone says where you are
   else map.setView(shown ? [(at.lat + shown.lat) / 2, (at.lng + shown.lng) / 2] : [at.lat, at.lng], 16);
   addBaseMap(map); // David's map colors from OpenFreeMap vector tiles; CARTO's pictures if that can't load (basemap.js)
@@ -182,7 +196,8 @@ function drawMap(shown, way = null) {
     if (!avoiding) map.once("click", () => home());
   }
   const trip = savedTrip(), hotel = savedHotel() || (trip?.homeIsHotel ? trip.home : null);
-  drawExtras(map, { areas: areasNow(city.name), way, home: hotel, places: here.places, at: here.at });
+  drawExtras(map, { way, home: hotel, places: here.places, at: here.at });
+  zoneWay = way; redrawZones();
   if (way?.route) map.fitBounds(L.latLngBounds(way.route.path).pad(0.15));
   if (avoiding) map.on("click", (e) => {
     avoiding.push([e.latlng.lat, e.latlng.lng]);
@@ -199,11 +214,13 @@ function nameBadges(map, badges) {
   const all = badges.map((b) => ({ ...b, pt: map.latLngToContainerPoint([b.p.lat, b.p.lng]) }));
   for (const { pt } of all) taken.push([pt.x - 13, pt.y - 13, pt.x + 13, pt.y + 13]);
   if (at) { const u = map.latLngToContainerPoint([at.lat, at.lng]); taken.push([u.x - 20, u.y - 20, u.x + 20, u.y + 20]); all.sort((a, b) => meters(at, a.p) - meters(at, b.p)); }
+  const free = (box) => box[0] > 0 && box[2] < size.x && !taken.some((t) => t[0] < box[2] && box[0] < t[2] && t[1] < box[3] && box[1] < t[3]);
   for (const { p, m, pt } of all) {
-    const box = [pt.x + 15, pt.y - 8, pt.x + 17 + Math.min(150, p.name.length * 6.2), pt.y + 8];
-    const fits = box[2] < size.x && pt.y > 8 && pt.y < size.y - 8 && !taken.some((t) => t[0] < box[2] && box[0] < t[2] && t[1] < box[3] && box[1] < t[3]);
-    if (fits) taken.push(box);
-    m.getElement()?.classList.toggle("named", fits);
+    const w = Math.min(150, p.name.length * 6.2) + 2, right = [pt.x + 15, pt.y - 8, pt.x + 15 + w, pt.y + 8], left = [pt.x - 15 - w, pt.y - 8, pt.x - 15, pt.y + 8];
+    const box = pt.y > 8 && pt.y < size.y - 8 ? [right, left].find(free) : null; // to the right, as in the art; to the left at the screen's edge
+    if (box) taken.push(box);
+    m.getElement()?.classList.toggle("named", !!box);
+    m.getElement()?.classList.toggle("left", box === left);
   }
 }
 // You: the onboarding art's green circle, with a white arrow pointing where you're walking (the phone's heading,
@@ -243,11 +260,39 @@ function watchGps() {
     here.at = { lat: pos.coords.latitude, lng: pos.coords.longitude };
     here.heading = headingFrom(pos, before); moveMe();
     recordTrail(here.at); watchAlerts();
-    if (first || meters(before, here.at) > 20000) arriveAt(here.at, refreshScan); // landed somewhere new: work out the city, research its scams
+    if (first || meters(before, here.at) > 20000) arriveAt(here.at, refreshScan).then(keepZones); // landed somewhere new: work out the city, research its scams
+    else keepZones();
     if ($(".sheet") && first) home(); // the map jumps to you at once, without waiting for places (Overpass can be slow)
     if (first || !saved() || meters(saved().center, here.at) > 1500) { here.places = await placesAround(here.at); keepHospitalDrive(); }
     if ($(".sheet") && first) home(); // redraw Home once more with the places; later moves only move your dot (moveMe)
   }, (err) => { if (err.code === 1) { here.denied = true; if ($(".sheet")) home(); } }, { enableHighAccuracy: true, maximumAge: 15000 });
+}
+
+// Red zones from police data (unsafezones.js), drawn only within a 30-minute walk of her or on her saved routes.
+// Fetched once per ~2 km while online; redrawn when she has moved 200 m. They never text anyone.
+let zoneLayer = null, zonesAt = null, zoneWay = null;
+function policeZones() {
+  const at = where(), trip = savedTrip(), seen = new Set();
+  const pts = [at && [at.lat, at.lng], trip?.home, trip?.place?.at].filter(Boolean);
+  return pts.flatMap((p) => zonesAround(p)).filter((z) => !seen.has(z.id) && seen.add(z.id));
+}
+function shownAreas() {
+  const at = where(), trip = savedTrip();
+  const lines = [trip?.there?.path, trip?.back?.path, zoneWay?.route?.path].filter(Boolean);
+  return [...areasNow(city.name), ...zonesToShow(policeZones(), at && [at.lat, at.lng], { graph: tripGraph(), lines })];
+}
+function redrawZones() { if (!map || !window.L || !$("#map")) return; zoneLayer?.remove(); zoneLayer = drawAreas(map, shownAreas()); zonesAt = where(); }
+function keepZones() {
+  const at = where();
+  if (!at) return;
+  if (!zonesAt || meters(zonesAt, at) > 200) redrawZones();
+  loadZones([at.lat, at.lng], city.countryCode).then((fresh) => { if (fresh) { rerouteTrip(); redrawZones(); } });
+}
+// Under the way back: red zones from police data it passes or goes around, and quiet stretches (amber).
+function routeNotes(w) {
+  if (!w?.route) return "";
+  const zones = zoneLine(w.route, w.fastest, policeZones()), quiet = quietNote(w.route);
+  return `${zones ? `<p class="small">${esc(zones)}</p>` : ""}${quiet ? `<p class="small note-amber">${esc(quiet)}</p>` : ""}`;
 }
 
 // Alerts her people by itself when she walks into an area marked dangerous (once per area an hour),
@@ -257,14 +302,10 @@ const lastDangerText = {};
 function watchAlerts() {
   if (!here.at || !store.contacts.length) return;
   const at = [here.at.lat, here.at.lng], now = Date.now();
-  const e = entered(at, areasNow(city.name), insideAreas);
-  insideAreas = e.inside;
-  for (const a of e.entered) {
-    const k = a.id || a.name;
-    if (now - (lastDangerText[k] || 0) < 3600000) continue;
-    lastDangerText[k] = now;
-    sendAlert("danger", { place: a.name, lat: here.at.lat, lng: here.at.lng, police: police() });
-  }
+  // Only Beacon's reviewed list and her own marks alert anyone; red zones from police data never do (alerts.js).
+  const d = dangerTexts(at, areasNow(city.name), insideAreas, lastDangerText, now);
+  insideAreas = d.inside;
+  for (const a of d.text) sendAlert("danger", { place: a.name, lat: here.at.lat, lng: here.at.lng, police: police() });
   const minutes = stoppedMinutes(trail(), now);
   if (minutes < 5) stillTexted = false;
   else if (shouldTextStill({ trip: savedTrip(), at, minutes, now, textedThisStop: stillTexted })) {
@@ -303,7 +344,7 @@ const chat = []; // [{you, text, place}]
 function ask(question) {
   let thinking = false;
   const draw = () => {
-    app.innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
+    panel().innerHTML = `<div class="screen" style="gap:0;padding-top:12px">
       <div class="chat-top"><button class="back" id="back" aria-label="Back">${icon.back}</button><h2>Ask Beacon</h2></div>
       <div class="bubbles" id="bubbles">
         ${chat.map((l) => `<div class="bubble ${l.you ? "you" : "beacon"}">${esc(l.text)}</div>${l.place ? `<button class="link left show" data-place="${esc(l.place)}">Show ${esc(l.place)} on the map</button>` : ""}${l.way ? `<button class="link left show" data-way="1">Show the way back on the map</button>` : ""}${l.drive ? `<button class="link left show" data-drive="1">Show the drive to the hospital</button>${navigator.onLine && here.at ? `<a class="link left show" target="_blank" rel="noopener" href="${googleMapsLink([here.at.lat, here.at.lng], driveHere().at)}">Drive there in Google Maps</a>` : ""}` : ""}`).join("")}
@@ -315,7 +356,8 @@ function ask(question) {
     $("#back").onclick = () => home();
     $("#form").onsubmit = (e) => { e.preventDefault(); send($("#box").value); };
     app.querySelectorAll("[data-q]").forEach((b) => (b.onclick = () => send(b.dataset.q)));
-    app.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => home(b.dataset.place)));
+    // On desktop the map is beside the chat: ring the place there and stay in the chat.
+    app.querySelectorAll("[data-place]").forEach((b) => (b.onclick = () => { const p = here.places.find((x) => x.name === b.dataset.place); if (p && $(":scope > .side") && $("#map")) drawMap(p); else home(b.dataset.place); }));
     app.querySelectorAll("[data-drive]").forEach((b) => (b.onclick = () => { const d = driveHere(); if (!d) return; home(null, { route: { path: d.line, steps: [], metres: Math.round(d.km * 1000), minutes: d.minutes }, drive: d }); }));
     app.querySelectorAll("[data-way]").forEach((b) => (b.onclick = () => home(null, where() ? wayBack([where().lat, where().lng]) : null)));
     const bubbles = $("#bubbles"); bubbles.scrollTop = bubbles.scrollHeight;
@@ -343,7 +385,7 @@ function ask(question) {
       const step = (t) => { chat[chat.length - 1].text = t; draw(); };
       const place = await findPlace(goingTo, [where().lat, where().lng], city.name);
       if (!place) { chat.pop(); return said(`I couldn't find ${goingTo} on the map. Try its full name.`); }
-      const trip = await planTrip({ from: [where().lat, where().lng], hotel: savedHotel(), place, city: city.name }, step);
+      const trip = await planTrip({ from: [where().lat, where().lng], hotel: savedHotel(), place, city: city.name, countryCode: city.countryCode }, step);
       chat.pop();
       if (trip.error) return said(trip.error === "streets" ? "The map servers are busy. Try again in a minute; nothing was saved yet." : "I couldn't save a walking route for that trip. Try a place nearer by.");
       return said(`Saved for no signal: the way to ${place.name} and back. Back: ${dist(trip.back.metres)}, ${trip.back.minutes} min on busy, lit streets.`, { way: true });
@@ -365,7 +407,7 @@ QUESTION: ${text}`))?.text ?? plainAnswer(text);
 // ---------- SOS: a few words in, a clear message out, sent from your messages app ----------
 function sos(note = "", draft = "") {
   const people = store.contacts;
-  app.innerHTML = `<div class="screen">
+  app.innerHTML = `<div class="screen focus">
     <button class="back-inline" id="back" aria-label="Back">${icon.back}</button>
     <h1>What's happening?</h1>
     <textarea class="field" id="note" placeholder="A few words are enough">${esc(note)}</textarea>
@@ -404,7 +446,7 @@ Note: "${text}"`);
 
 function sent({ status, count } = {}, fallback = "") {
   const place = helpPlace(), reached = status === "sent" && count > 0;
-  app.innerHTML = `<div class="screen center" style="text-align:center">
+  app.innerHTML = `<div class="screen center focus" style="text-align:center">
     <h1>${reached ? `Your SOS reached ${count === 1 ? "1 person" : `${count} people`}` : status === "waiting" ? "Your SOS is waiting for signal" : "Send your SOS as a text"}</h1>
     <p class="small">${reached ? "Their phones showed your message and where you are." : status === "waiting" ? "Beacon sends the alert by itself as soon as there's a connection. A text may get through sooner:" : "Nobody has turned on Beacon alerts yet, so send it as a text:"}</p>
     <a class="btn ${reached ? "quiet" : ""}" href="${esc(fallback)}" style="display:grid;place-items:center;text-decoration:none">${reached ? "Also send as a text" : "Send as a text"}</a>
@@ -423,7 +465,7 @@ if (new URLSearchParams(location.search).has("reset")) store.reset();
 loadVectorMap(); // starts fetching the map library while the first screen shows
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 const devAt = ["localhost", "127.0.0.1"].includes(location.hostname) && new URLSearchParams(location.search).get("at");
-if (devAt) { const [lat, lng] = devAt.split(",").map(Number); here.at = { lat, lng }; recordTrail(here.at); arriveAt(here.at, refreshScan); placesAround(here.at).then((p) => { here.places = p; if ($(".sheet")) home(); }); }
+if (devAt) { const [lat, lng] = devAt.split(",").map(Number); here.at = { lat, lng }; recordTrail(here.at); arriveAt(here.at, refreshScan).then(keepZones); placesAround(here.at).then((p) => { here.places = p; if ($(".sheet")) home(); }); }
 else if (store.setupDone) watchGps(); // new users are asked on the onboarding's location screen
 research(refreshScan); // the city from your last visit, if there was one; a new position starts it again
 // Until the phone says where you are, show places around the last saved spot (if any). Never a made-up city.

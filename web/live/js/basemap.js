@@ -3,14 +3,15 @@
 // drawn by MapLibre GL from OpenFreeMap's vector tiles (free, no key, no sign-up; credit always showing).
 // Leaflet still draws everything on top (places, routes, areas, your dot); the open-source
 // maplibre-gl-leaflet bridge puts the MapLibre map in Leaflet's tile layer.
-// If WebGL, the libraries or OpenFreeMap don't work, the same map falls back to CARTO's Voyager pictures.
+// If WebGL, the libraries or OpenFreeMap don't work, the same map falls back to OpenStreetMap's standard pictures.
 // Tiles are viewed normally, never saved here or in sw.js.
 const GL = "https://unpkg.com/maplibre-gl@5.24.1/dist"; // same version as the family view (js/familymap.js)
 const BRIDGE = "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js";
 const STYLE = new URL("../map-style.json", import.meta.url).href;
 const OFM_CREDIT = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
-const CARTO = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-const CARTO_CREDIT = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>';
+// CARTO now needs an API key, so the fallback is OpenStreetMap's own tiles (light use, credit shown).
+const CARTO = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const CARTO_CREDIT = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 let library = null, broken = false; // broken: the vector map failed once; use the pictures from then on
 function webgl() {
@@ -37,7 +38,7 @@ export function addBaseMap(map) {
     clearTimeout(timer);
     if (gone || layer?.options.carto) return;
     if (layer) { try { map.removeLayer(layer); } catch { /* already gone */ } }
-    layer = L.tileLayer(CARTO, { maxZoom: 20, subdomains: "abcd", attribution: CARTO_CREDIT, className: "carto", carto: true }).addTo(map);
+    layer = L.tileLayer(CARTO, { maxZoom: 19, attribution: CARTO_CREDIT, className: "carto", carto: true }).addTo(map);
   };
   const fail = () => { if (!ready) { broken = true; pictures(); } };
   loadVectorMap().then((ok) => {

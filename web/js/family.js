@@ -32,14 +32,18 @@ const PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="#E07A2B" stroke-widt
 const AI_GAP_MILLIS = 20_000; // the summary is rewritten on new events only, and never more often than this
 
 export function familyScreen(app, watch, { demo = false, shareId = null } = {}) {
-  app.innerHTML = `<div class="screen">
+  // The two .fam-col boxes only matter on desktop (styles.css): the details | the map | numbers, message and
+  // what happened. On a phone they add nothing (display: contents) and the order is the same single column.
+  app.innerHTML = `<div class="screen fam">
+    <div class="fam-col fam-a">
     <header class="fam-head"><span class="small">Beacon${demo ? " demo" : ""}</span><div id="fam-title" class="fam-head"></div></header>
     ${demo ? '<div class="fam-demo"><div class="row-between"><span class="small" style="color:var(--ink)">A made-up incident in Lapa, Rio, replayed about 12 times faster. Nothing here is real.</span><button class="link small" id="fam-replay" style="flex:none">Play again</button></div><div class="bar"><i id="fam-bar"></i></div></div>' : ""}
     ${shareId ? '<div id="fam-ask" class="card col"></div><div id="fam-alerts" class="card col"></div>' : ""}
     <div id="fam-note" class="card col"></div>
-    <div class="stack" id="fam-grid" hidden style="gap:20px">
-      <div class="card fam-where"><div id="fam-map" class="fam-map" role="img" aria-label="Map of the latest position and the trail"></div><div id="fam-last"></div></div>
-      <div id="fam-summary" class="card col"></div>
+    <div id="fam-summary" class="card col fam-ready" hidden></div>
+    </div>
+    <div class="card fam-where fam-ready" id="fam-grid" hidden><div id="fam-map" class="fam-map" role="img" aria-label="Map of the latest position and the trail"></div><div id="fam-last"></div></div>
+    <div class="fam-col fam-b fam-ready" hidden>
       <section id="fam-numbers" class="fam-section"></section>
       <div id="fam-message" class="card col"></div>
       <div id="fam-timeline" class="card col"></div>
@@ -79,7 +83,8 @@ export function familyScreen(app, watch, { demo = false, shareId = null } = {}) 
 
   function draw() {
     const ready = state.status === "ready";
-    $("fam-grid").hidden = !ready; $("fam-note").hidden = ready;
+    app.querySelectorAll(".fam-ready").forEach((el) => (el.hidden = !ready)); $("fam-note").hidden = ready;
+    app.querySelector(".fam").classList.toggle("fam-live", ready);
     if (demo && state.progress != null) $("fam-bar").style.width = `${Math.round(state.progress * 100)}%`;
     if (!ready) {
       const [title, detail] = demo && state.status === "no-incident" ? ["Waiting for the first alert…", "The replay is starting."] : NOTES[state.status] ?? NOTES.offline;
