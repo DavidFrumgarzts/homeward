@@ -4,11 +4,11 @@ Find the file for any feature without reading the whole app. Beacon is three nat
 
 | Platform | Folder | Stack |
 |---|---|---|
-| Android | `app/` (code in `app/src/main/java/app/homeward/`) | Kotlin, Jetpack Compose, `firebase-ai` + `firebase-ai-ondevice` |
+| Android | `android/` (Gradle project; code in `android/app/src/main/java/app/homeward/`) | Kotlin, Jetpack Compose, `firebase-ai` + `firebase-ai-ondevice` |
 | iOS | `ios/` | Swift, SwiftUI, Firebase Apple SDK through Swift Package Manager |
 | Web (desktop Chrome) | `web/` | Plain HTML, CSS and JavaScript modules, no build step |
 | Shared | `shared/` | Data shapes, the demo pack, test vectors, prompts. They share data and behaviour, not UI code |
-| Backend | `firebase/` | Firestore rules and indexes, hosting config |
+| Backend | `backend/` (`backend/firebase/`, `backend/functions/`) | Server-side code all three apps use: Firestore rules and indexes, Cloud Functions (texts). Hosting config is `firebase.json` at the repo root |
 
 Every folder has its own README listing its files. The package name is still `app.homeward`; the app is called Beacon.
 
@@ -52,7 +52,7 @@ AI models are created in one place: `ai/AiModels.kt`. Every AI-written text carr
 5. While the SOS is active, `UpdateThrottle` decides when contacts get a location update (200 m or 5 minutes, at most one per 2 minutes, one catch-up text after a stretch with no signal).
 6. "I'm safe now, end SOS" asks once, tells contacts it is over, and stops GPS.
 
-Everything sent to contacts is also mirrored to Firestore by `features/sync/IncidentSync.kt` (trip, share, incident, one update per message), and the alert carries a family link (`https://homeward-6999c.web.app/f/{shareId}`) that opens the live web view. Nothing is written before she presses Send. The document shapes and the access rules are in `shared/schema/README.md` and `firebase/firestore.rules`.
+Everything sent to contacts is also mirrored to Firestore by `features/sync/IncidentSync.kt` (trip, share, incident, one update per message), and the alert carries a family link (`https://homeward-6999c.web.app/f/{shareId}`) that opens the live web view. Nothing is written before she presses Send. The document shapes and the access rules are in `shared/schema/README.md` and `backend/firebase/firestore.rules`.
 
 ## Rules the code follows
 
@@ -74,7 +74,7 @@ Everything sent to contacts is also mirrored to Firestore by `features/sync/Inci
 | No location updates during an SOS | `features/session/SafetySessionService.kt` (location permission), `device/LocationUpdates.kt` |
 | Family link missing from the SMS | The phone has never signed in (it needs to be online once): `features/sync/FirestoreCloud.kt`, logcat tag `FirestoreCloud` |
 | Family view shows nothing | Logcat tag `FirestoreCloud` ("was refused" = the Firestore rules); the SOS screen says "Live link is not updating" |
-| No real SMS in a debug build | "Test mode" is on: `app/src/debug/java/app/homeward/testmode/` |
+| No real SMS in a debug build | "Test mode" is on: `android/app/src/debug/java/app/homeward/testmode/` |
 | Red zone warning wrong | `features/safetymap/ZoneChecker.kt` (+ `ZoneCheckerTest`) |
 | No buzz near a red zone | `features/safetymap/ApproachDetector.kt` (+ test), location permission |
 | Pack fails to build | `features/safetypack/SafetyPackBuilder.kt` (JSON parsing), `SafetyPackPrompt.kt` |

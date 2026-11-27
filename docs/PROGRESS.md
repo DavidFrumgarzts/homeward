@@ -23,7 +23,7 @@ Each branch sits on top of the one before it. Nothing has been merged to `main`.
 - **Android** (`app/`): onboarding, Home on the illustrated Lapa map or a street map, Ask Beacon, hold for SOS, compose with an AI-rewritten sentence, an outbox with real sent and delivered reports, the active SOS screen (checklist, call button, nearest open place, phrase to show someone), location updates, "I'm safe now", Firestore sync and the family link in the SMS. 102 unit tests.
 - **Web** (`web/`, no build step): the traveler flow, the family view at `/f/{shareId}`, and `/demo`. 79 unit tests and 5 browser tests.
 - **iOS** (`ios/`): onboarding, Home on Apple Maps, Ask Beacon, SOS through Messages with Firestore sync. 38 tests.
-- **Backend** (`firebase/`, `firebase.json`): Firestore rules with 18 tests, deployed. Hosting is live at **https://homeward-6999c.web.app**.
+- **Backend** (`backend/firebase/`, `backend/functions/`, `firebase.json`): Firestore rules with 18 tests, deployed. Hosting is live at **https://homeward-6999c.web.app**.
 - **Shared** (`shared/`): data shapes, the Rio demo pack, a demo incident, prompt texts, and nine test-vector files that all three platforms run.
 
 Checked end to end: an SOS sent from the Android emulator and one from the iPhone simulator both appear in the hosted family view, with their location updates and "Ended".
@@ -63,13 +63,13 @@ Checked end to end: an SOS sent from the Android emulator and one from the iPhon
 
 ## How to run and test
 
-Commands for each platform are in the root [`README.md`](../README.md), [`ios/README.md`](../ios/README.md), [`web/README.md`](../web/README.md) and [`firebase/README.md`](../firebase/README.md). On this Mac, Gradle needs Java 21:
+Commands for each platform are in the root [`README.md`](../README.md), [`ios/README.md`](../ios/README.md), [`web/README.md`](../web/README.md) and [`backend/firebase/README.md`](../backend/firebase/README.md). On this Mac, Gradle needs Java 21:
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ANDROID_HOME=~/Library/Android/sdk
 ```
 
-The three config files (`app/google-services.json`, `ios/Beacon/GoogleService-Info.plist`, `web/firebase-config.js`) are git-ignored and must be on disk.
+The three config files (`android/app/google-services.json`, `ios/Beacon/GoogleService-Info.plist`, `web/firebase-config.js`) are git-ignored and must be on disk.
 
 ## How the work was done
 

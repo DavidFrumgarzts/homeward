@@ -10,7 +10,7 @@ import java.io.File
 // BEACON_WRITE_FIXTURES=1 to write the new expected values, then read the diff before committing.
 object SharedVectors {
     val json = Json { ignoreUnknownKeys = true; encodeDefaults = true; prettyPrint = true; prettyPrintIndent = "  " }
-    private val dir = File("../shared/test-vectors") // unit tests run from the app/ folder
+    private val dir = File("../../shared/test-vectors") // unit tests run from the android/app/ folder
     private val writing = System.getenv("BEACON_WRITE_FIXTURES") == "1"
 
     fun run(fileName: String, compute: (fn: String, input: JsonObject) -> JsonElement) {

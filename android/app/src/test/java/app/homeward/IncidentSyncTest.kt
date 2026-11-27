@@ -41,7 +41,7 @@ class IncidentSyncTest {
     )
     private fun sync(cloud: FakeCloud) = IncidentSync(cloud, { "trip-1" }, { "a".repeat(32) }, { 500 })
     private fun required(schema: String): List<String> =
-        Json.parseToJsonElement(File("../shared/schema/$schema.schema.json").readText()).jsonObject.getValue("required").jsonArray.map { it.jsonPrimitive.content }
+        Json.parseToJsonElement(File("../../shared/schema/$schema.schema.json").readText()).jsonObject.getValue("required").jsonArray.map { it.jsonPrimitive.content }
 
     @Test fun shareIdIs32HexAndTheLinkPointsAtHosting() {
         val id = FamilyLink.newShareId(Random(1))

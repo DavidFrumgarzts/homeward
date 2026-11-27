@@ -37,7 +37,29 @@ Every AI-written text carries a badge taken from the SDK's own answer: **On devi
 
 The model only rewrites or answers from text it is given. Phone numbers, places, coordinates and links come from the saved pack or from code, never from model output. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## Run it
+## Repo layout
+
+| Folder | What | Build tool |
+|---|---|---|
+| [`android/`](android/) | Android app (Kotlin, Compose). A Gradle project: `android/app/` is the module | Gradle (`android/gradlew`) |
+| [`ios/`](ios/) | iOS app (SwiftUI) | Xcode (`ios/Beacon.xcodeproj`) |
+| [`web/`](web/) | Web app for desktop Chrome, plus `web/live/` (Beacon live) and `web/ny/`. No build step | none to run; `npm` for tests |
+| [`shared/`](shared/) | What all three apps share: data shapes, demo fixtures, AI prompt texts, test vectors | read by each platform's tests |
+| [`backend/`](backend/) | Server-side code all three apps use: `backend/firebase/` (Firestore rules and their tests), `backend/functions/` (Cloud Functions, e.g. sending texts) | Firebase CLI, `npm` |
+| [`docs/`](docs/) | Design rules, specs, demo material | |
+
+`firebase.json` and `.firebaserc` stay at the repo root: the Firebase CLI only hosts a folder inside the one holding `firebase.json`, and it points at `web/`, `backend/firebase/` and `backend/functions/` from there. New logic that more than one app needs goes into `shared/` (data, prompts, test vectors) or `backend/` (code that runs on a server), not into one app's folder.
+
+## Build and run each platform
+
+| Platform | Build / test | Run |
+|---|---|---|
+| Android | `cd android && ./gradlew testDebugUnitTest assembleDebug` | `adb install -r android/app/build/outputs/apk/debug/app-debug.apk` |
+| iOS | `xcodebuild test -project ios/Beacon.xcodeproj -scheme Beacon -destination 'platform=iOS Simulator,name=iPhone 17'` | open `ios/Beacon.xcodeproj` in Xcode, Run |
+| Web (Chrome) | `cd web && npm install && npx vitest run` | `python3 web/serve.py`, open http://localhost:4173 in Chrome |
+| Backend | `cd backend/firebase && npm install && npm test`; `cd backend/functions && npm test` | `firebase deploy --only hosting,firestore,functions --project homeward-6999c` (from the repo root) |
+
+Details for each are below and in each folder's README.
 
 ### Android
 
@@ -48,17 +70,18 @@ export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home 
 ```
 
 ```bash
-./gradlew test assembleDebug
+cd android && ./gradlew test assembleDebug
 ```
 
 ```bash
-~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/debug/app-debug.apk
+~/Library/Android/sdk/platform-tools/adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-- `app/google-services.json` must be on disk (Firebase console > Project settings > the Android app, package `app.homeward`). It is git-ignored.
+- In Android Studio, open the `android/` folder (not the repo root).
+- `android/app/google-services.json` must be on disk (Firebase console > Project settings > the Android app, package `app.homeward`). It is git-ignored.
 - On an emulator, debug builds run in **Test mode: no real SMS**: nothing is sent, and each text is shown as sent, then delivered, so the screens can be checked. Release builds always use the real sender.
 - On-device AI needs a phone with Gemini Nano (Pixel 9 or newer, recent Samsung flagships). Emulators have none and fall back to the cloud.
-- Optional: `CARTO_KEY=your_key` in `local.properties` for the Google Maps-like map style. Without it the app uses plain OpenStreetMap tiles.
+- Optional: `CARTO_KEY=your_key` in `android/local.properties` for the Google Maps-like map style. Without it the app uses plain OpenStreetMap tiles.
 - A recorded walk for demos: `./docs/demo/play-route.sh` plays it into a running emulator.
 
 ### iOS
@@ -71,7 +94,7 @@ See [web/README.md](web/README.md). In short: `python3 web/serve.py`, then open 
 
 ### Backend
 
-Firestore rules, their tests and the deploy command are in [firebase/README.md](firebase/README.md). The data layout is in [shared/schema/README.md](shared/schema/README.md).
+Firestore rules, their tests and the deploy command are in [backend/firebase/README.md](backend/firebase/README.md). Cloud Functions are in [backend/functions/](backend/functions/). The data layout is in [shared/schema/README.md](shared/schema/README.md).
 
 ### App Check (needed before any cloud AI call works)
 

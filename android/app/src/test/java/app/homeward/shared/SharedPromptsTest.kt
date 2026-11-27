@@ -12,7 +12,7 @@ import java.io.File
 // After changing a prompt on purpose, run once with BEACON_WRITE_FIXTURES=1 to write the files again.
 class SharedPromptsTest {
     private fun check(fileName: String, template: String) {
-        val file = File("../shared/prompts/$fileName")
+        val file = File("../../shared/prompts/$fileName")
         if (System.getenv("BEACON_WRITE_FIXTURES") == "1") file.writeText(template + "\n")
         assertEquals("$fileName differs from the Kotlin template", template, file.readText().trimEnd('\n'))
     }

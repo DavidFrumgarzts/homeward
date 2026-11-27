@@ -1,7 +1,7 @@
 {
   "firestore": {
-    "rules": "firebase/firestore.rules",
-    "indexes": "firebase/firestore.indexes.json"
+    "rules": "backend/firebase/firestore.rules",
+    "indexes": "backend/firebase/firestore.indexes.json"
   },
   "hosting": {
     "public": "web",
@@ -56,7 +56,7 @@
   },
   "functions": [
     {
-      "source": "functions",
+      "source": "backend/functions",
       "codebase": "default",
       "runtime": "nodejs22",
       "ignore": [

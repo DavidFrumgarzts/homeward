@@ -47,4 +47,4 @@ The snapshot after each step has: `phase`, `effects` (in order; each `{ "type" }
 
 ## Changing the logic
 
-Android's Kotlin is the reference. After changing it on purpose, run `BEACON_WRITE_FIXTURES=1 ./gradlew :app:testDebugUnitTest --tests 'app.homeward.shared.*'` to write the new expected values, read the diff, then update the iOS and web ports until their tests pass again.
+Android's Kotlin is the reference. After changing it on purpose, run (from `android/`) `BEACON_WRITE_FIXTURES=1 ./gradlew :app:testDebugUnitTest --tests 'app.homeward.shared.*'` to write the new expected values, read the diff, then update the iOS and web ports until their tests pass again.
