@@ -5,7 +5,7 @@
 //   - sms: and tel: links are stopped and shown on the demo page instead (nothing texts or calls anyone);
 //   - the position comes from ?at=lat,lng (both apps), so no location prompt;
 //   - the camera permission step gets an empty stream (Scan still takes an uploaded photo).
-// Automatic texts (live/js/texts.js) check the same flag themselves and never reach the sendText function.
+// Automatic alerts (live/js/notify.js) check the same flag themselves and never reach the alertFamily function.
 import { SCREEN, deviceLink } from "./links.js";
 
 const query = new URLSearchParams(location.search);

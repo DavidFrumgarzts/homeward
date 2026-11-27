@@ -2,11 +2,11 @@
 // Only the files listed here are kept. Map tiles, fonts and Firebase always go to the network:
 // the map provider does not allow saving tiles in bulk, and live data must not be served stale.
 // tests/files.test.js fails if a file in js/ or fixtures/ is missing from this list.
-const CACHE = "beacon-v6";
+const CACHE = "beacon-v7";
 const FILES = ["/", "/index.html", "/styles.css",
   "/js/app.js", "/js/map.js", "/js/cop.js", "/js/ai.js", "/js/ask.js", "/js/sos.js", "/js/pack.js", "/js/store.js",
   "/js/firebase.js", "/js/messages.js", "/js/situation.js", "/js/incident.js", "/js/html.js", "/js/router.js", "/js/walkroute.js", "/js/areas.js", "/js/alerts.js", "/js/unsafe.js", "/js/crimedata.js",
-  "/js/trip.js", "/js/booking.js", "/js/seal.js", "/js/checkin.js", "/js/familyask.js", "/js/onboarding.js", "/js/prompts.js", "/js/family.js", "/js/familydata.js",
+  "/js/trip.js", "/js/booking.js", "/js/seal.js", "/js/checkin.js", "/js/familyask.js", "/js/onboarding.js", "/js/prompts.js", "/js/family.js", "/js/familydata.js", "/js/familyalerts.js",
   "/js/familymap.js", "/js/summary.js", "/js/timeline.js", "/js/demo.js", "/js/scan.js", "/js/scams.js", "/js/cityscams.js", "/js/emergency.js",
   "/fixtures/demo-incident.json", "/fixtures/rio-lapa-pack.json"];
 
@@ -21,4 +21,20 @@ self.addEventListener("fetch", (e) => {
   const listed = FILES.includes(url.pathname);
   e.respondWith(fetch(e.request).then((r) => { if (listed && r.ok) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(url.pathname, copy)).catch(() => {}); } return r; })
     .catch(() => caches.match(listed ? url.pathname : "/index.html").then((saved) => (saved && (listed || e.request.mode === "navigate") ? saved : Response.error()))));
+});
+
+// Alerts to trusted people (Firebase Cloud Messaging, sent by the alertFamily function): show them, and open
+// the family page when tapped.
+self.addEventListener("push", (e) => {
+  let m = {}; try { m = e.data.json(); } catch { /* not JSON */ }
+  const n = m.notification || {}, link = m.data?.link || m.fcmOptions?.link || n.click_action || "/";
+  e.waitUntil(self.registration.showNotification(n.title || "Beacon", { body: n.body || "", tag: n.tag, renotify: !!n.tag, requireInteraction: !!n.requireInteraction, data: { link } }));
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const link = e.notification.data?.link || "/";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((all) => {
+    const open = all.find((c) => c.url.startsWith(link));
+    return open ? open.focus() : self.clients.openWindow(link);
+  }));
 });

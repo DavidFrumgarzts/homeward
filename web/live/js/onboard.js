@@ -1,12 +1,11 @@
 // First launch: Figma "Onboarding v3". Each screen shows Beacon solving a problem, then asks for one thing.
 // Order and skip rules: js/onboarding.js. Pictures: live/img/ (exported from Figma). Text and buttons are HTML.
-import { store, cleanPhone, shortPhone, joinNames } from "../../js/store.js";
+import { store, cleanPhone, shortPhone } from "../../js/store.js";
 import { nextStep, skipTo } from "../../js/onboarding.js";
 import { SAMPLE_BOOKING } from "../../js/booking.js";
 import { checkBooking } from "./bookingflow.js";
 import { gmailAvailable, readGmailBookings } from "./gmail.js";
 import { checkinLink } from "./answering.js";
-import { sendText } from "./texts.js";
 import { googleMapsLink } from "../../js/trip.js";
 
 const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -16,7 +15,7 @@ const TINTS = [["var(--blue-tint)", "var(--blue)"], ["var(--amber-tint)", "var(-
 //        onPosition(pos), done() }
 export function onboarding(app, ctx) {
   const $ = (s) => app.querySelector(s);
-  let step = "night", booking = { state: "idle" }, note = "", linkNote = "", readyTimer = null;
+  let step = "night", booking = { state: "idle" }, note = "", readyTimer = null;
   const go = (s) => { step = s; note = ""; draw(); window.scrollTo(0, 0); };
   const next = () => { const n = nextStep(step, { contacts: store.contacts.length }); n === null ? ctx.done() : go(n); };
   const top = (left = "") => `<div class="onb-top"><span class="small">${left}</span><button class="link small" id="skip" style="color:var(--muted)">Skip</button></div>`;
@@ -79,7 +78,7 @@ export function onboarding(app, ctx) {
       <input class="field" id="cname" placeholder="Their name, e.g. Mom"><input class="field" id="cphone" placeholder="Phone with country code, e.g. +972…" inputmode="tel">
       <button class="link left" id="add">+ Add person</button><p class="error">${esc(note)}</p>
       <div class="grow"></div>
-      ${store.contacts.length ? `<button class="btn quiet" id="link">Text them their check-in link</button>${linkNote ? `<p class="small center-text">${esc(linkNote)}</p>` : ""}` : ""}
+      ${store.contacts.length ? '<button class="btn quiet" id="link">Send them their check-in link</button>' : ""}
       <button class="btn" id="go" ${store.contacts.length ? "" : "disabled"}>Continue</button>
       <p class="small center-text">You see every answer Beacon sends, and you can pause it any time.</p></div>`,
 
@@ -192,9 +191,7 @@ export function onboarding(app, ctx) {
         savePeople();
         const link = await checkinLink(ctx.city());
         if (!link) { note = "Beacon needs a connection once to make the link."; return draw(); }
-        const r = await sendText("invite", { link });
-        linkNote = r === "waiting" ? "No signal: Beacon texts them as soon as there's a connection." : r === "sent" ? `Beacon texted ${joinNames(store.contacts.map((c) => c.name))} their link.` : "";
-        draw();
+        location.href = `sms:${store.contacts.map((c) => c.phone).join(",")}?&body=${encodeURIComponent(`${store.name || "I"} added you to Beacon. Open this to see how ${store.name || "I"} ${store.name ? "is" : "am"} any time, and tap "Get alerts on this phone": ${link}`)}`;
       });
       // "Continue" with names typed but not added yet: add them first.
       $("#go").addEventListener("click", (e) => { if (!add()) e.stopImmediatePropagation(); }, { capture: true });

@@ -15,6 +15,22 @@ export function buildText(kind, d = {}) {
   if (!KINDS.includes(kind)) return { error: "kind" };
   const to = Array.isArray(d.to) ? [...new Set(d.to)] : [];
   if (!to.length || to.length > 5 || !to.every((p) => typeof p === "string" && PHONE.test(p))) return { error: "to" };
+  const b = buildBody(kind, d);
+  return b.error ? b : { to, body: b.body };
+}
+
+// The push notification: {title, body} or {error}. Same fixed wording as the text messages.
+export function buildPush(kind, d = {}) {
+  if (!["sos", "danger", "still"].includes(kind)) return { error: "kind" };
+  const b = buildBody(kind, d);
+  if (b.error) return b;
+  const name = clean(d.name, 30) || "Your contact";
+  const title = { sos: `SOS from ${name}`, danger: `${name} walked into an area marked dangerous`, still: `${name} hasn't moved for a while` }[kind];
+  return { title, body: b.body.replace(/^Beacon: /, "") };
+}
+
+function buildBody(kind, d) {
+  if (!KINDS.includes(kind)) return { error: "kind" };
   const name = clean(d.name, 30) || "Your contact";
   const map = where(d.lat, d.lng), police = digits(d.police) || "112";
   const call = `Maybe call ${name}. Police there: ${police}.`;
@@ -32,5 +48,5 @@ export function buildText(kind, d = {}) {
     if (!LINK.test(String(d.link ?? ""))) return { error: "link" };
     body = `${name} added you to Beacon. Open this any time to see how ${name} is: ${d.link}`;
   }
-  return { to, body };
+  return { body };
 }

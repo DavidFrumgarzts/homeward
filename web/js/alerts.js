@@ -1,5 +1,5 @@
 // When Beacon texts her trusted people by itself (no tap): she walked into an area marked dangerous,
-// or she hasn't moved for 5 minutes on her way back. Pure logic; live/js/texts.js sends.
+// or she hasn't moved for 5 minutes on her way back. Pure logic; live/js/notify.js sends.
 import { meters, inside } from "./walkroute.js";
 
 const key = (a) => a.id || a.name;
