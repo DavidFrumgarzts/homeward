@@ -75,3 +75,12 @@ describe("who can trigger the automatic danger text", () => {
     expect(textableAreas(areasFor("Jaipur", null, [], [{ ...list[0], reviewed: true }]))).toHaveLength(1);
   });
 });
+
+describe("researched areas and the automatic alert", () => {
+  const ring = [[26.92, 75.80], [26.92, 75.81], [26.93, 75.81], [26.93, 75.80]];
+  it("alert only when an official or news source reports it; travelers' posts alone only colour the map", () => {
+    const official = { name: "A", ring, origin: "Reported online", official: true };
+    const posts = { name: "B", ring, origin: "Reported online", official: false };
+    expect(textableAreas([official, posts]).map((a) => a.name)).toEqual(["A"]);
+  });
+});

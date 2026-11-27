@@ -94,6 +94,22 @@ async function loadSearchModel() {
   }
 }
 
+// Same, but also returns the sites Google Search actually found ({text, sites}), so links the model writes can be
+// checked against them. null when AI isn't set up or it fails.
+export async function askAiWithSearchSources(prompt) {
+  searchPromise ??= loadSearchModel();
+  const model = await searchPromise;
+  if (!model || !navigator.onLine) return null;
+  try {
+    const result = await model.generateContent(prompt);
+    const chunks = result.response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const sites = [...new Set(chunks.map((c) => String(c.web?.title || c.web?.domain || "").toLowerCase().replace(/^www\./, "")).filter((t) => /^[a-z0-9.-]+\.[a-z]{2,}$/.test(t)))];
+    return { text: result.response.text().trim(), sites };
+  } catch {
+    return null;
+  }
+}
+
 // Asks Gemini with Google Search (needs a connection). Returns the text, or null when AI isn't set up or it fails.
 export async function askAiWithSearch(prompt) {
   searchPromise ??= loadSearchModel();

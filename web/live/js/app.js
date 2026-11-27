@@ -12,6 +12,7 @@ import { placesAround, nearest, saved, meters } from "./places.js";
 import { city, scamsHere, savedAt, fromMemory, arriveAt, research, numbers } from "./city.js";
 import { savedTrip, planTrip, wayBack, findPlace, addMyArea, areasNow, tripGraph, rerouteTrip } from "./trips.js";
 import { drawExtras, drawAreas } from "./routemap.js";
+import { researchedAreas, areaState } from "./areasearch.js";
 import { loadZones, zonesAround } from "./unsafezones.js";
 import { zonesToShow, zoneLine, quietNote } from "../../js/unsafe.js";
 import { addBaseMap, loadVectorMap } from "./basemap.js";
@@ -281,6 +282,7 @@ function shownAreas() {
   const lines = [trip?.there?.path, trip?.back?.path, zoneWay?.route?.path].filter(Boolean);
   return [...areasNow(city.name), ...zonesToShow(policeZones(), at && [at.lat, at.lng], { graph: tripGraph(), lines })];
 }
+addEventListener("beacon-areas", () => redrawZones()); // new areas researched for this city
 function redrawZones() { if (!map || !window.L || !$("#map")) return; zoneLayer?.remove(); zoneLayer = drawAreas(map, shownAreas()); zonesAt = where(); }
 function keepZones() {
   const at = where();
@@ -477,6 +479,7 @@ const counts = () => {
   const k = (kind) => here.places.filter((p) => p.kind === kind && (kind !== "pharmacy" || p.open24h)).length;
   const h = where() && nearest(here.places, where(), ["hospital"]);
   return { hospitals: k("hospital"), police: k("police"), pharmacies: k("pharmacy"), scams: scamsHere().length, researching: city.researching,
+    areas: researchedAreas(city.name).length, areasResearching: areaState.researching,
     nearestHospital: h ? `${h.name}, ${dist(h.meters)}` : "", placesDone: !!here.places.length || (!!where() && !city.researching) };
 };
 const onPosition = async (pos) => {
