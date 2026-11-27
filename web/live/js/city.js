@@ -55,7 +55,7 @@ export async function arriveAt(at, onChange) {
 // Once a day per city, while online: look up scams reported here and save them.
 export async function research(onChange) {
   if (!city.name) return;
-  researchAreas(city.name, city.country, city.at ? [city.at.lat ?? city.at[0], city.at.lng ?? city.at[1]] : null, onChange); // areas to avoid at night, every 14 days
+  researchAreas(city.name, city.country, onChange); // areas to avoid at night, every 14 days
   const key = scamKey(city.name), saved = read(key);
   if (city.researching || !needsResearch(saved, Date.now(), navigator.onLine)) return;
   city.researching = true; onChange();

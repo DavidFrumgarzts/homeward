@@ -432,7 +432,7 @@ function sos(note = "", draft = "") {
       const map = here.at ? `\nWhere: https://maps.google.com/?q=${here.at.lat.toFixed(5)},${here.at.lng.toFixed(5)}` : "";
       const ai = await askAi(`Rewrite this emergency note into a clear SOS text message for family. Max 50 words. Third person about ${who}${inCity()}.
 Keep every fact; add none. End with: "Call ${who} now. If there is no answer, call ${police()}."
-Note: "${text}"`);
+Note: "${text}"`, { private: true });
       sos(text, (ai?.text ?? `${who} needs help${inCity()}: ${text}. Call ${who} now. If there is no answer, call ${police()}.`) + map);
     };
   } else {

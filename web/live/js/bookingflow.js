@@ -20,7 +20,7 @@ export async function checkBooking(text, onStep = () => {}) {
   onStep("Reading the booking…", 0);
   // The sample is only a demo: it is never saved as her hotel, and its hospital drive isn't kept.
   const sample = text === SAMPLE_BOOKING;
-  const ai = await askAi(bookingPrompt(text));
+  const ai = await askAi(bookingPrompt(text), { private: !sample }); // real booking emails stay on this computer
   const booking = (ai && readBooking(ai.text)) || readBookingPlain(text); // without AI: a plain reading
   if (!booking) return { error: ai ? "unreadable" : "no-ai" };
   onStep(`Finding ${booking.hotel} on the map…`, 1);

@@ -92,7 +92,7 @@ export async function startAnswering(getCtx, onLog = () => {}) {
     else {
       write(LAST_BY, { ...lastBy, [q.viewerUid]: Date.now() });
       const fx = await facts(getCtx()); at = fx.at || null;
-      text = (await askAi(answerPrompt(fx)))?.text?.trim() || answerText(fx);
+      text = (await askAi(answerPrompt(fx), { private: true }))?.text?.trim() || answerText(fx); // her location: on this phone only
     }
     const sealed = await seal(key, JSON.stringify({ text, at: at && { lat: at.lat, lng: at.lng, t: at.t } }));
     await f.updateDoc(snap.ref, { answer: sealed, answeredAtMillis: Date.now() }).catch(() => {});
