@@ -127,7 +127,7 @@ const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 const getJson = (url) => fetch(url, { headers: UA, signal: AbortSignal.timeout(15000) })
   .then((r) => { if (!r.ok) console.warn("fetch", r.status, url.slice(0, 90)); return r.ok ? r.json() : null; })
   .catch((e) => { console.warn("fetch failed", String(e).slice(0, 80), url.slice(0, 90)); return null; });
-const AREAS_VERSION = 2; // bump to research every city again after the rules change
+const AREAS_VERSION = 4; // bump to research every city again after the rules change
 
 async function wikivoyage(city) {
   const out = [], titles = [city];
@@ -148,10 +148,22 @@ async function ukAdvice(city, country) {
   const paras = parts.flatMap((p) => String(p.body).split(/<\/p>|<\/li>/)).map(plainText).filter((t) => t.toLowerCase().includes(city.toLowerCase()));
   return paras.length ? [{ site: "gov.uk", url: `https://www.gov.uk/foreign-travel-advice/${slug}/safety-and-security`, type: "official", text: paras.join(" ") }] : [];
 }
-async function shapeOf(place, city, center) {
+// Tries the map search string, then the name, then the name without words like "shopping district"
+// (OpenStreetMap knows "Saara", not "Saara shopping district").
+async function shapeOf(a, city, center) {
+  const plain = a.name.replace(/\b(shopping|district|area|neighbou?rhood|region|zone|surroundings?|vicinity)\b/gi, "").replace(/\s+/g, " ").trim();
+  for (const q of [...new Set([a.place, a.name, plain].filter(Boolean))]) {
+    const r = await shapeFor(q, city, center);
+    if (r !== undefined) return r;
+    await pause(1100);
+  }
+  return null;
+}
+// undefined = not found (try another name); null = found but too big; ring otherwise.
+async function shapeFor(place, city, center) {
   const d = 0.25, vb = center ? `&viewbox=${center[1] - d},${center[0] + d},${center[1] + d},${center[0] - d}&bounded=1` : "";
   const hit = (await getJson(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&polygon_geojson=1&polygon_threshold=0.0002&accept-language=en${vb}&q=${encodeURIComponent(`${place}, ${city}`)}`))?.[0];
-  if (!hit) return null;
+  if (!hit) return undefined;
   // A neighbourhood or park outline that's too big stays out (no whole districts), rather than shrinking to a dot.
   if (/Polygon/.test(hit.geojson?.type || "")) return ringFrom(hit.geojson);
   return ringFrom(hit.geojson) || ringFrom({ type: "Point", coordinates: [+hit.lon, +hit.lat] });
@@ -168,18 +180,19 @@ export const researchAreas = onCall({ secrets: [GEMINI], enforceAppCheck: true, 
   await countAi(req.auth.uid);
 
   const sources = [...(await wikivoyage(city)), ...(await ukAdvice(city, country))].map((s, i) => ({ ...s, id: `S${i + 1}` }));
-  let areas = [];
+  let areas = [], found = [];
   if (sources.length) {
-    const found = readAreas(await gemini([{ text: extractPrompt(city, country, sources) }]), sources);
+    found = readAreas(await gemini([{ text: extractPrompt(city, country, sources) }]), sources);
     const c = (await getJson(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(`${city}, ${country}`)}`))?.[0];
     const center = c ? [+c.lat, +c.lon] : null;
     for (const a of found) {
       await pause(1100); // Nominatim: at most one request a second
-      const ring = await shapeOf(a.place, city, center);
+      const ring = await shapeOf(a, city, center);
       if (ring) areas.push({ ...a, city, ring });
     }
   }
   console.log("areas", city, { sources: sources.length, kept: areas.length });
+  if (!sources.length) return { areas: [], cached: false, info: { sources: [], found: [], kept: 0 } }; // fetch failed: don't cache
   await ref.set({ v: AREAS_VERSION, city, country, savedAt: Date.now(), sources: sources.map((s) => s.url), areasJson: JSON.stringify(areas) });
-  return { areas, cached: false };
+  return { areas, cached: false, info: { sources: sources.map((x) => x.url), found: found.map((x) => x.name), kept: areas.length } };
 });
