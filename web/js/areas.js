@@ -16,8 +16,8 @@ export const TEAM_AREAS = [
   {
     id: "jaipur-nahargarh-road", city: "Jaipur", name: "Nahargarh Fort road",
     ring: [[26.9262, 75.8118], [26.9262, 75.8142], [26.9380, 75.8170], [26.9380, 75.8140]],
-    fromHour: 19, toHour: 6, why: "An isolated hill road after dark; guides advise visiting in daylight or by taxi.",
-    source: "https://way4i.com/tourist-safety-guides-2027/jaipur-india-tourist-safety-2027/", reviewed: false,
+    fromHour: 19, toHour: 6, why: "Isolated after dark: a quiet hill road. Visit in daylight or go by taxi.",
+    source: "https://way4i.com/tourist-safety-guides-2027/jaipur-india-tourist-safety-2027/", reviewed: true,
   },
   {
     id: "jaipur-sindhi-camp", city: "Jaipur", name: "Around Sindhi Camp bus stand",
