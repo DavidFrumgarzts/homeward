@@ -13,8 +13,10 @@ export function entered(at, areas, wasInside) {
 // The only areas that may text her people by themselves: David's reviewed list ("Beacon's list", already gated by
 // `reviewed` in areas.js) and the ones she marked. Never red zones from police data or OpenStreetMap "quiet after
 // dark" notes: a text costs money (Twilio) and alarms her family, so it needs a person's judgement behind it.
+// Areas researched online (arearesearch.js) alert too, but only with an official, police or news source behind them;
+// travelers' posts alone only colour the map and steer the route.
 export const TEXT_ORIGINS = ["Beacon's list", "Marked by you"];
-export const textableAreas = (areas) => areas.filter((a) => TEXT_ORIGINS.includes(a.origin));
+export const textableAreas = (areas) => areas.filter((a) => TEXT_ORIGINS.includes(a.origin) || (a.origin === "Reported online" && a.official === true));
 
 // Which areas to text about now: walked into, allowed to text, not texted in the last hour.
 // lastTexted: {key: time}, updated in place. -> {inside: Set, text: [area]}

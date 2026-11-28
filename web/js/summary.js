@@ -63,6 +63,6 @@ export function safeToShow(text, incident, updates) {
 
 // { text, source }: source is "on_device" or "in_cloud" when AI wrote it, null for the template.
 export async function writeSummary(incident, updates) {
-  const ai = await askAi(summaryPrompt(incident, updates));
+  const ai = await askAi(summaryPrompt(incident, updates), { private: true });
   return ai && safeToShow(ai.text, incident, updates) ? ai : { text: summaryTemplate(incident, updates), source: null };
 }

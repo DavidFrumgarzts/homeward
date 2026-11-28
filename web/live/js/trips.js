@@ -3,7 +3,8 @@
 // streets only (no network). Streets and places: © OpenStreetMap contributors (ODbL).
 import { buildGraph, markDanger, route, pack, unpack, directionTo } from "../../js/walkroute.js";
 import { boxFor } from "../../js/trip.js";
-import { areasFor } from "../../js/areas.js";
+import { areasFor, TEAM_AREAS } from "../../js/areas.js";
+import { researchedAreas } from "./areasearch.js";
 import { OVERPASS } from "./places.js";
 import { loadZones, zonesAround } from "./unsafezones.js";
 import { ringsOf } from "../../js/unsafe.js";
@@ -14,10 +15,10 @@ const write = (k, v) => { try { localStorage.setItem(k, typeof v === "string" ? 
 
 export const savedTrip = () => read(TRIP);
 export const myAreas = () => read(MINE) || [];
-const ringsNow = (city) => areasFor(city, new Date().getHours(), myAreas());
+const ringsNow = (city) => areasFor(city, new Date().getHours(), myAreas(), TEAM_AREAS, researchedAreas(city));
 // Routes are walked later than they're planned, so they avoid every area of the night, whatever its hours,
 // and the red zones from police data around the places on the route (unsafezones.js).
-const ringsAllNight = (city, near = []) => [...areasFor(city, null, myAreas()), ...near.flatMap((p) => zonesAround(p))];
+const ringsAllNight = (city, near = []) => [...areasFor(city, null, myAreas(), TEAM_AREAS, researchedAreas(city)), ...near.flatMap((p) => zonesAround(p))];
 let graph = null;
 const savedGraph = () => (graph ??= (() => { const s = localStorage.getItem(GRAPH); try { return s ? unpack(s) : null; } catch { return null; } })());
 

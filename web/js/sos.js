@@ -15,7 +15,7 @@ import { sosSentencePrompt } from "./prompts.js";
 // Returns { text, source }: source is "on_device" or "in_cloud" when AI rewrote her words, null for the plain sentence.
 export async function writeSos(name, note, realFix, familyLink = null) {
   const profile = { name, pronoun: "UseName" };
-  const ai = await askAi(sosSentencePrompt(profile, note));
+  const ai = await askAi(sosSentencePrompt(profile, note), { private: true });
   const usable = ai && ai.text.length <= 400; // a rambling answer is not a rewrite: use her own words
   const fix = realFix ? { point: { lat: realFix.lat, lng: realFix.lng } } : null;
   const time = realFix?.takenAtMillis ? clockText(realFix.takenAtMillis) : null;

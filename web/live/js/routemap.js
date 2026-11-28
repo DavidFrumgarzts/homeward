@@ -32,7 +32,8 @@ export function drawAreas(map, areas) {
   const group = L.layerGroup().addTo(map);
   for (const a of areas) {
     const tip = `<b>${esc(a.name)}</b>${a.why ? `<br>${esc(a.why)}` : ""}<br><span class="zone-src">${esc(a.origin === "Police data" ? `Police data, ${a.period || "last 12 months"}` : a.origin)}${
-      /^https:\/\//.test(a.source || "") ? ` · <a href="${esc(a.source)}" target="_blank" rel="noopener">Source</a>` : ""}</span>`;
+      /^https:\/\//.test(a.source || "") ? ` · <a href="${esc(a.source)}" target="_blank" rel="noopener">Source</a>` : ""}${
+      (a.sources || []).map((s) => ` · <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.site)}</a>`).join("")}</span>`;
     // Police zones are one square per busy cell: filled as one shape (nonzero), see-through as a whole (live.css),
     // so where squares meet there's no seam.
     const rings = a.rings || [a.ring];

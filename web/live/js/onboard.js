@@ -102,6 +102,7 @@ export function onboarding(app, ctx) {
         ${row(`${n.police} police stations`, "Near you", n.placesDone)}
         ${row(`${n.pharmacies} 24-hour pharmacies`, "Near you", n.placesDone)}
         ${row(`${n.scams} scams travelers report`, n.researching ? "Looking up reports…" : "Checked when you scan a photo", !n.researching && n.scams > 0)}
+        ${row(n.areasResearching ? "Areas to avoid at night" : `${n.areas} ${n.areas === 1 ? "area" : "areas"} to avoid at night`, n.areasResearching ? "Reading travel advice, news and travelers' reports…" : n.areas ? "Reported by at least 2 sources each. Your routes go around them." : "None reported by 2 sources or more", !n.areasResearching)}
         <p class="small">Saved on your phone, so it all works with no signal.</p>
         <div class="grow"></div><button class="btn" id="go">Start exploring${c.name ? ` ${esc(c.name)}` : ""}</button></div>`;
     },

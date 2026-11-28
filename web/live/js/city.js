@@ -6,6 +6,7 @@
 // project allows it, otherwise from what the model knows) and saves them so the scan works with no signal.
 import { ny } from "./nypack.js";
 import { askAi, askAiWithSearch } from "../../js/ai.js";
+import { researchAreas } from "./areasearch.js";
 import { researchPrompt, memoryPrompt, readResearch, needsResearch, mergeScams } from "../../js/cityscams.js";
 import { numbersFor } from "../../js/emergency.js";
 import { meters } from "./places.js";
@@ -54,6 +55,7 @@ export async function arriveAt(at, onChange) {
 // Once a day per city, while online: look up scams reported here and save them.
 export async function research(onChange) {
   if (!city.name) return;
+  researchAreas(city.name, city.country, onChange); // areas to avoid at night, every 14 days
   const key = scamKey(city.name), saved = read(key);
   if (city.researching || !needsResearch(saved, Date.now(), navigator.onLine)) return;
   city.researching = true; onChange();

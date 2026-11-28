@@ -44,3 +44,17 @@ describe("areas for routing a whole evening", () => {
     expect(areasFor("Jaipur", null, [], list).map((a) => a.name)).toEqual(["Checked area"]);
   });
 });
+
+describe("researched areas (web search, with sources)", () => {
+  const ring = [[26.92, 75.80], [26.92, 75.81], [26.93, 75.81], [26.93, 75.80]];
+  const r = (over) => ({ name: "MI Road underpass", ring, why: "Phone snatching at night.", fromHour: 22, toHour: 5, official: true,
+    sources: [{ url: "https://gov.example/a", site: "gov.example", type: "official" }, { url: "https://reddit.com/b", site: "reddit.com", type: "traveler" }], ...over });
+  it("join the list at the hours they apply, labelled with where they come from", () => {
+    const got = areasFor("Jaipur", 23, [], [], [r()]);
+    expect(got).toHaveLength(1);
+    expect(got[0]).toMatchObject({ name: "MI Road underpass", origin: "Reported online", official: true });
+    expect(got[0].sources).toHaveLength(2);
+    expect(areasFor("Jaipur", 12, [], [], [r()])).toEqual([]);
+    expect(areasFor("Jaipur", null, [], [], [r()])).toHaveLength(1); // routes: all night
+  });
+});
