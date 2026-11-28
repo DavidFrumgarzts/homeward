@@ -42,6 +42,7 @@ Return ONLY JSON, at most ${MAX_AREAS} places, or {"areas":[]} if the texts name
 ${blocks}`;
 }
 
+const GENERIC = new Set(["street", "road", "area", "areas", "district", "station", "park", "beach", "square", "avenue", "market", "bridge", "neighbourhood", "neighborhood", "around", "near", "city", "centre", "center", "rua", "avenida", "praca", "lagoon", "lake"]);
 const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 const str = (x, max) => (typeof x === "string" ? x.replace(/\s+/g, " ").trim().slice(0, max) : "");
 const hour = (h, d) => (Number.isInteger(h) && h >= 0 && h <= 24 ? h : d);
@@ -65,6 +66,9 @@ export function readAreas(text, sources) {
     }
     if (!used.size) continue;
     const srcs = [...used.values()];
+    // At least one quote must name the place itself, not just say "at night, be careful".
+    const words = norm(`${name} ${place}`).split(" ").filter((w) => w.length >= 4 && !GENERIC.has(w));
+    if (!words.length || !srcs.some((s) => words.some((w) => ` ${norm(s.quote)} `.includes(` ${w} `)))) continue;
     out.push({ id: slug(name), name, place, why, fromHour: hour(x.fromHour, 21), toHour: hour(x.toHour, 5), sources: srcs, official: srcs.some((s) => s.type === "official") });
     if (out.length === MAX_AREAS) break;
   }

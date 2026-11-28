@@ -30,10 +30,18 @@ async function loadCloud() {
 }
 const device = () => (devicePromise ??= loadDevice());
 const cloud = () => (cloudPromise ??= loadCloud());
+// Only when Chrome's model is already on this computer ("available"): while it's still downloading, a question
+// would wait for the download. 20 seconds at most, then the free cloud answers.
+async function deviceReady() {
+  try { return typeof LanguageModel !== "undefined" && (await LanguageModel.availability()) === "available"; } catch { return false; }
+}
 async function onDevice(parts) {
+  if (!(await deviceReady())) return "";
   const m = await device();
   if (!m) return "";
-  try { return (await m.generateContent(parts)).response.text().trim(); } catch { return ""; }
+  try {
+    return await Promise.race([m.generateContent(parts).then((r) => r.response.text().trim()), new Promise((ok) => setTimeout(() => ok(""), 20000))]);
+  } catch { return ""; }
 }
 async function inCloud(prompt, image) {
   const call = await cloud();

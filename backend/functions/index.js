@@ -124,7 +124,10 @@ export const askGemini = onCall({ secrets: [GEMINI], enforceAppCheck: true, regi
 // ---------- Areas to avoid at night, researched per city (areas.js has the rules) ----------
 const UA = { "User-Agent": "BeaconSafetyApp/1.0 (https://homeward-6999c.web.app)" };
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-const getJson = (url) => fetch(url, { headers: UA, signal: AbortSignal.timeout(15000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+const getJson = (url) => fetch(url, { headers: UA, signal: AbortSignal.timeout(15000) })
+  .then((r) => { if (!r.ok) console.warn("fetch", r.status, url.slice(0, 90)); return r.ok ? r.json() : null; })
+  .catch((e) => { console.warn("fetch failed", String(e).slice(0, 80), url.slice(0, 90)); return null; });
+const AREAS_VERSION = 2; // bump to research every city again after the rules change
 
 async function wikivoyage(city) {
   const out = [], titles = [city];
@@ -148,7 +151,10 @@ async function ukAdvice(city, country) {
 async function shapeOf(place, city, center) {
   const d = 0.25, vb = center ? `&viewbox=${center[1] - d},${center[0] + d},${center[1] + d},${center[0] - d}&bounded=1` : "";
   const hit = (await getJson(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&polygon_geojson=1&polygon_threshold=0.0002&accept-language=en${vb}&q=${encodeURIComponent(`${place}, ${city}`)}`))?.[0];
-  return hit ? ringFrom(hit.geojson) || ringFrom({ type: "Point", coordinates: [+hit.lon, +hit.lat] }) : null;
+  if (!hit) return null;
+  // A neighbourhood or park outline that's too big stays out (no whole districts), rather than shrinking to a dot.
+  if (/Polygon/.test(hit.geojson?.type || "")) return ringFrom(hit.geojson);
+  return ringFrom(hit.geojson) || ringFrom({ type: "Point", coordinates: [+hit.lon, +hit.lat] });
 }
 
 // researchAreas: {city, country} -> {areas: [{name, why, fromHour, toHour, sources, official, ring: [[lat, lng]]}]}.
@@ -158,7 +164,7 @@ export const researchAreas = onCall({ secrets: [GEMINI], enforceAppCheck: true, 
   const city = String(req.data?.city || "").trim().slice(0, 80), country = String(req.data?.country || "").trim().slice(0, 80);
   if (!city || !country) throw new HttpsError("invalid-argument", "City and country, please.");
   const ref = getFirestore().doc(`cityAreas/${slugOf(city, country)}`), cached = (await ref.get()).data();
-  if (cached && Date.now() - cached.savedAt < 14 * 864e5) return { areas: JSON.parse(cached.areasJson), cached: true };
+  if (cached?.v === AREAS_VERSION && Date.now() - cached.savedAt < 14 * 864e5) return { areas: JSON.parse(cached.areasJson), cached: true };
   await countAi(req.auth.uid);
 
   const sources = [...(await wikivoyage(city)), ...(await ukAdvice(city, country))].map((s, i) => ({ ...s, id: `S${i + 1}` }));
@@ -173,6 +179,7 @@ export const researchAreas = onCall({ secrets: [GEMINI], enforceAppCheck: true, 
       if (ring) areas.push({ ...a, city, ring });
     }
   }
-  await ref.set({ city, country, savedAt: Date.now(), sources: sources.map((s) => s.url), areasJson: JSON.stringify(areas) });
+  console.log("areas", city, { sources: sources.length, kept: areas.length });
+  await ref.set({ v: AREAS_VERSION, city, country, savedAt: Date.now(), sources: sources.map((s) => s.url), areasJson: JSON.stringify(areas) });
   return { areas, cached: false };
 });

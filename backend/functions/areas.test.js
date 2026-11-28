@@ -36,7 +36,7 @@ test("keeps an area only when its quotes really appear in the sources", () => {
 });
 
 test("a travel guide alone: kept for the map and routes, not official", () => {
-  const [a] = readAreas(answer([{ ...lapa, evidence: [lapa.evidence[0]] }]), sources);
+  const [a] = readAreas(answer([{ ...lapa, evidence: [{ source: "S1", quote: "Lapa arches area: robberies after the bars close" }] }]), sources);
   assert.equal(a.official, false);
 });
 
@@ -57,3 +57,8 @@ test("map shapes: street band, point square, no whole districts", () => {
 });
 
 test("city keys", () => { assert.equal(slugOf("Rio de Janeiro", "Brazil"), "rio-de-janeiro--brazil"); });
+
+test("the quote must name the place", () => {
+  const lagoon = { name: "Rodrigo de Freitas Lagoon", place: "Lagoa Rodrigo de Freitas", why: "Quiet at night.", evidence: [{ source: "S1", quote: "robberies after the bars close" }] };
+  assert.deepEqual(readAreas(answer([lagoon]), sources), []);
+});
